@@ -1,0 +1,10 @@
+# Reglas de CODEOWNERS
+
+# Cada línea es una ruta de archivo seguida de uno o más "dueños".
+# Los dueños pueden ser usuarios de GitHub o equipos.
+
+# Solo los dueños del backend pueden aprobar cambios en la carpeta backend/
+/backend/   @All-Sx
+
+# Solo los dueños del frontend pueden aprobar cambios en la carpeta frontend/
+/frontend/  @All-Sx
