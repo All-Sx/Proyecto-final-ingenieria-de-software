@@ -1,4 +1,4 @@
-#Proyecto final ingenieria de software
+# Proyecto final ingenieria de software
 
 Proyecto final para la asignatura de **Ingeniería de Software**. Este repositorio contiene el código fuente del sistema de inscripcion y recomendacion de electivos universitarios.
 
