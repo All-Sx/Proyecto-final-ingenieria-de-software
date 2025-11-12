@@ -1,12 +1,12 @@
 import { Router } from "express";
-import alumnoController from "../controllers/alumno.controller";
+import { createAlumnoController, deleteAlumnoController, getAllAlumnosController, getAlumnoByRutController, updateAlumnoController } from "../controllers/alumno.controller.js";
 
 const alumnoRoutes = Router();
 
-alumnoRoutes.post("/", alumnoController.createAlumno);
-alumnoRoutes.get("/", alumnoController.getAllAlumnos);
-alumnoRoutes.get("/:rut", alumnoController.getAlumnoByRut);
-alumnoRoutes.put("/:rut", alumnoController.updateAlumno);
-alumnoRoutes.delete("/:rut", alumnoController.deleteAlumno);
+alumnoRoutes.post("/", createAlumnoController);
+alumnoRoutes.get("/", getAllAlumnosController);
+alumnoRoutes.get("/:rut", getAlumnoByRutController);
+alumnoRoutes.put("/:rut", updateAlumnoController);
+alumnoRoutes.delete("/:rut", deleteAlumnoController);
 
 export default alumnoRoutes;

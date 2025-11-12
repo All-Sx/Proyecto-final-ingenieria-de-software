@@ -19,10 +19,10 @@ export const Electivo = new EntitySchema({
             type: "varchar",
             length: 12,
             nullable: false,
-            foreignKey: {
+            /*foreignKey: {
                 entity: "User",
                 column: "rut",
-            },
+            },*/
             format: "XXXXXXXX-X",
         },
         creditos: {

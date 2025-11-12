@@ -4,31 +4,25 @@ export const Alumno = new EntitySchema({
     name: "Alumno",
     tableName: "alumnos",
     columns: {
+        id: {
+            primary: true,
+            type: "int",
+            generated: "increment",
+        },
         rut: {
             primary: true,
             type: "varchar",
             length: 12,
             unique: true,
-            nullable: false,
             format: "XXXXXXXX-X",
-            foreignKey: {
-                entity: "User",
-                column: "rut",
-            },
+            nullable: false,
+
         },
         carrera: {
             type: "varchar",
             length: 255,
             nullable: false,
-            foreignKey: {
-                entity: "Carrera",
-                column: "codigo",
-            },
-        },
-        ingreso: {
-            type: "int",
-            nullable: false,
-            default: Date.now().getFullYear(),
+
         },
         creditos_aprovados: {
             type: "int",

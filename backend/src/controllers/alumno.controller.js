@@ -1,59 +1,59 @@
-import alumnoService from "../services/alumno.service.js";
+import { createAlumno, deleteAlumno, findAlumnoByRut, getAllAlumnos, updateAlumno } from "../services/alumno.service.js";
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../Handlers/responseHandlers.js";
 
-export async function createAlumno(req, res) {
+export async function createAlumnoController(req, res) {
     try {
-        const data = req.body;
-        const newAlumno = await alumnoService.createAlumno(data);
-        handleSuccess(res, 201, "Alumno creado exitosamente", newAlumno);
+        const alumno = await createAlumno(req.body);
+        handleSuccess(res, alumno, 201);
     } catch (error) {
-        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+        handleErrorServer(res, error);
     }
 }
-export async function getAlumnoByRut(req, res) {
+
+export async function getAllAlumnosController(req, res) {
+    try {
+        const alumnos = await getAllAlumnos();
+        handleSuccess(res, alumnos);
+    } catch (error) {
+        handleErrorServer(res, error);
+    }
+}
+export async function getAlumnoByRutController(req, res) {
     try {
         const { rut } = req.params;
-        const alumno = await alumnoService.findAlumnoByRut(rut);
+        const alumno = await findAlumnoByRut(rut);
         if (!alumno) {
-            return handleErrorClient(res, 404, "Alumno no encontrado");
+            return handleErrorClient(res, "Alumno no encontrado", 404);
         }
-        handleSuccess(res, 200, "Alumno encontrado", alumno);
+        handleSuccess(res, alumno);
     } catch (error) {
-        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+        handleErrorServer(res, error);
     }
 }
-export async function updateAlumno(req, res) {
+
+export async function updateAlumnoController(req, res) {
     try {
         const { rut } = req.params;
-        const data = req.body;
-        await alumnoService.updateAlumno(rut, data);
-        handleSuccess(res, 200, "Alumno actualizado exitosamente");
-    } catch (error) {
-        if (error.message.includes("no encontrado")) {
-            handleErrorClient(res, 404, error.message);
-        } else {
-            handleErrorServer(res, 500, "Error interno del servidor", error.message);
+        const alumno = await findAlumnoByRut(rut);
+        if (!alumno) {
+            return handleErrorClient(res, "Alumno no encontrado", 404);
         }
+        await updateAlumno(rut, req.body);
+        handleSuccess(res, { message: "Alumno actualizado correctamente" });
+    } catch (error) {
+        handleErrorServer(res, error);
     }
 }
-export async function deleteAlumno(req, res) {
+export async function deleteAlumnoController(req, res) {
     try {
         const { rut } = req.params;
-        await alumnoService.deleteAlumno(rut);
-        handleSuccess(res, 200, "Alumno eliminado exitosamente");
-    } catch (error) {
-        if (error.message.includes("no encontrado")) {
-            handleErrorClient(res, 404, error.message);
-        } else {
-            handleErrorServer(res, 500, "Error interno del servidor", error.message);
+        const alumno = await findAlumnoByRut(rut);
+        if (!alumno) {
+            return handleErrorClient(res, "Alumno no encontrado", 404);
         }
-    }
-}
-export async function getAllAlumnos(req, res) {
-    try {
-        const alumnos = await alumnoService.getAllAlumnos();
-        handleSuccess(res, 200, "Alumnos obtenidos exitosamente", alumnos);
+        await deleteAlumno(rut);
+        handleSuccess(res, { message: "Alumno eliminado correctamente" });
     } catch (error) {
-        handleErrorServer(res, 500, "Error interno del servidor", error.message);
+        handleErrorServer(res, error);
     }
 }
