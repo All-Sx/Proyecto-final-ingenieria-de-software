@@ -10,7 +10,8 @@ export async function createUser(data) {
     const newUser = userRepository.create({
         rut: data.rut,
         nombre: data.nombre,
-        apellidos: data.apellidos,
+        primer_apellido: data.primer_apellido,
+        segundo_apellido: data.segundo_apellido,
         email: data.email,
         password: hashedPassword,
         cargo: data.cargo,
