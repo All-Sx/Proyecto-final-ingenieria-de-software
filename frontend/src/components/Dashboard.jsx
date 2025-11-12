@@ -16,10 +16,19 @@ import {
 export default function Dashboard() {
     const navigate = useNavigate();
     const { state } = useLocation();
-    const user = state?.user || {
+    
+    /**
+     * OBTENER USUARIO DE LOCALSTORAGE O DEL STATE
+     * Primero intenta recuperar el usuario de localStorage (persistencia)
+     * Si no existe, usa el state de React Router
+     * Si ninguno existe, usa valores por defecto
+     */
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const user = storedUser || state?.user || {
         nombre: "Estudiante Demo",
         correo: "estudiante@universidad.cl",
         tipo: "Estudiante",
+        rol: "estudiante",
         foto: "https://i.pravatar.cc/150?img=5",
     };
 
@@ -29,12 +38,23 @@ export default function Dashboard() {
         navigate("/profesor/electivos", { state: { user } });
     };
 
+    /**
+     * NUEVA FUNCIÓN: Navegación a Gestión de Electivos
+     * Permite al Jefe de Carrera acceder al panel de gestión
+     * donde puede revisar, aprobar o rechazar propuestas de electivos
+     */
+    const handleGestionElectivos = () => {
+        navigate("/jefe/gestion-electivos", { state: { user } });
+    };
+
     const handleLogout = () => {
+        // LIMPIAR localStorage al cerrar sesión para eliminar datos del usuario
+        localStorage.removeItem("user");
         navigate("/");
     };
 
     // Ejemplo de electivos (simulados)
-    const electivos = [
+    let electivos = [
         {
             id: 1,
             nombre: "Deep Learning",
@@ -60,6 +80,49 @@ export default function Dashboard() {
             cupos: 20,
         },
     ];
+
+    /**
+     * CURSOS ESPECÍFICOS PARA EL JEFE DE CARRERA
+     * Si el usuario es "jefe", se reemplazan los electivos normales
+     * por un conjunto de herramientas administrativas
+     */
+    if (user.rol === "jefe") {
+        electivos = [
+            {
+                id: "admin-001",
+                nombre: "Gestión de Electivos",
+                descripcion: "Panel administrativo para revisar y aprobar electivos propuestos.",
+                profesor: "Sistema",
+                creditos: 0,
+                cupos: 0,
+                progreso: 0.8,        // Barra de progreso (80%)
+                estado: "Revisar",     // Estado actual de la tarea
+                pendiente: false,      // Si requiere atención inmediata
+            },
+            {
+                id: "admin-002",
+                nombre: "Estadísticas y Reportes",
+                descripcion: "Análisis de inscripciones y rendimiento de electivos.",
+                profesor: "Sistema",
+                creditos: 0,
+                cupos: 0,
+                progreso: 1.0,         // Completado al 100%
+                estado: "Completado",
+                pendiente: false,
+            },
+            {
+                id: "admin-003",
+                nombre: "Planificación Académica",
+                descripcion: "Planificación de electivos para próximos semestres.",
+                profesor: "Sistema",
+                creditos: 0,
+                cupos: 0,
+                progreso: 0.3,         // 30% completado
+                estado: "En progreso",
+                pendiente: true,       // Requiere atención
+            },
+        ];
+    }
 
     return (
         <div
@@ -94,41 +157,61 @@ export default function Dashboard() {
 
                         <h2 className="text-lg font-semibold">{user.nombre}</h2>
                         <p className="text-sm text-gray-500">{user.correo}</p>
-                        <span className="mt-2 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
-                            {user.tipo}
+                        {/* 
+                          BADGE DINÁMICO SEGÚN EL ROL
+                          - Jefe: Púrpura
+                          - Profesor: Verde
+                          - Estudiante: Azul
+                        */}
+                        <span className={`mt-2 text-xs font-semibold px-3 py-1 rounded-full ${
+                            user.rol === "jefe" ? "bg-purple-100 text-purple-700" :
+                            user.tipo === "Profesor" || user.rol === "profesor" ? "bg-green-100 text-green-700" :
+                            "bg-blue-100 text-blue-700"
+                        }`}>
+                            {user.rol === "jefe" ? "Jefe de Carrera" : user.tipo}
                         </span>
                     </div>
 
                     <nav className="space-y-2">
                         <button className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
                             <User size={18} />
-                            Perfil
+                            <span>Perfil</span>
                         </button>
-                        {user.tipo === "Profesor" ? (
+                        {/* MENÚ ESPECÍFICO PARA JEFE DE CARRERA */}
+                        {/* Menú simplificado - Las opciones principales están en el panel central */}
+                        {user.rol === "jefe" ? (
+                            <>
+                                {/* Gestión de Profesores */}
+                                <button className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                                    <GraduationCap size={18} />
+                                    <span>Profesores</span>
+                                </button>
+                            </>
+                        ) : user.tipo === "Profesor" ? (
                             <>
                                 <button className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
                                     <FileText size={18} />
-                                    Mis Electivos
+                                    <span>Mis Electivos</span>
                                 </button>
                                 <button
                                     onClick={handleOpenElectivo}
                                     className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition"
                                 >
                                     <BookOpen size={18} />
-                                    Registrar Electivo
+                                    <span>Registrar Electivo</span>
                                 </button>
                             </>
                         ) : (
                             <>
                                 <button className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
                                     <Bookmark size={18} />
-                                    Catálogo de Electivos
+                                    <span>Catálogo de Electivos</span>
                                 </button>
                             </>
                         )}
                         <button className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
                             <Settings size={18} />
-                            Configuración
+                            <span>Configuración</span>
                         </button>
                     </nav>
                 </div>
@@ -154,16 +237,127 @@ export default function Dashboard() {
 
             {/* Contenido principal */}
             <main className="flex-1 p-8">
+                {/* 
+                  SALUDO PERSONALIZADO
+                  Usa el nombre completo guardado en localStorage 
+                  El operador ?. previene errores si user es null/undefined
+                */}
                 <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-3xl font-bold mb-6"
                 >
-                    Bienvenido, {user.nombre.split(" ")[0]} 👋
+                    Bienvenido, {user?.nombre} 👋
                 </motion.h1>
 
-                {/* PROFESOR */}
-                {user.tipo === "Profesor" ? (
+                {/* ===== PANEL ESPECÍFICO PARA JEFE DE CARRERA ===== */}
+                {user.rol === "jefe" ? (
+                    <>
+                        {/* Tarjetas de estadísticas administrativas */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"
+                        >
+                            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                                <div className="flex items-center gap-4">
+                                    <BookOpen className="text-purple-600" size={26} />
+                                    <div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Electivos pendientes
+                                        </p>
+                                        <h3 className="text-xl font-bold">8</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                                <div className="flex items-center gap-4">
+                                    <GraduationCap className="text-green-600" size={26} />
+                                    <div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Electivos aprobados
+                                        </p>
+                                        <h3 className="text-xl font-bold">42</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                                <div className="flex items-center gap-4">
+                                    <Settings className="text-blue-600" size={26} />
+                                    <div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Total de profesores
+                                        </p>
+                                        <h3 className="text-xl font-bold">15</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        <h2 className="text-2xl font-bold mb-4">Panel de Administración</h2>
+                        {/* 
+                          TARJETAS ADMINISTRATIVAS CON PROGRESO
+                          Cada tarjeta muestra el estado y progreso de tareas administrativas
+                        */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        >
+                            {electivos.map((e) => (
+                                <motion.div
+                                    key={e.id}
+                                    whileHover={{ scale: 1.02 }}
+                                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6"
+                                >
+                                    <h3 className="text-lg font-semibold mb-2 text-purple-600">
+                                        {e.nombre}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                        {e.descripcion}
+                                    </p>
+                                    <div className="mb-3">
+                                        {/* Estado con color dinámico según el estado */}
+                                        <p className="text-sm text-gray-500 mb-1">
+                                            Estado: <span className={`font-semibold ${
+                                                e.estado === "Completado" ? "text-green-600" :
+                                                e.estado === "Revisar" ? "text-yellow-600" :
+                                                "text-blue-600"
+                                            }`}>{e.estado}</span>
+                                        </p>
+                                        {/* Barra de progreso visual */}
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className="bg-purple-600 h-2 rounded-full"
+                                                style={{ width: `${e.progreso * 100}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    {/* 
+                                      BOTÓN DINÁMICO CON NAVEGACIÓN
+                                      - Si es la tarjeta "Gestión de Electivos" (id: admin-001),
+                                        redirige a la página específica de gestión
+                                      - Para otras tarjetas, muestra texto según si está pendiente o no
+                                    */}
+                                    <button 
+                                        onClick={() => {
+                                            if (e.id === "admin-001") {
+                                                handleGestionElectivos();
+                                            }
+                                        }}
+                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition"
+                                    >
+                                        {e.id === "admin-001" ? "Abrir panel" : e.pendiente ? "Revisar" : "Ver detalles"}
+                                    </button>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </>
+                ) : user.tipo === "Profesor" ? (
                     <>
                         <motion.div
                             initial={{ opacity: 0 }}

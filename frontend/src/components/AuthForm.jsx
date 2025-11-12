@@ -27,6 +27,47 @@ export default function AuthForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * FUNCIÓN PARA LOGIN DE DEMOSTRACIÓN
+   * Esta función permite acceso rápido sin registro para probar la aplicación
+   * @param {string} role - El rol del usuario: "profesor", "estudiante" o "jefe"
+   */
+  const handleDemoLogin = (role) => {
+    let user;
+    
+    // Verificar el rol y crear el objeto de usuario correspondiente
+    if (role === "profesor") {
+      user = { 
+        nombre: "Profesor Demo", 
+        correo: "profesor.demo@ubiobio.cl",
+        rol: "profesor",
+        tipo: "Profesor"
+      };
+    } else if (role === "estudiante") {
+      user = { 
+        nombre: "Estudiante Demo", 
+        correo: "estudiante.demo@alumnos.ubiobio.cl",
+        rol: "estudiante",
+        tipo: "Estudiante"
+      };
+    } else if (role === "jefe") {
+      // Caso específico para el Jefe de Carrera
+      user = { 
+        nombre: "Jefe de Carrera", 
+        correo: "jefe.carrera@ubiobio.cl",
+        rol: "jefe",  // Identificador único para el jefe
+        tipo: "Jefe de Carrera"
+      };
+    }
+    
+    // GUARDAR usuario en localStorage para persistencia entre páginas
+    // Convertimos el objeto a string JSON para almacenarlo
+    localStorage.setItem("user", JSON.stringify(user));
+    
+    // Navegar al dashboard y pasar el usuario también por state (método alternativo)
+    navigate("/dashboard", { state: { user } });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -238,42 +279,32 @@ export default function AuthForm() {
           <p className="text-sm text-gray-500 mb-3">Modo demostración:</p>
 
           <div className="flex flex-col gap-3">
+            {/* Botón para login demo como PROFESOR */}
             <button
               type="button"
-              onClick={() =>
-                navigate("/dashboard", {
-                  state: {
-                    user: {
-                      nombre: "Profesor Demo",
-                      correo: "profesor.demo@ubiobio.cl",
-                      tipo: "Profesor",
-                      foto: "",
-                    },
-                  },
-                })
-              }
+              onClick={() => handleDemoLogin("profesor")}
               className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
               👨‍🏫 Entrar como Profesor (Demo)
             </button>
 
+            {/* Botón para login demo como ESTUDIANTE */}
             <button
               type="button"
-              onClick={() =>
-                navigate("/dashboard", {
-                  state: {
-                    user: {
-                      nombre: "Estudiante Demo",
-                      correo: "estudiante.demo@alumnos.ubiobio.cl",
-                      tipo: "Estudiante",
-                      foto: "",
-                    },
-                  },
-                })
-              }
+              onClick={() => handleDemoLogin("estudiante")}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
               🎓 Entrar como Estudiante (Demo)
+            </button>
+
+            {/* Botón para login demo como JEFE DE CARRERA */}
+            {/* Este botón usa color púrpura para diferenciarlo de los otros roles */}
+            <button
+              type="button"
+              onClick={() => handleDemoLogin("jefe")}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition-colors"
+            >
+              👔 Entrar como Jefe de Carrera (Demo)
             </button>
           </div>
         </div>
