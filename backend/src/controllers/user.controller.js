@@ -25,23 +25,3 @@ export async function findUserByEmail(email) {
 export async function findUserByRut(rut) {
     return await userRepository.findOneBy({ rut });
 }
-export async function updateUser(rut, data) {
-    try {
-        const user = await userRepository.findOneBy({ rut });
-        await userRepository.update(user.id, user);
-    } catch (error) {
-        throw new Error("Usuario no encontrado", error);
-    }
-}
-export async function deleteUser(rut) {
-    try {
-        const user = await userRepository.findOneBy({ rut });
-        await userRepository.remove(user);
-    } catch (error) {
-        throw new Error("Usuario no encontrado", error);
-    }
-    return true;
-}
-export async function getAllUsers() {
-    return await userRepository.find();
-}
