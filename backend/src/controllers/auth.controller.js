@@ -2,13 +2,13 @@
 import { loginUser } from "../services/auth.service.js";
 import { createUser } from "../services/user.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responsehandlers.js";
-import { authQueryValidation } from "../validations/auth.validation.js";
+import { authRegisterValidation, authLoginValidation } from "../validations/auth.validation.js";
 
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
     
-    const { error } = authQueryValidation.validate({ email, password });
+    const { error } = authLoginValidation.validate({ email, password });
     if (error) {
       return handleErrorClient(res, 400, "Parametros invalidos", error.message);
     }
@@ -24,7 +24,7 @@ export async function register(req, res) {
   try {
     const data = req.body;
     
-    const { error } = authQueryValidation.validate(data);
+    const { error } = authRegisterValidation.validate(data);
     if (error) {
       return handleErrorClient(res, 400, "Parametros invalidos", error.message);
     }
