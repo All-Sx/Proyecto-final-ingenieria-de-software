@@ -1,6 +1,8 @@
 import { Router } from "express";
 import authRoutes from "./auth.routes.js";
 import profileRoutes from "./profile.routes.js";
+import alumnoRoutes from "./alumnos.routes.js";
+
 import router from "./auth.routes.js";
 
 export function routerApi(app) {
@@ -9,7 +11,9 @@ export function routerApi(app) {
 
     router.use("/auth", authRoutes);
     router.use("/profile", profileRoutes);
-    
+    router.use("/alumno", alumnoRoutes);
+
 }
+
 
 export default router;
