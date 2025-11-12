@@ -4,7 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { AppDataSource, connectDB } from "./config/configDB.js";
 import { routerApi } from "./routes/index.routes.js";
-import { HOST, PORT} from "./config/configEnv.js";
+import { HOST, PORT} from "./config/configenv.js";
 
 const app = express();
 app.use(express.json());
