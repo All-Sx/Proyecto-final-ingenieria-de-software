@@ -25,12 +25,12 @@ export const User = new EntitySchema({
     primer_apellido: {
       type: "varchar",
       length: 255,
-      nullable: true,
+      nullable: false,
     },
     segundo_apellido: {
       type: "varchar",
       length: 255,
-      nullable: true,
+      nullable: false,
     },
     email: {
       type: "varchar",
