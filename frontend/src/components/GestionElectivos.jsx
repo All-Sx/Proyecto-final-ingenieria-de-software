@@ -39,7 +39,7 @@ export default function GestionElectivos() {
             estado: "pendiente", // pendiente, aprobado, rechazado
             descripcion: "Curso enfocado en técnicas modernas de IA, incluyendo machine learning y redes neuronales.",
             requisitos: "Programación avanzada, Matemáticas discretas",
-            fechaPropuesta: "2024-11-10",
+    
         },
         {
             id: 2,
@@ -52,7 +52,6 @@ export default function GestionElectivos() {
             estado: "pendiente",
             descripcion: "Diseño y desarrollo de videojuegos usando Unity y C#.",
             requisitos: "Programación orientada a objetos",
-            fechaPropuesta: "2024-11-08",
         },
         {
             id: 3,
@@ -65,7 +64,6 @@ export default function GestionElectivos() {
             estado: "aprobado",
             descripcion: "Fundamentos de blockchain, contratos inteligentes y aplicaciones descentralizadas.",
             requisitos: "Estructuras de datos, Criptografía",
-            fechaPropuesta: "2024-10-15",
         },
         {
             id: 4,
@@ -77,8 +75,6 @@ export default function GestionElectivos() {
             cuposDisponibles: 15,
             estado: "rechazado",
             descripcion: "Introducción a los principios de la computación cuántica.",
-            requisitos: "Física moderna, Álgebra lineal",
-            fechaPropuesta: "2024-11-05",
         },
         {
             id: 5,
@@ -91,7 +87,6 @@ export default function GestionElectivos() {
             estado: "pendiente",
             descripcion: "Desarrollo completo de aplicaciones web con React, Node.js y MongoDB.",
             requisitos: "Programación web básica",
-            fechaPropuesta: "2024-11-12",
         },
         {
             id: 6,
@@ -104,7 +99,6 @@ export default function GestionElectivos() {
             estado: "pendiente",
             descripcion: "Diseño e implementación de sistemas IoT con Arduino y Raspberry Pi.",
             requisitos: "Sistemas operativos, Redes",
-            fechaPropuesta: "2024-11-09",
         },
     ]);
 
@@ -419,11 +413,6 @@ export default function GestionElectivos() {
                             <div>
                                 <h3 className="font-semibold mb-1 text-gray-700">Requisitos</h3>
                                 <p className="text-gray-600">{electroSeleccionado.requisitos}</p>
-                            </div>
-
-                            <div>
-                                <h3 className="font-semibold mb-1 text-gray-700">Fecha de Propuesta</h3>
-                                <p className="text-gray-600">{electroSeleccionado.fechaPropuesta}</p>
                             </div>
 
                             <div>
