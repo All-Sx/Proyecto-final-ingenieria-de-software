@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { handleErrorClient } from "../Handlers/responseHandlers.js";
+import { handleErrorClient } from "../handlers/responsehandlers.js";
 
 export function authMiddleware(req, res, next) {
     const authHeader = req.headers["authorization"];

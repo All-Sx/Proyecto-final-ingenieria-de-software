@@ -3,10 +3,10 @@ import { createAlumnoController, deleteAlumnoController, getAllAlumnosController
 
 const alumnoRoutes = Router();
 
-alumnoRoutes.post("/", createAlumnoController);
-alumnoRoutes.get("/", getAllAlumnosController);
+alumnoRoutes.post("/create", createAlumnoController);
+alumnoRoutes.get("/obtener", getAllAlumnosController);
 alumnoRoutes.get("/:rut", getAlumnoByRutController);
-alumnoRoutes.put("/:rut", updateAlumnoController);
-alumnoRoutes.delete("/:rut", deleteAlumnoController);
+alumnoRoutes.put("/update:rut", updateAlumnoController);
+alumnoRoutes.delete("/delete:rut", deleteAlumnoController);
 
 export default alumnoRoutes;

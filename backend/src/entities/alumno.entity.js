@@ -26,7 +26,7 @@ export const Alumno = new EntitySchema({
         },
         creditos_aprovados: {
             type: "int",
-            nullable: false,
+            default: 0,
         },
         create_at: {
             type: "timestamp",

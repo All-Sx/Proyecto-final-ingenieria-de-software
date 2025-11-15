@@ -1,4 +1,4 @@
-import { AppDataSource } from "../config/configDB.js";
+import { AppDataSource } from "../config/configdb.js";
 import { Alumno } from "../entities/alumno.entity.js";
 
 const alumnoRepository = AppDataSource.getRepository(Alumno);
@@ -26,6 +26,7 @@ export async function updateAlumno(rut, data) {
         throw new Error("Alumno no encontrado", error);
     }
 }
+
 export async function deleteAlumno(rut) {
     try {
         const alumno = await alumnoRepository.findOneBy({ rut });
