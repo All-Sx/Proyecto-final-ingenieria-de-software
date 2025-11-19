@@ -285,7 +285,7 @@ export default function AuthForm() {
               onClick={() => handleDemoLogin("profesor")}
               className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
-              👨‍🏫 Entrar como Profesor (Demo)
+              Entrar como Profesor (Demo)
             </button>
 
             {/* Botón para login demo como ESTUDIANTE */}
@@ -294,7 +294,7 @@ export default function AuthForm() {
               onClick={() => handleDemoLogin("estudiante")}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
-              🎓 Entrar como Estudiante (Demo)
+              Entrar como Estudiante (Demo)
             </button>
 
             {/* Botón para login demo como JEFE DE CARRERA */}
@@ -304,7 +304,7 @@ export default function AuthForm() {
               onClick={() => handleDemoLogin("jefe")}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
-              👔 Entrar como Jefe de Carrera (Demo)
+              Entrar como Jefe de Carrera (Demo)
             </button>
           </div>
         </div>
