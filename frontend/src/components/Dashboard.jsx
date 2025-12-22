@@ -50,7 +50,7 @@ export default function Dashboard() {
     navigate("/");
   };
 
- 
+
   // Controla qué contenido mostrar en el área principal
   // Opciones: "inicio", "electivos", "perfil", "configuracion", "editarPerfil"
   const [vistaActual, setVistaActual] = useState(
@@ -81,7 +81,7 @@ export default function Dashboard() {
   // === FUNCIÓN PARA GUARDAR CAMBIOS DEL PERFIL ===
   const handleGuardarPerfil = (e) => {
     e.preventDefault();
-    
+
     // Validaciones
     if (datosEdicion.passwordNueva && datosEdicion.passwordNueva !== datosEdicion.passwordConfirmar) {
       setMensajeEdicion({ tipo: "error", texto: "Las contraseñas no coinciden" });
@@ -105,7 +105,7 @@ export default function Dashboard() {
 
     localStorage.setItem("user", JSON.stringify(usuarioActualizado));
     setMensajeEdicion({ tipo: "success", texto: "Perfil actualizado correctamente" });
-    
+
     // Limpiar campos de contraseña
     setDatosEdicion({
       ...datosEdicion,
@@ -245,10 +245,10 @@ export default function Dashboard() {
             {/* Badge del rol con color dinámico */}
             <span
               className={`mt-2 text-xs font-semibold px-3 py-1 rounded-full ${user.rol === "jefe"
-                  ? "bg-purple-100 text-purple-700"
-                  : user.tipo === "Profesor" || user.rol === "profesor"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-blue-100 text-blue-700"
+                ? "bg-purple-100 text-purple-700"
+                : user.tipo === "Profesor" || user.rol === "profesor"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-blue-100 text-blue-700"
                 }`}
             >
               {user.rol === "jefe" ? "Jefe de Carrera" : user.tipo}
@@ -333,7 +333,8 @@ export default function Dashboard() {
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold mb-6"
+          className={`text-3xl font-bold mb-6 ${darkMode ? "text-gray-100" : "text-gray-800"
+            }`}
         >
           Bienvenido, {user?.nombre} 👋
         </motion.h1>
@@ -343,7 +344,12 @@ export default function Dashboard() {
           <>
             {user.rol === "jefe" ? (
               <>
-                <h2 className="text-2xl font-bold mb-4">Panel de Administración</h2>
+                <h2
+                  className={`text-2xl font-bold mb-4 ${darkMode ? "text-gray-100" : "text-gray-800"
+                    }`}
+                >
+                  Panel de Administración
+                </h2>
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -354,33 +360,48 @@ export default function Dashboard() {
                     <motion.div
                       key={e.id}
                       whileHover={{ scale: 1.02 }}
-                      className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6"
+                      className={`rounded-2xl shadow-md p-6 transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+                        }`}
                     >
-                      <h3 className="text-lg font-semibold mb-2 text-purple-600">
+                      <h3
+                        className={`text-lg font-semibold mb-2 ${darkMode ? "text-purple-400" : "text-purple-600"
+                          }`}
+                      >
                         {e.nombre}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+
+                      <p
+                        className={`text-sm mb-3 ${darkMode ? "text-gray-300" : "text-gray-600"
+                          }`}
+                      >
                         {e.descripcion}
                       </p>
+
                       <p className="text-sm mb-1">
                         Estado:{" "}
                         <span
                           className={`font-semibold ${e.estado === "Completado"
-                              ? "text-green-600"
-                              : e.estado === "Revisar"
-                                ? "text-yellow-600"
-                                : "text-blue-600"
+                            ? "text-green-500"
+                            : e.estado === "Revisar"
+                              ? "text-yellow-500"
+                              : "text-blue-500"
                             }`}
                         >
                           {e.estado}
                         </span>
                       </p>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+
+                      {/* Barra de progreso */}
+                      <div
+                        className={`w-full rounded-full h-2 mb-3 ${darkMode ? "bg-gray-700" : "bg-gray-200"
+                          }`}
+                      >
                         <div
                           className="bg-purple-600 h-2 rounded-full"
                           style={{ width: `${e.progreso * 100}%` }}
-                        ></div>
+                        />
                       </div>
+
                       <button
                         onClick={() => {
                           if (e.id === "admin-001") handleGestionElectivos();
@@ -405,11 +426,17 @@ export default function Dashboard() {
                   transition={{ delay: 0.2 }}
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10"
                 >
-                  <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                  <div
+                    className={`p-6 rounded-2xl shadow-md transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+                      }`}
+                  >
                     <div className="flex items-center gap-4">
                       <BookOpen className="text-blue-600" size={26} />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p
+                          className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"
+                            }`}
+                        >
                           Electivos registrados
                         </p>
                         <h3 className="text-xl font-bold">5</h3>
@@ -417,11 +444,17 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                  <div
+                    className={`p-6 rounded-2xl shadow-md transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+                      }`}
+                  >
                     <div className="flex items-center gap-4">
                       <GraduationCap className="text-green-600" size={26} />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p
+                          className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"
+                            }`}
+                        >
                           Estudiantes inscritos
                         </p>
                         <h3 className="text-xl font-bold">123</h3>
@@ -429,11 +462,17 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+                  <div
+                    className={`p-6 rounded-2xl shadow-md transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+                      }`}
+                  >
                     <div className="flex items-center gap-4">
                       <Settings className="text-purple-600" size={26} />
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p
+                          className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"
+                            }`}
+                        >
                           Periodo actual
                         </p>
                         <h3 className="text-xl font-bold">2025-1</h3>
@@ -456,7 +495,10 @@ export default function Dashboard() {
                 </motion.div>
               </>
             ) : (
-              <p className="text-gray-600 dark:text-gray-300">
+              <p
+                className={`${darkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+              >
                 Selecciona “Electivos” en el menú para ver el catálogo disponible.
               </p>
             )}
@@ -475,26 +517,47 @@ export default function Dashboard() {
               <motion.div
                 key={e.id}
                 whileHover={{ scale: 1.02 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6"
+                className={`rounded-2xl shadow-md p-6 transition-colors ${darkMode
+                  ? "bg-gray-800 text-gray-100"
+                  : "bg-white text-gray-900"
+                  }`}
               >
-                <h3 className="text-lg font-semibold mb-2 text-blue-600">
+                <h3
+                  className={`text-lg font-semibold mb-2 ${darkMode ? "text-blue-400" : "text-blue-600"
+                    }`}
+                >
                   {e.nombre}
                 </h3>
 
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                <p
+                  className={`text-sm mb-3 ${darkMode ? "text-gray-300" : "text-gray-600"
+                    }`}
+                >
                   {e.descripcion}
                 </p>
 
-                <div className="text-sm text-gray-500 space-y-1 mb-3">
+                <div
+                  className={`text-sm space-y-1 mb-3 ${darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                >
                   <p>👨‍🏫 <strong>Profesor:</strong> {e.profesor}</p>
                   <p>🏛️ <strong>Carrera:</strong> {e.carrera}</p>
                   <p>📆 <strong>Semestre:</strong> {e.semestre}</p>
                   <p>🎓 <strong>Créditos:</strong> {e.creditos}</p>
                   <p>🪑 <strong>Cupos disponibles:</strong> {e.cuposDisponibles}</p>
+
                   {e.requisitos && (
-                    <div>
-                      <p className="font-semibold text-gray-700 dark:text-gray-200 mt-2">📋 Requisitos:</p>
-                      <ul className="list-disc list-inside ml-2 text-gray-600 dark:text-gray-300">
+                    <div className="mt-2">
+                      <p
+                        className={`font-semibold ${darkMode ? "text-gray-200" : "text-gray-700"
+                          }`}
+                      >
+                        📋 Requisitos:
+                      </p>
+                      <ul
+                        className={`list-disc list-inside ml-2 ${darkMode ? "text-gray-300" : "text-gray-600"
+                          }`}
+                      >
                         {e.requisitos.split(",").map((req, idx) => (
                           <li key={idx}>{req.trim()}</li>
                         ))}
@@ -502,6 +565,7 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+
 
                 <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition">
                   Inscribirse
@@ -517,9 +581,16 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md"
+            className={`p-6 rounded-2xl shadow-md transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+              }`}
           >
-            <h2 className="text-2xl font-bold mb-4">Perfil del Usuario</h2>
+            <h2
+              className={`text-2xl font-bold mb-4 ${darkMode ? "text-gray-100" : "text-gray-800"
+                }`}
+            >
+              Perfil del Usuario
+            </h2>
+
             <p><strong>Nombre:</strong> {user.nombre}</p>
             <p><strong>Correo:</strong> {user.correo}</p>
             <p><strong>Rol:</strong> {user.tipo}</p>
@@ -531,24 +602,31 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md space-y-4"
+            className={`p-6 rounded-2xl shadow-md space-y-4 transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+              }`}
           >
             <h2 className="text-2xl font-bold mb-4">Configuración</h2>
+
             <button
               onClick={() => setVistaActual("editarPerfil")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
             >
               Editar Perfil y Seguridad
             </button>
+
             <button
               onClick={handleLogout}
-              className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl font-medium transition"
+              className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl font-medium transition-colors"
             >
               Cerrar sesión
             </button>
+
             <button
               onClick={() => setVistaActual("inicio")}
-              className="w-full bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-black dark:text-white py-2 rounded-xl font-medium transition"
+              className={`w-full py-2 rounded-xl font-medium transition-colors ${darkMode
+                ? "bg-gray-700 hover:bg-gray-600 text-white"
+                : "bg-gray-300 hover:bg-gray-400 text-black"
+                }`}
             >
               Volver al Inicio
             </button>
@@ -560,15 +638,18 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md max-w-2xl"
+            className={`p-8 rounded-2xl shadow-md max-w-2xl transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+              }`}
           >
-            <h2 className="text-2xl font-bold mb-6">Editar Perfil y Seguridad</h2>
-            
+            <h2 className="text-2xl font-bold mb-6">
+              Editar Perfil y Seguridad
+            </h2>
+
             <form onSubmit={handleGuardarPerfil} className="space-y-6">
               {/* INFORMACIÓN PERSONAL */}
               <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
                 <h3 className="text-lg font-semibold mb-4 text-purple-600">Información Personal</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Nombre Completo</label>
@@ -577,11 +658,10 @@ export default function Dashboard() {
                       name="nombre"
                       value={datosEdicion.nombre}
                       onChange={handleChangeEdicion}
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                       required
                     />
                   </div>
@@ -593,11 +673,10 @@ export default function Dashboard() {
                       name="correo"
                       value={datosEdicion.correo}
                       onChange={handleChangeEdicion}
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                       required
                     />
                   </div>
@@ -607,7 +686,7 @@ export default function Dashboard() {
               {/* INFORMACIÓN DE CONTACTO */}
               <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
                 <h3 className="text-lg font-semibold mb-4 text-purple-600">Información de Contacto</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Teléfono Personal</label>
@@ -617,11 +696,10 @@ export default function Dashboard() {
                       value={datosEdicion.telefonoPersonal}
                       onChange={handleChangeEdicion}
                       placeholder="+56 9 1234 5678"
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                     />
                   </div>
 
@@ -633,11 +711,10 @@ export default function Dashboard() {
                       value={datosEdicion.correoPersonal}
                       onChange={handleChangeEdicion}
                       placeholder="ejemplo@gmail.com"
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                     />
                   </div>
                 </div>
@@ -649,7 +726,7 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   Deja estos campos vacíos si no deseas cambiar tu contraseña
                 </p>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Contraseña Actual</label>
@@ -658,11 +735,10 @@ export default function Dashboard() {
                       name="passwordActual"
                       value={datosEdicion.passwordActual}
                       onChange={handleChangeEdicion}
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                     />
                   </div>
 
@@ -674,11 +750,10 @@ export default function Dashboard() {
                       value={datosEdicion.passwordNueva}
                       onChange={handleChangeEdicion}
                       placeholder="Mínimo 6 caracteres"
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                     />
                   </div>
 
@@ -690,11 +765,10 @@ export default function Dashboard() {
                       value={datosEdicion.passwordConfirmar}
                       onChange={handleChangeEdicion}
                       placeholder="Repite la nueva contraseña"
-                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
                     />
                   </div>
                 </div>
@@ -703,11 +777,10 @@ export default function Dashboard() {
               {/* MENSAJES DE ÉXITO/ERROR */}
               {mensajeEdicion.texto && (
                 <div
-                  className={`p-4 rounded-xl ${
-                    mensajeEdicion.tipo === "success"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                  }`}
+                  className={`p-4 rounded-xl ${mensajeEdicion.tipo === "success"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                    }`}
                 >
                   {mensajeEdicion.texto}
                 </div>
@@ -739,6 +812,6 @@ export default function Dashboard() {
 
       {/* Botón flotante de modo oscuro */}
       <ModoOscuro />
-    </div>
+    </div >
   );
 }
