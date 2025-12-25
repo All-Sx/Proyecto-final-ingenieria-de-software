@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import { handleErrorClient } from "../handlers/responsehandlers.js";
+import { JWT_SECRET } from "../config/configenv.js";
 
 export function authMiddleware(req, res, next) {
-    const authHeader = req.headers["authorization"];
+    const authHeader = req.headers["authorization"] || req.headers["Authorization"];
 
     if (!authHeader) {
         return handleErrorClient(res, 401, "Acceso denegado. No se proporcionó token.");
@@ -15,7 +16,7 @@ export function authMiddleware(req, res, next) {
     }
 
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const payload = jwt.verify(token, JWT_SECRET);
         req.user = payload;
         next();
     } catch (error) {

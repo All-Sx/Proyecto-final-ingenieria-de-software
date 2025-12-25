@@ -1,19 +1,14 @@
 import { Router } from "express";
 import authRoutes from "./auth.routes.js";
-import profileRoutes from "./profile.routes.js";
-import alumnoRoutes from "./alumnos.routes.js";
-import electivoRoutes from "./electivo.routes.js";
-import router from "./auth.routes.js";
+
+
 
 export function routerApi(app) {
     const router = Router();
+    
+    // Aquí defines la URL base, ej: http://localhost:3000/api
     app.use("/api", router);
 
-    router.use("/auth", authRoutes);
-    router.use("/profile", profileRoutes);
-    router.use("/alumno", alumnoRoutes);
-    router.use("/electivos", electivoRoutes);
+    // Rutas hijas
+    router.use("/auth", authRoutes);      // /api/auth
 }
-
-
-export default router;
