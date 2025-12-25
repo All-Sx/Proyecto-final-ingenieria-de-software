@@ -1,6 +1,6 @@
 import { Router } from "express";
 import authRoutes from "./auth.routes.js";
-
+import electivoRoutes from "./electivo.routes.js";
 
 
 export function routerApi(app) {
@@ -11,4 +11,5 @@ export function routerApi(app) {
 
     // Rutas hijas
     router.use("/auth", authRoutes);      // /api/auth
+    router.use("/electivos", electivoRoutes); // /api/electivos
 }

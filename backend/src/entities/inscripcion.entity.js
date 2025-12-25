@@ -15,10 +15,10 @@ export const CupoPorCarrera = new EntitySchema({
     },
   },
   relations: {
-    seccion: {
-      target: "Seccion",
+    electivo: {
+      target: "Electivo",
       type: "many-to-one",
-      joinColumn: { name: "seccion_id" },
+      joinColumn: { name: "electivo_id" },
       onDelete: "CASCADE",
     },
     carrera: {
@@ -59,10 +59,10 @@ export const SolicitudInscripcion = new EntitySchema({
       joinColumn: { name: "alumno_id" },
       nullable: false,
     },
-    seccion: {
-      target: "Seccion",
+    electivo: {
+      target: "Electivo",
       type: "many-to-one",
-      joinColumn: { name: "seccion_id" },
+      joinColumn: { name: "electivo_id" },
       nullable: false,
     },
   },

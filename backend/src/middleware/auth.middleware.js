@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { handleErrorClient } from "../handlers/responsehandlers.js";
+import { handleErrorClient } from "../handlers/response.handlers.js";
 import { JWT_SECRET } from "../config/configenv.js";
 
 export function authMiddleware(req, res, next) {
