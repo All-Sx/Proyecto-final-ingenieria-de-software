@@ -9,19 +9,16 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const usuarioRepository = AppDataSource.getRepository(Usuario);
 
-    // 1. Verificar que el electivo exista
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
         return { error: "El electivo no existe." };
     }
 
-    // 2. Verificar que el alumno exista (por seguridad)
     const alumno = await usuarioRepository.findOneBy({ id: alumnoId });
     if (!alumno) {
         return { error: "Alumno no encontrado." };
     }
 
-    // 3. Verificar si ya existe una solicitud de este alumno para este electivo
     const solicitudExistente = await solicitudRepository.findOne({
         where: {
             alumno: { id: alumnoId },
@@ -33,12 +30,10 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: "Ya tienes una solicitud pendiente o aceptada para este electivo." };
     }
 
-    // 4. Crear la solicitud
-    // Nota: El estado se pone automáticamente en 'PENDIENTE' por la BD
     const nuevaSolicitud = solicitudRepository.create({
         alumno: alumno,
         electivo: electivo,
-        prioridad: prioridad || 1, // Si no envía prioridad, asumimos 1
+        prioridad: prioridad || 1, 
         fecha_solicitud: new Date()
     });
 
@@ -57,11 +52,11 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
 
     const solicitudes = await solicitudRepository.find({
       where: {
-        alumno: { id: alumnoId } // Filtramos por el alumno logueado
+        alumno: { id: alumnoId } 
       },
-      relations: ["electivo"], // ¡Importante! Para ver los datos del ramo
+      relations: ["electivo"], 
       order: {
-        fecha_solicitud: "DESC" // Las más recientes primero
+        fecha_solicitud: "DESC" 
       }
     });
 

@@ -75,7 +75,7 @@ export const register = async (req, res) => {
 
     const { rut, nombre_completo, email, password, rol_id } = req.body;
 
-    // Validación básica
+    
     if (!rut || !nombre_completo || !email || !password) {
       return res.status(400).json({ 
         message: "Faltan datos requeridos (rut, nombre, email, password)" 
@@ -97,7 +97,6 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // Buscar el rol (si se proporciona rol_id, úsalo; si no, usa "Alumno" por defecto)
     let rol;
     if (rol_id) {
       rol = await rolRepository.findOneBy({ id: rol_id });
@@ -133,7 +132,7 @@ export const register = async (req, res) => {
         rut:  newUser.rut,
         nombre: newUser.nombre_completo,
         email: newUser.email,
-        rol: newUser.rol.nombre  //Ahora mostrará el rol correcto
+        rol: newUser.rol.nombre  
       }
     });
 
