@@ -5,16 +5,16 @@ import { isAdmin } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-// POST /api/inscripciones
+
 router.post("/", 
     authMiddleware,
-    isAdmin(["Alumno"]), // Solo los alumnos pueden inscribir ramos
+    isAdmin(["Alumno"]), 
     createSolicitud
 );
 
 router.get("/solicitudes", 
     authMiddleware,
-    isAdmin(["Alumno"]), // Solo alumnos
+    isAdmin(["Alumno"]), 
     getMisSolicitudes
 );
 

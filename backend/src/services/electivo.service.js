@@ -1,15 +1,12 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js"; 
 import { PeriodoAcademico } from "../entities/academico.entity.js";
-import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 
-// Ahora recibimos también el nombre del profesor que crea el electivo
 export async function createElectivoService(data, nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
-    // Validar que exista un periodo en estado INSCRIPCION
     const periodoActivo = await periodoRepository.findOne({
       where: { estado: "INSCRIPCION" }
     });
@@ -18,7 +15,6 @@ export async function createElectivoService(data, nombreProfesor) {
       return { error: "No hay un periodo de inscripción activo. Debe crear o activar un periodo primero." };
     }
 
-    // Validar que estamos dentro de las fechas del periodo
     const ahora = new Date();
     const fechaInicio = new Date(periodoActivo.fecha_inicio);
     const fechaFin = new Date(periodoActivo.fecha_fin);
@@ -31,22 +27,18 @@ export async function createElectivoService(data, nombreProfesor) {
       return { error: `El periodo de inscripción ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
     }
 
-    //validar si el nombre ya existe
     const electivoExist = await electivoRepository.findOneBy({ nombre: data.nombre });
     if (electivoExist) {
-      return { error: "Ya existe un electivo con ese nombre." };
+        return { error: "Ya existe un electivo con ese nombre." };
     }
 
-    // Crear el electivo
-    // Importante: El estado siempre se fuerza a "PENDIENTE" sin importar lo que venga en data
-    // Esto asegura que todos los electivos necesiten aprobación del jefe de carrera
     const nuevoElectivo = electivoRepository.create({
-      nombre: data.nombre,
-      descripcion: data.descripcion,
-      creditos: data.creditos || 5, // Usar 5 por defecto si no envia nada es lo creditos minimos de la malla
-      cupos: data.cupos,
-      estado: "PENDIENTE", // Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
-      nombre_profesor: nombreProfesor // Guardamos quién creó este electivo
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        creditos: data.creditos || 5, 
+        cupos: data.cupos,
+        estado: "PENDIENTE", 
+        nombre_profesor: nombreProfesor 
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
@@ -61,7 +53,7 @@ export async function createElectivoService(data, nombreProfesor) {
 export async function getElectivosService() {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
-
+    
     const electivos = await electivoRepository.find();
 
     return { data: electivos };
@@ -71,15 +63,12 @@ export async function getElectivosService() {
   }
 }
 
-// Obtener solo los electivos creados por un profesor específico
-// Esto filtra por el campo nombre_profesor que agregamos
 export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
-
-    // Buscar todos los electivos donde nombre_profesor coincida
+    
     const electivos = await electivoRepository.find({
-      where: { nombre_profesor: nombreProfesor } // Filtro: solo los del profesor
+      where: { nombre_profesor: nombreProfesor } 
     });
 
     return { data: electivos };
@@ -93,18 +82,16 @@ export async function updateElectivoService(id, data) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
 
-    // 1. Buscar si el electivo existe
     const electivo = await electivoRepository.findOneBy({ id: id });
 
     if (!electivo) {
       return { error: "Electivo no encontrado" };
     }
 
-    // 2. Actualizar los campos que vengan en 'data'
-    // Esto mezcla los datos antiguos con los nuevos
+    
     electivoRepository.merge(electivo, data);
 
-    // 3. Guardar cambios
+    
     const electivoActualizado = await electivoRepository.save(electivo);
 
     return { data: electivoActualizado };
@@ -112,35 +99,5 @@ export async function updateElectivoService(id, data) {
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
     return { error: "Error interno al actualizar el electivo." };
-  }
-}
-
-export async function getElectivosAprovadosService() {
-  try {
-    //Establecer la fecha actual
-    const ahora = new Date();
-
-    const periodos = AppDataSource.getRepository(PeriodoAcademico);
-
-    const periodoActual = await periodos.findOne({
-      where: {
-        fecha_fin: MoreThanOrEqual(ahora),        //Fecha anterior a hoy
-        fecha_inicio: LessThanOrEqual(ahora),     //Fecha despues de hoy
-        estado: "INSCRIPCION"                     //Y que sea periodo de inscripcion
-      }
-    })
-
-    if (!periodoActual) return { error: "No existe periodo en inscripcion de asignaturas" };
-
-    const electivoRepository = AppDataSource.getRepository(Electivo);
-
-    const aprobados = await electivoRepository.find({
-      where: { estado: 'APROBADO' }
-    });
-
-    return { data: aprobados };
-  } catch (error) {
-    console.error("Error al obtener electivos aprobados: ", error);
-    return { error: "Error interno al listar los electivos." };
   }
 }

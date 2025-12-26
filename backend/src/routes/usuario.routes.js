@@ -6,26 +6,24 @@ import { deleteUsuarioDeAlumnoByRut } from "../controllers/jefeCarrera.controlle
 
 const router = Router();
 
-// POST /api/users/create
+
 router.post("/create",
-    authMiddleware,               // 1. Token válido
-    isAdmin(["Jefe de Carrera"]), // 2. Solo Jefe de Carrera
-    createUserAdmin               // 3. Crear usuario
+    authMiddleware,               
+    isAdmin(["Jefe de Carrera"]), 
+    createUserAdmin               
 );
 router.delete("/delete/alumno",
-    authMiddleware,               // Con estas lineas da error
-    isAdmin(["Jefe de Carrera"]), // Pero sin ellas se elimina con exito
+    authMiddleware,               
+    isAdmin(["Jefe de Carrera"]), 
     deleteUsuarioDeAlumnoByRut
 );
 
-// GET /api/usuarios/alumnos - Obtener todos los alumnos
 router.get("/alumnos",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
     getAlumnos
 );
 
-// GET /api/usuarios/profesores - Obtener todos los profesores
 router.get("/profesores",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
