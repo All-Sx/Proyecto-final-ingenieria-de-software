@@ -3,10 +3,23 @@ import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
   try {
-    const { nombre, descripcion, creditos, cupos } = req.body;
+    // 1. Extraer datos del cuerpo de la petición
+    const { nombre, descripcion, creditos, cupos, estado } = req.body;
 
+    // 2. Validar campos obligatorios
     if (!nombre || !cupos) {
       return handleErrorClient(res, 400, "Nombre y cupos del electivo son obligatorios.");
+    }
+
+    // 3. Normalizar el estado a mayúsculas si existe
+    // Esto permite que envíen "pendiente", "Pendiente" o "PENDIENTE"
+    const estadoNormalizado = estado ? estado.toUpperCase() : undefined;
+
+    // 4. Validar que no intenten enviar estados no permitidos
+    // Los profesores solo pueden crear electivos en estado PENDIENTE (o no enviar estado)
+    // No pueden crear directamente como APROBADO o RECHAZADO
+    if (estadoNormalizado && estadoNormalizado !== "PENDIENTE") {
+      return handleErrorClient(res, 400, "Solo puedes crear electivos en estado PENDIENTE. Los estados APROBADO y RECHAZADO solo pueden ser asignados por el Jefe de Carrera.");
     }
 
     const result = await createElectivoService({ nombre, descripcion, creditos, cupos });

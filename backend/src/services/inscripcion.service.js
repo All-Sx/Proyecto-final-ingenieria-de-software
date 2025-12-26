@@ -1,4 +1,3 @@
-
 import { AppDataSource } from "../config/configdb.js";
 import { SolicitudInscripcion } from "../entities/inscripcion.entity.js";
 import { Electivo } from "../entities/oferta.entity.js";

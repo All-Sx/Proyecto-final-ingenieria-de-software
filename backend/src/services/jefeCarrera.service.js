@@ -1,6 +1,6 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Usuario } from "../entities/usuarios.entity.js";
-import { Rol } from "../entities/rol.entity.js";
+import { Usuario } from "../entities/usuarios.entity.js"; // Asegúrate de la ruta correcta
+import { Rol } from "../entities/rol.entity.js";         // Asegúrate de la ruta correcta
 import bcrypt from "bcrypt";
 
 const usuarioRepository = AppDataSource.getRepository(Usuario);
@@ -40,7 +40,7 @@ export async function createJefeCarreraService(data) {
     // 5. Guardar y retornar (sin devolver la password)
     const savedUser = await usuarioRepository.save(newJefe);
     const { password_hash, ...userWithoutPassword } = savedUser;
-    
+
     return userWithoutPassword;
 }
 
@@ -64,10 +64,20 @@ export async function findAllJefesService() {
 
 export async function findJefeByRutService(rut) {
     return await usuarioRepository.findOne({
-        where: { 
+        where: {
             rut: rut,
             rol: { nombre: "Jefe de Carrera" } // Aseguramos que sea Jefe, no alumno
         },
         relations: ["rol"]
     });
+}
+
+export async function deleteUsuarioDeAlumnoByRutService(rut) {
+
+    const existingUser = await usuarioRepository.findOneBy({ rut: rut, rol: 3 });
+
+    if (!existingUser) throw new Error("No existe alumno con ese RUT.");
+
+    return await usuarioRepository.remove(existingUser);
+
 }

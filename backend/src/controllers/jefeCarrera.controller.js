@@ -1,6 +1,6 @@
-import { createJefeCarreraService, findAllJefesService, findJefeByRutService } from "../services/jefeCarrera.service.js";
+import { createJefeCarreraService, deleteUsuarioDeAlumnoByRutService, findAllJefesService, findJefeByRutService } from "../services/jefeCarrera.service.js";
 
-import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js"; 
+import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js";
 
 export async function createJefeCarrera(req, res) {
     try {
@@ -43,7 +43,7 @@ export async function getJefesCarrera(req, res) {
 
 export async function getJefeByRut(req, res) {
     try {
-        const { rut } = req.params; 
+        const { rut } = req.params;
 
         if (!rut) {
             return handleErrorClient(res, 400, "El RUT es obligatorio");
@@ -55,12 +55,32 @@ export async function getJefeByRut(req, res) {
             return handleErrorClient(res, 404, "Jefe de Carrera no encontrado", { rut_buscado: rut });
         }
 
-        
+
         const { password_hash, ...safeData } = jefe;
 
         handleSuccess(res, 200, "Jefe de Carrera encontrado", safeData);
 
     } catch (error) {
         handleErrorServer(res, 500, "Error al buscar Jefe de Carrera", error.message);
+    }
+}
+
+export async function deleteUsuarioDeAlumnoByRut(req, res) {
+    try {
+        const data = req.body;
+        if (!data.rut) {
+            return handleErrorClient(res, 400, "Faltan datos obligatorios rut");
+        }
+
+        const borrar = await deleteUsuarioDeAlumnoByRutService(data.rut);
+
+        handleSuccess(res, 200, "Alumno eliminado.", borrar)
+
+    } catch (error) {
+        if (error.message.includes("No existe")) {
+            handleErrorClient(res, 409, "Error al eliminar alumno", { reason: error.message });
+        } else {
+            handleErrorServer(res, 500, "Error interno al eliminar alumno", error.message);
+        }
     }
 }
