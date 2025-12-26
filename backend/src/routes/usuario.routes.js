@@ -1,8 +1,11 @@
 import { Router } from "express";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { createUserAdmin } from "../controllers/usuario.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js"; 
 =======
+=======
+>>>>>>> Stashed changes
 import { createUserAdmin, getAlumnos, getProfesores } from "../controllers/usuario.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 >>>>>>> Stashed changes
@@ -17,7 +20,10 @@ router.post("/create",
     createUserAdmin               // 3. Crear usuario
 );
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 
 // GET /api/usuarios/alumnos - Obtener todos los alumnos
 router.get("/alumnos",
