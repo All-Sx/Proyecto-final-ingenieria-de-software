@@ -33,7 +33,7 @@ export const Alumno = new EntitySchema({
             target: "Carrera",
             type: "many-to-one",
             joinColumn: { name: "carrera_id" },
-            nullable: false,
+            nullable: true,
             onDelete: "CASCADE",
         },
     },

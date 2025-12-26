@@ -58,8 +58,8 @@ export async function getAlumnosService() {
 
     const alumnos = await userRepository.find({
       where: { rol: { id: rolAlumno.id } },
-      relations: ["rol"],
-      select: ["id", "rut", "nombre_completo", "email", "activo", "created_at"]
+      relations: ["rol", "alumno", "alumno.carrera"],
+      select: ["id", "rut", "nombre_completo", "email", "activo"]
     });
 
     return { data: alumnos };
