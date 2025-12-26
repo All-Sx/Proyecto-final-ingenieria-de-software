@@ -27,3 +27,42 @@ export async function createElectivoService(data) {
     return { error: "Error interno al crear el electivo." };
   }
 }
+
+export async function getElectivosService() {
+  try {
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+    
+    const electivos = await electivoRepository.find();
+
+    return { data: electivos };
+  } catch (error) {
+    console.error("Error al obtener electivos:", error);
+    return { error: "Error interno al listar los electivos." };
+  }
+}
+
+export async function updateElectivoService(id, data) {
+  try {
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+
+    // 1. Buscar si el electivo existe
+    const electivo = await electivoRepository.findOneBy({ id: id });
+
+    if (!electivo) {
+      return { error: "Electivo no encontrado" };
+    }
+
+    // 2. Actualizar los campos que vengan en 'data'
+    // Esto mezcla los datos antiguos con los nuevos
+    electivoRepository.merge(electivo, data);
+
+    // 3. Guardar cambios
+    const electivoActualizado = await electivoRepository.save(electivo);
+
+    return { data: electivoActualizado };
+
+  } catch (error) {
+    console.error("Error al actualizar electivo:", error);
+    return { error: "Error interno al actualizar el electivo." };
+  }
+}
