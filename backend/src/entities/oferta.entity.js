@@ -33,6 +33,13 @@ export const Electivo = new EntitySchema({
         enum: ["PENDIENTE", "APROBADO", "RECHAZADO"],
         default: "PENDIENTE",
     },
+    // NUEVO: Campo para guardar el nombre del profesor que creó el electivo
+    // Esto nos permite saber quién creó cada electivo y filtrarlo después
+    nombre_profesor: {
+        type: "varchar",      // Tipo texto con longitud máxima
+        length: 150,          // Máximo 150 caracteres
+        nullable: false       // OBLIGATORIO: siempre debe tener el nombre del profesor
+    },
     created_at: { 
         type: "timestamp", 
         createDate: true 
