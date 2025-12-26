@@ -1,6 +1,5 @@
 import { AppDataSource } from "../config/configdb.js";
 import { PeriodoAcademico } from "../entities/academico.entity.js";
-import { parseDateFromDDMMYYYY, formatPeriodoResponse } from "../helpers/dateFormat.helpers.js";
 
 const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
@@ -15,25 +14,20 @@ export async function createPeriodoService(data) {
         throw new Error("Ya existe un periodo académico con ese nombre.");
     }
 
-    // Parsear fechas del formato dd-mm-aaaa
-    const parsedFechaInicio = parseDateFromDDMMYYYY(fecha_inicio);
-    const parsedFechaFin = parseDateFromDDMMYYYY(fecha_fin);
-
     // Validar que la fecha de inicio sea anterior a la fecha de fin
-    if (parsedFechaInicio >= parsedFechaFin) {
+    if (new Date(fecha_inicio) >= new Date(fecha_fin)) {
         throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
     }
 
     // Crear el nuevo periodo
     const nuevoPeriodo = periodoRepository.create({
         nombre,
-        fecha_inicio: parsedFechaInicio,
-        fecha_fin: parsedFechaFin,
+        fecha_inicio: new Date(fecha_inicio),
+        fecha_fin: new Date(fecha_fin),
         estado: estado || "PLANIFICACION"
     });
 
-    const savedPeriodo = await periodoRepository.save(nuevoPeriodo);
-    return formatPeriodoResponse(savedPeriodo);
+    return await periodoRepository.save(nuevoPeriodo);
 }
 
 // Actualizar fechas de un periodo existente
@@ -46,47 +40,39 @@ export async function updatePeriodoFechasService(id, data) {
 
     const { fecha_inicio, fecha_fin, estado } = data;
 
-    // Parsear fechas si se proporcionan
-    const parsedFechaInicio = fecha_inicio ? parseDateFromDDMMYYYY(fecha_inicio) : null;
-    const parsedFechaFin = fecha_fin ? parseDateFromDDMMYYYY(fecha_fin) : null;
-
     // Validar que la fecha de inicio sea anterior a la fecha de fin
-    if (parsedFechaInicio && parsedFechaFin) {
-        if (parsedFechaInicio >= parsedFechaFin) {
+    if (fecha_inicio && fecha_fin) {
+        if (new Date(fecha_inicio) >= new Date(fecha_fin)) {
             throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
         }
     }
 
     // Actualizar solo los campos proporcionados
-    if (parsedFechaInicio) periodo.fecha_inicio = parsedFechaInicio;
-    if (parsedFechaFin) periodo.fecha_fin = parsedFechaFin;
+    if (fecha_inicio) periodo.fecha_inicio = new Date(fecha_inicio);
+    if (fecha_fin) periodo.fecha_fin = new Date(fecha_fin);
     if (estado) periodo.estado = estado;
 
-    const savedPeriodo = await periodoRepository.save(periodo);
-    return formatPeriodoResponse(savedPeriodo);
+    return await periodoRepository.save(periodo);
 }
 
 // Obtener todos los periodos académicos
 export async function getAllPeriodosService() {
-    const periodos = await periodoRepository.find({
+    return await periodoRepository.find({
         order: { fecha_inicio: "DESC" }
     });
-    return periodos.map(formatPeriodoResponse);
 }
 
 // Obtener un periodo por ID
 export async function getPeriodoByIdService(id) {
-    const periodo = await periodoRepository.findOneBy({ id });
-    return formatPeriodoResponse(periodo);
+    return await periodoRepository.findOneBy({ id });
 }
 
 // Obtener el periodo actual (en estado INSCRIPCION)
 export async function getPeriodoActualService() {
-    const periodo = await periodoRepository.findOne({
+    return await periodoRepository.findOne({
         where: { estado: "INSCRIPCION" },
         order: { fecha_inicio: "DESC" }
     });
-    return formatPeriodoResponse(periodo);
 }
 
 // Cambiar el estado de un periodo
@@ -103,6 +89,5 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
     }
 
     periodo.estado = nuevoEstado;
-    const savedPeriodo = await periodoRepository.save(periodo);
-    return formatPeriodoResponse(savedPeriodo);
+    return await periodoRepository.save(periodo);
 }
