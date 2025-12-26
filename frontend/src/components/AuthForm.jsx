@@ -4,129 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
-
-const normalizarTexto = (texto) =>
-  texto.trim().toLowerCase().split(/\s+/);
-
-const quitarTildes = (texto) =>
-  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-const validarNombresOApellidos = (valor, tipo) => {
-  if (!valor.trim()) {
-    return `Debes ingresar tus ${tipo}.`;
-  }
-
-  const palabras = normalizarTexto(valor);
-
-  if (palabras.length < 2) {
-    return `Ingresa todos tus ${tipo}.`;
-  }
-
-  const regex = /^[a-záéíóúñ]+$/;
-
-  for (const palabra of palabras) {
-    if (!regex.test(palabra)) {
-      return `Los ${tipo} no pueden contener números ni caracteres especiales.`;
-    }
-  }
-
-  return null;
-};
-
-const validarRut = (rut) => {
-  if (!rut.trim()) {
-    return "Debes ingresar tu RUT.";
-  }
-
-  const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dk]$/;
-
-  if (!regex.test(rut)) {
-    return "El RUT debe tener el formato XX.XXX.XXX-X";
-  }
-
-  return null;
-};
-
-const validarCorreoEstudiante = (email, nombres, apellidos) => {
-  const regex =
-    /^([a-z]+)\.([a-z]+)(\d{2})0([12])@alumnos\.ubiobio\.cl$/;
-
-  const match = email.match(regex);
-
-  if (!match) {
-    return {
-      valid: false,
-      error:
-        "Formato inválido",
-    };
-  }
-
-  const nombreEmail = match[1];
-  const apellidoEmail = match[2];
-  const anioIngreso = parseInt(match[3], 10);
-  const semestre = match[4];
-  const anioActual = new Date().getFullYear() % 100;
-
-  if (anioIngreso > anioActual) {
-    return {
-      valid: false,
-      error: "El año de ingreso no puede ser mayor al año actual.",
-    };
-  }
-
-  if (semestre !== "1" && semestre !== "2") {
-    return {
-      valid: false,
-      error: "El semestre debe ser 1 o 2.",
-    };
-  }
-
-  const nombresArray = normalizarTexto(nombres);
-  const apellidosArray = normalizarTexto(apellidos);
-
-  if (
-    quitarTildes(nombreEmail) !==
-    quitarTildes(nombresArray[0])
-  ) {
-    return {
-      valid: false,
-      error:
-        "El nombre del correo no coincide con tu primer nombre.",
-    };
-  }
-
-  if (
-    quitarTildes(apellidoEmail) !==
-    quitarTildes(apellidosArray[0])
-  ) {
-    return {
-      valid: false,
-      error:
-        "El apellido del correo no coincide con tu primer apellido.",
-    };
-  }
-
-  return { valid: true };
-};
-
-const validarPassword = (password) => {
-  if (!password) {
-    return "Debes ingresar una contraseña.";
-  }
-
-  if (password.length < 8) {
-    return "La contraseña debe tener al menos 8 caracteres.";
-  }
-
-  const tieneLetra = /[a-zA-Z]/.test(password);
-  const tieneNumero = /\d/.test(password);
-
-  if (!tieneLetra || !tieneNumero) {
-    return "La contraseña debe contener letras y números.";
-  }
-
-  return null;
-};
+import {
+  validarNombresOApellidos,
+  validarRut,
+  validarPassword,
+  validarCorreoEstudiante,
+} from "../helpers/validators";
 
 const initialFormData = {
   nombres: "",
@@ -171,13 +54,11 @@ export default function AuthForm() {
 
     try {
       if (isRegister) {
-        // 🔎 Validaciones locales (las tuyas)
+        const errorNombres = validarNombresOApellidos(formData.nombres, "nombres");
         if (errorNombres) return setError(errorNombres);
-        if (errorApellidos) return setError(errorApellidos);
 
-        if (!formData.rut || !formData.password) {
-          return setError("Por favor, completa todos los campos requeridos.");
-        }
+        const errorApellidos = validarNombresOApellidos(formData.apellidos, "apellidos");
+        if (errorApellidos) return setError(errorApellidos);
 
         const errorRut = validarRut(formData.rut);
         if (errorRut) return setError(errorRut);
@@ -231,42 +112,6 @@ export default function AuthForm() {
     const value = e.target.value.toLowerCase();
     setFormData({ ...formData, rut: value });
     setError("");
-  };
-
-  const handleDemoLogin = (role) => {
-    let user;
-
-    // Verificar el rol y crear el objeto de usuario correspondiente
-    if (role === "profesor") {
-      user = {
-        nombre: "Profesor Demo",
-        correo: "profesor.demo@ubiobio.cl",
-        rol: "profesor",
-        tipo: "Profesor"
-      };
-    } else if (role === "estudiante") {
-      user = {
-        nombre: "Estudiante Demo",
-        correo: "estudiante.demo@alumnos.ubiobio.cl",
-        rol: "estudiante",
-        tipo: "Estudiante"
-      };
-    } else if (role === "jefe") {
-      // Caso específico para el Jefe de Carrera
-      user = {
-        nombre: "Jefe de Carrera",
-        correo: "jefe.carrera@ubiobio.cl",
-        rol: "jefe",  // Identificador único para el jefe
-        tipo: "Jefe de Carrera"
-      };
-    }
-
-    // GUARDAR usuario en localStorage para persistencia entre páginas
-    // Convertimos el objeto a string JSON para almacenarlo
-    localStorage.setItem("user", JSON.stringify(user));
-
-    // Navegar al dashboard y pasar el usuario también por state (método alternativo)
-    navigate("/dashboard", { state: { user } });
   };
 
   return (
@@ -400,42 +245,6 @@ export default function AuthForm() {
             </button>
           </p>
         </form>
-
-        {/* Botones temporales para acceso sin registro */}
-        <div className="mt-6 border-t pt-4 text-center">
-          <p className="text-sm text-gray-500 mb-3">Modo demostración:</p>
-
-          <div className="flex flex-col gap-3">
-            {/* Botón para login demo como PROFESOR */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("profesor")}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Profesor (Demo)
-            </button>
-
-            {/* Botón para login demo como ESTUDIANTE */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("estudiante")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Estudiante (Demo)
-            </button>
-
-            {/* Botón para login demo como JEFE DE CARRERA */}
-            {/* Este botón usa color púrpura para diferenciarlo de los otros roles */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("jefe")}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Jefe de Carrera (Demo)
-            </button>
-          </div>
-        </div>
-
       </motion.div>
     </div>
   );
