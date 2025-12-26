@@ -36,8 +36,8 @@ export const Usuario = new EntitySchema({
         default: true 
     },
     created_at: { 
-        type: "timestamp"
-        , createDate: true 
+        type: "timestamp",
+         createDate: true 
     },
     updated_at: { 
         type: "timestamp", 
