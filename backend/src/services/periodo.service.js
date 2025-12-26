@@ -59,6 +59,14 @@ export async function createPeriodoService(data) {
         throw new Error("Ya existe un periodo académico con ese nombre.");
     }
 
+    // Validar que no exista otro periodo en estado INSCRIPCION si se está creando uno con ese estado
+    if (estado === "INSCRIPCION") {
+        const periodoInscripcionActivo = await periodoRepository.findOneBy({ estado: "INSCRIPCION" });
+        if (periodoInscripcionActivo) {
+            throw new Error("Ya existe un periodo en estado de inscripción activo. Solo puede haber un periodo de inscripción a la vez.");
+        }
+    }
+
     // Parsear fechas del formato dd-mm-aaaa
     const parsedFechaInicio = parseDateFromDDMMYYYY(fecha_inicio);
     const parsedFechaFin = parseDateFromDDMMYYYY(fecha_fin);
@@ -146,7 +154,29 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
         throw new Error("Estado no válido.");
     }
 
+    // Validar que no exista otro periodo en estado INSCRIPCION al cambiar a ese estado
+    if (nuevoEstado === "INSCRIPCION") {
+        const periodoInscripcionActivo = await periodoRepository.findOne({
+            where: { estado: "INSCRIPCION" }
+        });
+        if (periodoInscripcionActivo && periodoInscripcionActivo.id !== periodo.id) {
+            throw new Error("Ya existe un periodo en estado de inscripción activo. Debe cerrar o cambiar el estado del periodo actual antes de activar otro.");
+        }
+    }
+
     periodo.estado = nuevoEstado;
     const savedPeriodo = await periodoRepository.save(periodo);
     return formatPeriodoResponse(savedPeriodo);
+}
+
+// Eliminar un periodo académico
+export async function deletePeriodoService(id) {
+    const periodo = await periodoRepository.findOneBy({ id });
+
+    if (!periodo) {
+        throw new Error("Periodo académico no encontrado.");
+    }
+
+    await periodoRepository.remove(periodo);
+    return formatPeriodoResponse(periodo);
 }

@@ -4,7 +4,8 @@ import {
     getAllPeriodosService,
     getPeriodoByIdService,
     getPeriodoActualService,
-    updateEstadoPeriodoService
+    updateEstadoPeriodoService,
+    deletePeriodoService
 } from "../services/periodo.service.js";
 
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js";
@@ -132,6 +133,23 @@ export async function updateEstadoPeriodo(req, res) {
             handleErrorClient(res, 404, error.message);
         } else {
             handleErrorServer(res, 500, "Error al actualizar el estado", error.message);
+        }
+    }
+}
+
+export async function deletePeriodo(req, res) {
+    try {
+        const { id } = req.params;
+
+        const periodoEliminado = await deletePeriodoService(id);
+
+        handleSuccess(res, 200, "Periodo académico eliminado exitosamente", periodoEliminado);
+
+    } catch (error) {
+        if (error.message.includes("no encontrado")) {
+            handleErrorClient(res, 404, error.message);
+        } else {
+            handleErrorServer(res, 500, "Error al eliminar el periodo", error.message);
         }
     }
 }
