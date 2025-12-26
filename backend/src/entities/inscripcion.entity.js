@@ -54,7 +54,7 @@ export const SolicitudInscripcion = new EntitySchema({
   },
   relations: {
     alumno: {
-      target: "Alumno",
+      target: "Usuario",
       type: "many-to-one",
       joinColumn: { name: "alumno_id" },
       nullable: false,
