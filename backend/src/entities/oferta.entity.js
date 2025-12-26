@@ -28,6 +28,14 @@ export const Electivo = new EntitySchema({
         type: "int", 
         nullable: false 
     },
+    // Estado del electivo: solo "Aprobado" o "Rechazado"
+    // El jefe de carrera debe decidir inmediatamente
+    estado: {
+        type: "enum",
+        enum: ["Aprobado", "Rechazado"],
+        nullable: true, // null = aún no revisado (pendiente)
+        default: null
+    },
     created_at: { 
         type: "timestamp", 
         createDate: true 

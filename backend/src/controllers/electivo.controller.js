@@ -1,4 +1,9 @@
-import { createElectivoService, getAllElectivosService } from "../services/electivo.service.js";
+import { 
+  createElectivoService, 
+  getAllElectivosService,
+  aprobarElectivoService,
+  rechazarElectivoService 
+} from "../services/electivo.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
@@ -28,7 +33,7 @@ export const createElectivo = async (req, res) => {
   }
 };
 
-// === NUEVA FUNCIÓN: Obtener lista de electivos ===
+//  Obtener lista de electivos
 export const getElectivos = async (req, res) => {
   try {
     const result = await getAllElectivosService();
@@ -39,6 +44,50 @@ export const getElectivos = async (req, res) => {
 
     return res.status(200).json({
       message: "Lista de electivos obtenida exitosamente",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+// Aprobar un electivo (Jefe de Carrera)
+export const aprobarElectivo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await aprobarElectivoService(parseInt(id));
+
+    if (result.error) {
+      const status = result.error.includes("no encontrado") ? 404 : 500;
+      return handleErrorClient(res, status, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Electivo aprobado exitosamente",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+// Rechazar un electivo (Jefe de Carrera)
+export const rechazarElectivo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await rechazarElectivoService(parseInt(id));
+
+    if (result.error) {
+      const status = result.error.includes("no encontrado") ? 404 : 500;
+      return handleErrorClient(res, status, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Electivo rechazado exitosamente",
       data: result.data
     });
 
