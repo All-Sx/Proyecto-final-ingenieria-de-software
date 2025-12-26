@@ -5,17 +5,17 @@ export async function createElectivoService(data) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
 
-    // 1. Validar si ya existe el nombre
+    //validar si el nombre ya existe
     const electivoExist = await electivoRepository.findOneBy({ nombre: data.nombre });
     if (electivoExist) {
         return { error: "Ya existe un electivo con ese nombre." };
     }
 
-    // 2. Crear el electivo
+    //crear el electivo
     const nuevoElectivo = electivoRepository.create({
         nombre: data.nombre,
         descripcion: data.descripcion,
-        creditos: data.creditos || 5, // Usamos 5 por defecto si no envían nada
+        creditos: data.creditos || 5, //usar 5 por defecto si no envia nada
         cupos: data.cupos
     });
 

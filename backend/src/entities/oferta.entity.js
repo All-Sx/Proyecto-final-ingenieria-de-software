@@ -28,6 +28,11 @@ export const Electivo = new EntitySchema({
         type: "int", 
         nullable: false 
     },
+    estado: {
+        type: "enum",
+        enum: ["PENDIENTE", "APROBADO", "RECHAZADO"],
+        default: "PENDIENTE",
+    },
     created_at: { 
         type: "timestamp", 
         createDate: true 
