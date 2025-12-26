@@ -1,9 +1,9 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js";
-import bcrypt from "bcryptjs"; //npm install bcryptjs
-import jwt from "jsonwebtoken"; //npm install jsonwebtoken
-import { JWT_SECRET } from "../config/configenv.js";
 import { Rol } from "../entities/rol.entity.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/configenv.js";
 
 export const login = async (req, res) => {
   try {
@@ -44,7 +44,8 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { 
         id: user.id, 
-        email: user.email, 
+        email: user.email,
+        nombre_completo: user.nombre_completo,  // Agregamos el nombre al token
         rol: user.rol.nombre 
       },
       JWT_SECRET,
@@ -71,7 +72,7 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    // ✅ Ahora recibimos también rol_id
+
     const { rut, nombre_completo, email, password, rol_id } = req.body;
 
     // Validación básica
@@ -96,7 +97,7 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // ✅ Buscar el rol (si se proporciona rol_id, úsalo; si no, usa "Alumno" por defecto)
+    // Buscar el rol (si se proporciona rol_id, úsalo; si no, usa "Alumno" por defecto)
     let rol;
     if (rol_id) {
       rol = await rolRepository.findOneBy({ id: rol_id });
@@ -119,20 +120,20 @@ export const register = async (req, res) => {
       nombre_completo,
       email,
       password_hash: passwordHash,
-      rol: rol,  // ✅ Ahora usa el rol que encontramos
+      rol: rol,  // Ahora usa el rol que encontramos
       activo: true
     });
 
     await userRepository.save(newUser);
 
-    // ✅ Responder con el rol correcto
+    // Responder con el rol correcto
     return res.status(201).json({
       message: `Usuario registrado exitosamente como ${rol.nombre}`,
       user: {
         rut:  newUser.rut,
         nombre: newUser.nombre_completo,
         email: newUser.email,
-        rol: newUser.rol.nombre  // ✅ Ahora mostrará el rol correcto
+        rol: newUser.rol.nombre  //Ahora mostrará el rol correcto
       }
     });
 
