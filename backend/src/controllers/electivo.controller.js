@@ -5,7 +5,6 @@ export const createElectivo = async (req, res) => {
   try {
     const { nombre, descripcion, creditos, cupos } = req.body;
 
-    // Validación simple
     if (!nombre || !cupos) {
       return handleErrorClient(res, 400, "Nombre y cupos del electivo son obligatorios.");
     }
@@ -13,7 +12,6 @@ export const createElectivo = async (req, res) => {
     const result = await createElectivoService({ nombre, descripcion, creditos, cupos });
 
     if (result.error) {
-      // Si dice "Ya existe", devolvemos 409 (Conflict), si no, 500
       const status = result.error.includes("Ya existe") ? 409 : 500;
       return handleErrorClient(res, status, result.error);
     }

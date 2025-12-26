@@ -36,8 +36,8 @@ export const Usuario = new EntitySchema({
         default: true 
     },
     created_at: { 
-        type: "timestamp"
-        , createDate: true 
+        type: "timestamp",
+         createDate: true 
     },
     updated_at: { 
         type: "timestamp", 
@@ -48,7 +48,7 @@ export const Usuario = new EntitySchema({
     rol: {
       target: "Rol",
       type: "many-to-one",
-      joinColumn: { name: "rol_id" }, // Nombre de la columna en BD
+      joinColumn: { name: "rol_id" }, 
       nullable: false,
     },
   },

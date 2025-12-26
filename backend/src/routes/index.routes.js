@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoutes from "./auth.routes.js";
 import electivoRoutes from "./electivo.routes.js";
+import periodoRoutes from "./periodo.routes.js";
 import userRoutes from "./usuario.routes.js";
 
 
@@ -13,5 +14,6 @@ export function routerApi(app) {
     // Rutas hijas
     router.use("/auth", authRoutes);      // /api/auth
     router.use("/electivos", electivoRoutes); // /api/electivos
+    router.use("/periodos", periodoRoutes); // /api/periodos
     router.use("/usuarios", userRoutes);     // /api/usuarios
 }
