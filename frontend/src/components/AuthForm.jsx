@@ -34,36 +34,36 @@ export default function AuthForm() {
    */
   const handleDemoLogin = (role) => {
     let user;
-    
+
     // Verificar el rol y crear el objeto de usuario correspondiente
     if (role === "profesor") {
-      user = { 
-        nombre: "Profesor Demo", 
+      user = {
+        nombre: "Profesor Demo",
         correo: "profesor.demo@ubiobio.cl",
         rol: "profesor",
         tipo: "Profesor"
       };
     } else if (role === "estudiante") {
-      user = { 
-        nombre: "Estudiante Demo", 
+      user = {
+        nombre: "Estudiante Demo",
         correo: "estudiante.demo@alumnos.ubiobio.cl",
         rol: "estudiante",
         tipo: "Estudiante"
       };
     } else if (role === "jefe") {
       // Caso específico para el Jefe de Carrera
-      user = { 
-        nombre: "Jefe de Carrera", 
+      user = {
+        nombre: "Jefe de Carrera",
         correo: "jefe.carrera@ubiobio.cl",
         rol: "jefe",  // Identificador único para el jefe
         tipo: "Jefe de Carrera"
       };
     }
-    
+
     // GUARDAR usuario en localStorage para persistencia entre páginas
     // Convertimos el objeto a string JSON para almacenarlo
     localStorage.setItem("user", JSON.stringify(user));
-    
+
     // Navegar al dashboard y pasar el usuario también por state (método alternativo)
     navigate("/dashboard", { state: { user } });
   };
@@ -72,17 +72,23 @@ export default function AuthForm() {
     e.preventDefault();
 
     if (isRegister) {
-      if (!formData.name || !formData.rut || !formData.email || !formData.password || !userType) {
+      if (
+        !formData.name ||
+        !formData.rut ||
+        !formData.email ||
+        !formData.password
+      ) {
         setError("Por favor, completa todos los campos requeridos.");
         return;
       }
-      if (userType === "estudiante" && !formData.carrera) {
+
+      if (!formData.carrera) {
         setError("Por favor, selecciona tu carrera.");
         return;
       }
 
       setError("");
-      console.log("Registro:", { ...formData, userType });
+      console.log("Registro:", { ...formData, userType: "estudiante" });
       alert("Registro exitoso");
     } else {
       if (!formData.email || !formData.password) {
@@ -97,9 +103,9 @@ export default function AuthForm() {
     navigate("/dashboard", {
       state: {
         user: {
-          nombre: "Profesor Demo",
+          nombre: "Estudiante Demo",
           correo: formData.email,
-          tipo: "Profesor",
+          tipo: isRegister ? "Estudiante" : "Profesor",
           foto: "https://i.pravatar.cc/150?img=12",
         },
       },
@@ -115,7 +121,7 @@ export default function AuthForm() {
         className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8"
       >
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-          {isRegister ? "Crear Cuenta" : "Iniciar Sesión"}
+          {isRegister ? "Crear Cuenta (Alumno)" : "Iniciar Sesión"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -166,43 +172,25 @@ export default function AuthForm() {
                   </div>
                 </div>
 
-                {/* Tipo de usuario */}
+                {/* Carrera */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo de usuario
+                    Carrera universitaria
                   </label>
                   <select
-                    value={userType}
-                    onChange={(e) => setUserType(e.target.value)}
+                    name="carrera"
+                    value={formData.carrera}
+                    onChange={handleChange}
                     className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Selecciona...</option>
-                    <option value="estudiante">Estudiante</option>
-                    <option value="profesor">Profesor</option>
+                    <option value="">Selecciona tu carrera...</option>
+                    {carreras.map((carrera) => (
+                      <option key={carrera} value={carrera}>
+                        {carrera}
+                      </option>
+                    ))}
                   </select>
                 </div>
-
-                {/* Carrera (solo si es estudiante) */}
-                {userType === "estudiante" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Carrera universitaria
-                    </label>
-                    <select
-                      name="carrera"
-                      value={formData.carrera}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Selecciona tu carrera...</option>
-                      {carreras.map((carrera) => (
-                        <option key={carrera} value={carrera}>
-                          {carrera}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </motion.div>
             )}
           </AnimatePresence>
