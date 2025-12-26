@@ -1,6 +1,6 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Usuario } from "../entities/usuario.entity.js"; // Asegúrate de la ruta correcta
-import { Rol } from "../entities/rol.entity.js";         // Asegúrate de la ruta correcta
+import { Usuario } from "../entities/usuarios.entity.js";
+import { Rol } from "../entities/rol.entity.js";
 import bcrypt from "bcrypt";
 
 const usuarioRepository = AppDataSource.getRepository(Usuario);

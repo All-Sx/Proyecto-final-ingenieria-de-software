@@ -1,6 +1,6 @@
 import { createJefeCarreraService, findAllJefesService, findJefeByRutService } from "../services/jefeCarrera.service.js";
 
-import { handleSuccess, handleErrorClient, handleErrorServer } from "../utils/response.handlers.js"; 
+import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js"; 
 
 export async function createJefeCarrera(req, res) {
     try {

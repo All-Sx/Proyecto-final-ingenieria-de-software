@@ -1,14 +1,6 @@
 import { Router } from "express";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { createUserAdmin } from "../controllers/usuario.controller.js";
-import { authMiddleware } from "../middleware/auth.middleware.js"; 
-=======
-=======
->>>>>>> Stashed changes
 import { createUserAdmin, getAlumnos, getProfesores } from "../controllers/usuario.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
->>>>>>> Stashed changes
 import { isAdmin } from "../middleware/authorization.middleware.js";
 
 const router = Router();
@@ -19,11 +11,6 @@ router.post("/create",
     isAdmin(["Jefe de Carrera"]), // 2. Solo Jefe de Carrera
     createUserAdmin               // 3. Crear usuario
 );
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
 
 // GET /api/usuarios/alumnos - Obtener todos los alumnos
 router.get("/alumnos",
@@ -38,12 +25,5 @@ router.get("/profesores",
     isAdmin(["Jefe de Carrera"]),
     getProfesores
 );
-
-router.delete("/delete/alumno",
-    authMiddleware,               // Con estas lineas da error
-    isAdmin(["Jefe de Carrera"]), // Pero sin ellas se elimina con exito
-    deleteUsuarioDeAlumnoByRut
-);
->>>>>>> Stashed changes
 
 export default router;
