@@ -5,7 +5,7 @@ import { isAdmin } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-// POST /api/electivos
+// POST /api/electivos - Crear electivo (SOLO PROFESORES)
 router.post("/", 
     authMiddleware,               // 1. ¿Tiene token válido?
     isAdmin(["Jefe de Carrera", "Profesor"]), // 2. ¿Es Jefe de Carrera?

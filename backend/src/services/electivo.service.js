@@ -1,5 +1,5 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js"; //Importamos desde oferta.entity.js
 
 export async function createElectivoService(data) {
   try {
