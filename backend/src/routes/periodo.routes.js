@@ -5,7 +5,8 @@ import {
     getAllPeriodos,
     getPeriodoById,
     getPeriodoActual,
-    updateEstadoPeriodo
+    updateEstadoPeriodo,
+    deletePeriodo
 } from "../controllers/periodo.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
@@ -48,6 +49,12 @@ router.patch("/:id/estado",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
     updateEstadoPeriodo
+);
+
+router.delete("/:id",
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]),
+    deletePeriodo
 );
 
 export default router;
