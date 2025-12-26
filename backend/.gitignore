@@ -6,3 +6,5 @@ node_modules
 
 #database
 database.sqlite
+configdb.js
+configenv.js
