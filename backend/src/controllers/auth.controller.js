@@ -9,54 +9,70 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validación básica
+    if (!email || !password) {
+      return res.status(400).json({ 
+        message: "Email y contraseña son requeridos" 
+      });
+    }
+
     const userRepository = AppDataSource.getRepository(Usuario);
 
-    // 1. Buscamos el usuario por email
-    const user = await userRepository.findOne({ 
-        where: { email },
-        relations: ["rol"] // Traemos también el rol para saber quién es
+    // Buscar usuario con su rol
+    const user = await userRepository.findOne({
+      where: { email },
+      relations: ["rol"]
     });
 
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // 2. Comparamos la contraseña enviada con la encriptada
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
+    // Verificar si el usuario está activo
+    if (!user.activo) {
+      return res.status(403).json({ message: "Usuario inactivo" });
     }
 
-    // 3. (Opcional) Generar Token JWT
-    // Si no tienes configurado JWT aún, puedes omitir esta parte del token
+    // Verificar contraseña
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Credenciales inválidas" });
+    }
+
+    // Generar JWT
     const token = jwt.sign(
-        { id: user.id, email: user.email, rol: user.rol.nombre }, 
-        JWT_SECRET, // Debería ir en tu .env
-        { expiresIn: "1h" }
+      { 
+        id: user.id, 
+        email: user.email, 
+        rol: user.rol.nombre 
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" }
     );
 
-    // 4. Responder éxito
-    return res.json({
+    return res.status(200).json({
       message: "Login exitoso",
-      token: token,
+      token,
       user: {
-        nombre: user.nombreCompleto,
+        id: user.id,
+        rut: user.rut,
+        nombre: user.nombre_completo,
         email: user.email,
         rol: user.rol.nombre
       }
     });
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en login:", error);
+    return res.status(500).json({ message: "Error en el servidor al hacer login" });
   }
 };
 
 export const register = async (req, res) => {
   try {
-    // 1. Recibir datos del cliente
-    const { rut, nombre_completo, email, password } = req.body;
+    // ✅ Ahora recibimos también rol_id
+    const { rut, nombre_completo, email, password, rol_id } = req.body;
 
     // Validación básica
     if (!rut || !nombre_completo || !email || !password) {
@@ -68,11 +84,11 @@ export const register = async (req, res) => {
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // 2. Verificar si el usuario ya existe (por email o rut)
+    // Verificar si el usuario ya existe
     const userExist = await userRepository.findOne({
       where: [
-        { email: email },
-        { rut: rut }
+        { email:  email },
+        { rut:  rut }
       ]
     });
 
@@ -80,36 +96,43 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // 3. Buscar el rol de "Alumno" para asignarlo automáticamente
-    const rolAlumno = await rolRepository.findOneBy({ nombre: "Alumno" });
-
-    if (!rolAlumno) {
-      return res.status(500).json({ message: "Error interno: El rol 'Alumno' no existe en la BD." });
+    // ✅ Buscar el rol (si se proporciona rol_id, úsalo; si no, usa "Alumno" por defecto)
+    let rol;
+    if (rol_id) {
+      rol = await rolRepository.findOneBy({ id: rol_id });
+      if (!rol) {
+        return res.status(400).json({ message: "El rol especificado no existe." });
+      }
+    } else {
+      rol = await rolRepository. findOneBy({ nombre: "Alumno" });
+      if (!rol) {
+        return res.status(500).json({ message: "Error interno: El rol 'Alumno' no existe en la BD." });
+      }
     }
 
-    // 4. Encriptar contraseña
+    // Encriptar contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 5. Crear y guardar el usuario
+    // Crear usuario con el rol correspondiente
     const newUser = userRepository.create({
       rut,
       nombre_completo,
       email,
-      password_hash: passwordHash, // Usamos el nombre exacto de tu columna en la BD
-      rol: rolAlumno,
+      password_hash: passwordHash,
+      rol: rol,  // ✅ Ahora usa el rol que encontramos
       activo: true
     });
 
     await userRepository.save(newUser);
 
-    // 6. Responder con éxito
+    // ✅ Responder con el rol correcto
     return res.status(201).json({
-      message: "Alumno registrado exitosamente",
+      message: `Usuario registrado exitosamente como ${rol.nombre}`,
       user: {
-        rut: newUser.rut,
+        rut:  newUser.rut,
         nombre: newUser.nombre_completo,
         email: newUser.email,
-        rol: newUser.rol.nombre
+        rol: newUser.rol.nombre  // ✅ Ahora mostrará el rol correcto
       }
     });
 

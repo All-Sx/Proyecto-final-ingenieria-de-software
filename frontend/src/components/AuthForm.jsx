@@ -164,47 +164,88 @@ export default function AuthForm() {
 
   const emailBloqueado = !!errorNombres || !!errorApellidos;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (isRegister) {
-      if (errorNombres) return setError(errorNombres);
-      if (errorApellidos) return setError(errorApellidos);
+    try {
+      if (isRegister) {
+        // 🔎 Validaciones locales (las tuyas)
+        if (errorNombres) return setError(errorNombres);
+        if (errorApellidos) return setError(errorApellidos);
 
-      if (!formData.rut || !formData.password || !formData.carrera) {
-        setError("Por favor, completa todos los campos requeridos.");
+        if (!formData.rut || !formData.password || !formData.carrera) {
+          return setError("Por favor, completa todos los campos requeridos.");
+        }
+
+        const errorRut = validarRut(formData.rut);
+        if (errorRut) return setError(errorRut);
+
+        const errorPassword = validarPassword(formData.password);
+        if (errorPassword) return setError(errorPassword);
+
+        const errorEmail = validarCorreoEstudiante(
+          formData.email,
+          formData.nombres,
+          formData.apellidos
+        );
+
+        if (!errorEmail.valid) return setError(errorEmail.error);
+
+        //  REGISTRO REAL
+        const response = await fetch(`${API_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rut: formData.rut,
+            nombre_completo: `${formData.nombres} ${formData.apellidos}`,
+            email: formData.email,
+            password: formData.password
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return setError(data.message || "Error al registrar usuario.");
+        }
+
+        alert("Registro exitoso, ahora puedes iniciar sesión.");
+        setIsRegister(false);
+        setFormData(initialFormData);
         return;
       }
 
-      const errorRut = validarRut(formData.rut);
-      if (errorRut) {
-        setError(errorRut);
-        return;
-      }
-
-      const errorPassword = validarPassword(formData.password);
-      if (errorPassword) return setError(errorPassword);
-
-      const errorEmail = validarCorreoEstudiante(
-        formData.email,
-        formData.nombres,
-        formData.apellidos
-      );
-
-      if (!errorEmail.valid) {
-        setError(errorEmail.error);
-        return;
-      }
-      console.log("Registro estudiante:", formData);
-      alert("Registro exitoso");
-    } else {
+      // LOGIN REAL
       if (!formData.email || !formData.password) {
-        setError("Ingresa tus credenciales.");
-        return;
+        return setError("Ingresa tus credenciales.");
       }
-    }
 
-    navigate("/dashboard");
+      const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return setError(data.message || "Credenciales inválidas.");
+      }
+
+      // Guardar sesión
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error(err);
+      setError("Error de conexión con el servidor.");
+    }
   };
 
   const handleRutChange = (e) => {
