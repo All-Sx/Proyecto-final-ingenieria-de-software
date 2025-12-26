@@ -1,14 +1,12 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Rol } from "../entities/rol.entity.js";
-import { Usuario } from "../entities/usuarios.entity.js"; 
-import bcrypt from "bcryptjs"; 
+import { Usuario } from "../entities/usuarios.entity.js"; // <--- OJO: Asegúrate que se llame así tu entidad de usuario
+import bcrypt from "bcryptjs"; // Recuerda: npm install bcryptjs
 
 
 export async function createData() {
-  await seedRoles();      
-  await seedUserAdmin();  
-  await seedProfesor();   
-  await seedAlumno();     
+   await seedRoles();      // 1. Primero creamos los roles
+  await seedUserAdmin();  // 2. Después creamos el usuario con el rol asignado  
 }
 
 
@@ -66,76 +64,3 @@ async function seedUserAdmin() {
 }
 
 
-async function seedProfesor() {
-  const userRepository = AppDataSource.getRepository(Usuario);
-  const rolRepository = AppDataSource.getRepository(Rol);
-
-
-  const userExist = await userRepository.findOne({ 
-      where: { email: "profesor@universidad.cl" }
-  });
-
-  if (userExist) {
-    console.log("[SEED] El usuario Profesor ya existe.");
-    return;
-  }
-
- 
-  const rolProfesor = await rolRepository.findOneBy({ nombre: "Profesor" });
-
-  if (!rolProfesor) {
-    console.log("[SEED] Error: No se encontró el rol 'Profesor'.");
-    return;
-  }
-
- 
-  const passwordHash = await bcrypt.hash("profesor123", 10);
-
-  const newProfesor = userRepository.create({
-    rut: "12.345.678-9",
-    email: "profesor@universidad.cl",
-    password_hash: passwordHash,
-    nombre_completo: "Carlos Profesor García",
-    activo: true,
-    rol: rolProfesor,
-  });
-
-  await userRepository.save(newProfesor);
-  console.log("[SEED] Usuario Profesor creado exitosamente.");
-}
-
-
-async function seedAlumno() {
-  const userRepository = AppDataSource.getRepository(Usuario);
-  const rolRepository = AppDataSource.getRepository(Rol);
-
-  const userExist = await userRepository.findOne({ 
-      where: { email: "alumno@estudiante.cl" }
-  });
-
-  if (userExist) {
-    console.log("[SEED] El usuario Alumno ya existe.");
-    return;
-  }
-
-  const rolAlumno = await rolRepository.findOneBy({ nombre: "Alumno" });
-
-  if (!rolAlumno) {
-    console.log("[SEED] Error: No se encontró el rol 'Alumno'.");
-    return;
-  }
-
-  const passwordHash = await bcrypt.hash("alumno123", 10);
-
-  const newAlumno = userRepository.create({
-    rut: "20.123.456-7",
-    email: "alumno@estudiante.cl",
-    password_hash: passwordHash,
-    nombre_completo: "María Alumna López",
-    activo: true,
-    rol: rolAlumno,
-  });
-
-  await userRepository.save(newAlumno);
-  console.log("[SEED] Usuario Alumno creado exitosamente.");
-}
