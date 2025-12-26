@@ -1,5 +1,5 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js"; //Importamos desde oferta.entity.js
 
 export async function createElectivoService(data) {
   try {
@@ -25,5 +25,23 @@ export async function createElectivoService(data) {
   } catch (error) {
     console.error("Error en createElectivoService:", error);
     return { error: "Error interno al crear el electivo." };
+  }
+}
+
+// Obtener todos los electivos 
+export async function getAllElectivosService() {
+  try {
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+    
+    // Obtener TODOS los electivos ordenados por fecha de creación (más recientes primero)
+    const electivos = await electivoRepository.find({
+      order: { created_at: "DESC" }
+    });
+    
+    return { data: electivos };
+
+  } catch (error) {
+    console.error("Error en getAllElectivosService:", error);
+    return { error: "Error interno al obtener los electivos." };
   }
 }
