@@ -50,3 +50,25 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     return { error: "Error interno al procesar la inscripción." };
   }
 }
+
+export async function getSolicitudesPorAlumnoService(alumnoId) {
+  try {
+    const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+
+    const solicitudes = await solicitudRepository.find({
+      where: {
+        alumno: { id: alumnoId } // Filtramos por el alumno logueado
+      },
+      relations: ["electivo"], // ¡Importante! Para ver los datos del ramo
+      order: {
+        fecha_solicitud: "DESC" // Las más recientes primero
+      }
+    });
+
+    return { data: solicitudes };
+
+  } catch (error) {
+    console.error("Error al obtener solicitudes del alumno:", error);
+    return { error: "Error interno al obtener tus solicitudes." };
+  }
+}

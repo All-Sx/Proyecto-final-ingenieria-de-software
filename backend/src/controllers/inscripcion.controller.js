@@ -1,4 +1,4 @@
-import { createSolicitudService } from "../services/inscripcion.service.js";
+import { createSolicitudService, getSolicitudesPorAlumnoService } from "../services/inscripcion.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createSolicitud = async (req, res) => {
@@ -26,6 +26,29 @@ export const createSolicitud = async (req, res) => {
     return res.status(201).json({
         message: "Solicitud enviada exitosamente",
         data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const getMisSolicitudes = async (req, res) => {
+  try {
+    // 1. Obtener ID del Alumno desde el Token
+    const { id: alumnoId } = req.user;
+
+    // 2. Llamar al servicio
+    const result = await getSolicitudesPorAlumnoService(alumnoId);
+
+    if (result.error) {
+      return handleErrorClient(res, 500, result.error);
+    }
+
+    // 3. Responder
+    return res.status(200).json({
+      message: "Historial de solicitudes",
+      data: result.data
     });
 
   } catch (error) {
