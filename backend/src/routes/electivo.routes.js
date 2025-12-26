@@ -35,9 +35,9 @@ router.put("/:id",
     updateElectivo
 );
 
-//GET api/electivos/aprovados
-//El ALUMNO dentro del periodo de INSCRIPCIÓN puede ver los electivos en estado APROVADO
-router.get("/aprovados",
+//GET api/electivos/aprobados
+//El ALUMNO dentro del periodo de INSCRIPCIÓN puede ver los electivos en estado APROBADO
+router.get("/aprobados",
     authMiddleware,
     isAdmin(["Alumno"]),
     getElectivosAprovados

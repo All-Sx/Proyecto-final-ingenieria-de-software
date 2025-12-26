@@ -126,7 +126,7 @@ export const getElectivosAprovados = async (req, res) => {
     if (result.error) return handleErrorClient(res, 500, result.error);
 
     return res.status(200).json({
-      message: "Lista de electivos aprovados",
+      message: "Lista de electivos aprobados",
       data: result.data
     });
   } catch (error) {

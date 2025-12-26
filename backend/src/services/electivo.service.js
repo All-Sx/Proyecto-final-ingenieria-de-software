@@ -140,7 +140,7 @@ export async function getElectivosAprovadosService() {
 
     return { data: aprobados };
   } catch (error) {
-    console.error("Error al obtener electivos aprovados: ", error);
+    console.error("Error al obtener electivos aprobados: ", error);
     return { error: "Error interno al listar los electivos." };
   }
 }
