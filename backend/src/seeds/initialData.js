@@ -62,4 +62,4 @@ async function seedUserAdmin() {
 
   await userRepository.save(newAdmin);
   console.log("[SEED] Usuario Jefe de Carrera creado exitosamente.");
-}
+  }
