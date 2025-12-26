@@ -2,7 +2,8 @@ import { AppDataSource } from "../config/configdb.js";
 import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
 import { PeriodoAcademico } from "../entities/academico.entity.js";
 
-export async function createElectivoService(data) {
+// Ahora recibimos también el nombre del profesor que crea el electivo
+export async function createElectivoService(data, nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
@@ -43,7 +44,8 @@ export async function createElectivoService(data) {
         descripcion: data.descripcion,
         creditos: data.creditos || 5, // Usar 5 por defecto si no envia nada es lo creditos minimos de la malla
         cupos: data.cupos,
-        estado: "PENDIENTE" // ⬅️ Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
+        estado: "PENDIENTE", // Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
+        nombre_profesor: nombreProfesor // Guardamos quién creó este electivo
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
@@ -65,6 +67,24 @@ export async function getElectivosService() {
   } catch (error) {
     console.error("Error al obtener electivos:", error);
     return { error: "Error interno al listar los electivos." };
+  }
+}
+
+// Obtener solo los electivos creados por un profesor específico
+// Esto filtra por el campo nombre_profesor que agregamos
+export async function getElectivosByProfesorService(nombreProfesor) {
+  try {
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+    
+    // Buscar todos los electivos donde nombre_profesor coincida
+    const electivos = await electivoRepository.find({
+      where: { nombre_profesor: nombreProfesor } // Filtro: solo los del profesor
+    });
+
+    return { data: electivos };
+  } catch (error) {
+    console.error("Error al obtener electivos del profesor:", error);
+    return { error: "Error interno al listar los electivos del profesor." };
   }
 }
 
