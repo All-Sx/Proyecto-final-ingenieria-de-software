@@ -4,6 +4,7 @@ import electivoRoutes from "./electivo.routes.js";
 import periodoRoutes from "./periodo.routes.js";
 import userRoutes from "./usuario.routes.js";
 import inscripcionRoutes from "./inscripcion.routes.js";
+import carreraRoutes from "./carrera.routes.js";
 
 
 export function routerApi(app) {
@@ -18,4 +19,5 @@ export function routerApi(app) {
     router.use("/periodos", periodoRoutes); // /api/periodos
     router.use("/usuarios", userRoutes);     // /api/usuarios
     router.use("/inscripciones", inscripcionRoutes); // /api/inscripciones
+    router.use("/carreras", carreraRoutes); // /api/carreras
 }
