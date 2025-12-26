@@ -81,20 +81,21 @@ const validarCorreoEstudiante = (email, nombres, apellidos) => {
   return null;
 };
 
-export default function AuthForm() {
-  const [isRegister, setIsRegister] = useState(false);
-  const [userType, setUserType] = useState(""); // estudiante o profesor
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+const initialFormData = {
     nombres: "",
     apellidos: "",
     rut: "",
     email: "",
     password: "",
     carrera: "",
-  });
+  };
+  
+export default function AuthForm() {
+  const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState(initialFormData);
 
   const carreras = [
     "Ingeniería Civil Informática",
@@ -323,6 +324,7 @@ export default function AuthForm() {
               className="text-blue-600"
               onClick={() => {
                 setIsRegister(!isRegister);
+                setFormData(initialFormData); // 👈 RESET
                 setError("");
               }}
             >
