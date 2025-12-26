@@ -1,6 +1,7 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js";
 import { Rol } from "../entities/rol.entity.js";
+import { Alumno } from "../entities/alumno.entity.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/configenv.js";
@@ -73,7 +74,7 @@ export const login = async (req, res) => {
 export const register = async (req, res) => {
   try {
 
-    const { rut, nombre_completo, email, password, rol_id } = req.body;
+    const { rut, nombre_completo, email, password, rol } = req.body;
 
     // Validación básica
     if (!rut || !nombre_completo || !email || !password) {
@@ -97,16 +98,16 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // Buscar el rol (si se proporciona rol_id, úsalo; si no, usa "Alumno" por defecto)
-    let rol;
-    if (rol_id) {
-      rol = await rolRepository.findOneBy({ id: rol_id });
-      if (!rol) {
-        return res.status(400).json({ message: "El rol especificado no existe." });
+    // Buscar el rol (si se proporciona rol, úsalo; si no, usa "Alumno" por defecto)
+    let rolEntity;
+    if (rol) {
+      rolEntity = await rolRepository.findOneBy({ nombre: rol });
+      if (!rolEntity) {
+        return res.status(400).json({ message: `El rol '${rol}' no existe.` });
       }
     } else {
-      rol = await rolRepository. findOneBy({ nombre: "Alumno" });
-      if (!rol) {
+      rolEntity = await rolRepository.findOneBy({ nombre: "Alumno" });
+      if (!rolEntity) {
         return res.status(500).json({ message: "Error interno: El rol 'Alumno' no existe en la BD." });
       }
     }
@@ -120,20 +121,32 @@ export const register = async (req, res) => {
       nombre_completo,
       email,
       password_hash: passwordHash,
-      rol: rol,  // Ahora usa el rol que encontramos
+      rol: rolEntity,  // Ahora usa el rol que encontramos
       activo: true
     });
 
-    await userRepository.save(newUser);
+    const usuarioGuardado = await userRepository.save(newUser);
+
+    // Si el rol es "Alumno", crear entrada en tabla alumnos (sin carrera asignada aún)
+    if (rolEntity.nombre === "Alumno") {
+      const alumnoRepository = AppDataSource.getRepository(Alumno);
+      const nuevoAlumno = alumnoRepository.create({
+        usuario_id: usuarioGuardado.id,
+        carrera: null,  // La carrera se asignará después
+        anio_ingreso: new Date().getFullYear(),
+        creditos_acumulados: 0
+      });
+      await alumnoRepository.save(nuevoAlumno);
+    }
 
     // Responder con el rol correcto
     return res.status(201).json({
-      message: `Usuario registrado exitosamente como ${rol.nombre}`,
+      message: `Usuario registrado exitosamente como ${rolEntity.nombre}`,
       user: {
-        rut:  newUser.rut,
-        nombre: newUser.nombre_completo,
-        email: newUser.email,
-        rol: newUser.rol.nombre  //Ahora mostrará el rol correcto
+        rut:  usuarioGuardado.rut,
+        nombre: usuarioGuardado.nombre_completo,
+        email: usuarioGuardado.email,
+        rol: rolEntity.nombre  //Ahora mostrará el rol correcto
       }
     });
 
