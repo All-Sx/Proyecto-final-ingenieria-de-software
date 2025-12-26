@@ -7,6 +7,7 @@ import { routerApi } from "./routes/index.routes.js";
 import { HOST, PORT} from "./config/configenv.js";
 import { createData } from "./seeds/initialData.js";
 
+
 const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
