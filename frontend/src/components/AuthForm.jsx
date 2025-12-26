@@ -1,3 +1,4 @@
+import { login, register } from "../services/auth.service";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
@@ -174,7 +175,7 @@ export default function AuthForm() {
         if (errorNombres) return setError(errorNombres);
         if (errorApellidos) return setError(errorApellidos);
 
-        if (!formData.rut || !formData.password || !formData.carrera) {
+        if (!formData.rut || !formData.password) {
           return setError("Por favor, completa todos los campos requeridos.");
         }
 
@@ -192,23 +193,12 @@ export default function AuthForm() {
 
         if (!errorEmail.valid) return setError(errorEmail.error);
 
-        //  REGISTRO REAL
-        const response = await fetch(`${API_URL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            rut: formData.rut,
-            nombre_completo: `${formData.nombres} ${formData.apellidos}`,
-            email: formData.email,
-            password: formData.password
-          })
+        await register({
+          rut: formData.rut,
+          nombre_completo: `${formData.nombres} ${formData.apellidos}`,
+          email: formData.email,
+          password: formData.password,
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          return setError(data.message || "Error al registrar usuario.");
-        }
 
         alert("Registro exitoso, ahora puedes iniciar sesión.");
         setIsRegister(false);
@@ -221,30 +211,19 @@ export default function AuthForm() {
         return setError("Ingresa tus credenciales.");
       }
 
-      const response = await fetch(`${API_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const { data } = await login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return setError(data.message || "Credenciales inválidas.");
-      }
-
-      // Guardar sesión
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      console.log("LOGIN DATA:", data);
       navigate("/dashboard");
 
     } catch (err) {
       console.error(err);
-      setError("Error de conexión con el servidor.");
     }
   };
 

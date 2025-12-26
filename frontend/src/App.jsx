@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
 import Dashboard from "./components/Dashboard";
 import ElectivoForm from "./components/ElectivoForm";
-import GestionElectivos from "./components/GestionElectivos"; // NUEVO: Componente de gestión de electivos
+import GestionElectivos from "./components/GestionElectivos"; 
 
 export default function App() {
   return (
@@ -20,7 +20,6 @@ export default function App() {
         {/* Formulario de electivos (solo profesores) */}
         <Route path="/profesor/electivos" element={<ElectivoForm />} />
         
-        {/* NUEVA RUTA: Gestión de electivos (solo jefe de carrera) */}
         {/* Panel administrativo para revisar, aprobar y rechazar propuestas de electivos */}
         <Route path="/jefe/gestion-electivos" element={<GestionElectivos />} />
       </Routes>
