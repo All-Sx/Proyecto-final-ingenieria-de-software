@@ -7,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 const normalizarTexto = (texto) =>
   texto.trim().toLowerCase().split(/\s+/);
 
+const quitarTildes = (texto) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 const validarNombresOApellidos = (valor, tipo) => {
   if (!valor.trim()) {
     return `Debes ingresar tus ${tipo}.`;
@@ -45,51 +48,94 @@ const validarRut = (rut) => {
 
 const validarCorreoEstudiante = (email, nombres, apellidos) => {
   const regex =
-    /^([a-z]+)\.([a-z]+)(20\d{2})-([12])@alumnos\.ubiobio\.cl$/;
+    /^([a-z]+)\.([a-z]+)(\d{2})0([12])@alumnos\.ubiobio\.cl$/;
 
   const match = email.match(regex);
 
   if (!match) {
-    return "El correo no cumple el formato institucional requerido.";
+    return {
+      valid: false,
+      error:
+        "Formato inválido",
+    };
   }
 
   const nombreEmail = match[1];
   const apellidoEmail = match[2];
   const anioIngreso = parseInt(match[3], 10);
   const semestre = match[4];
-  const anioActual = new Date().getFullYear();
+  const anioActual = new Date().getFullYear() % 100;
 
   if (anioIngreso > anioActual) {
-    return "El año de ingreso no puede ser mayor al año actual.";
+    return {
+      valid: false,
+      error: "El año de ingreso no puede ser mayor al año actual.",
+    };
   }
 
-  if (!["1", "2"].includes(semestre)) {
-    return "El semestre de ingreso debe ser 1 o 2.";
+  if (semestre !== "1" && semestre !== "2") {
+    return {
+      valid: false,
+      error: "El semestre debe ser 1 o 2.",
+    };
   }
 
   const nombresArray = normalizarTexto(nombres);
   const apellidosArray = normalizarTexto(apellidos);
 
-  if (nombreEmail !== nombresArray[0]) {
-    return "El nombre del correo no coincide con tu primer nombre.";
+  if (
+    quitarTildes(nombreEmail) !==
+    quitarTildes(nombresArray[0])
+  ) {
+    return {
+      valid: false,
+      error:
+        "El nombre del correo no coincide con tu primer nombre.",
+    };
   }
 
-  if (apellidoEmail !== apellidosArray[0]) {
-    return "El apellido del correo no coincide con tu primer apellido.";
+  if (
+    quitarTildes(apellidoEmail) !==
+    quitarTildes(apellidosArray[0])
+  ) {
+    return {
+      valid: false,
+      error:
+        "El apellido del correo no coincide con tu primer apellido.",
+    };
+  }
+
+  return { valid: true };
+};
+
+const validarPassword = (password) => {
+  if (!password) {
+    return "Debes ingresar una contraseña.";
+  }
+
+  if (password.length < 8) {
+    return "La contraseña debe tener al menos 8 caracteres.";
+  }
+
+  const tieneLetra = /[a-zA-Z]/.test(password);
+  const tieneNumero = /\d/.test(password);
+
+  if (!tieneLetra || !tieneNumero) {
+    return "La contraseña debe contener letras y números.";
   }
 
   return null;
 };
 
 const initialFormData = {
-    nombres: "",
-    apellidos: "",
-    rut: "",
-    email: "",
-    password: "",
-    carrera: "",
-  };
-  
+  nombres: "",
+  apellidos: "",
+  rut: "",
+  email: "",
+  password: "",
+  carrera: "",
+};
+
 export default function AuthForm() {
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -136,17 +182,19 @@ export default function AuthForm() {
         return;
       }
 
+      const errorPassword = validarPassword(formData.password);
+      if (errorPassword) return setError(errorPassword);
+
       const errorEmail = validarCorreoEstudiante(
         formData.email,
         formData.nombres,
         formData.apellidos
       );
 
-      if (errorEmail) {
-        setError(errorEmail);
+      if (!errorEmail.valid) {
+        setError(errorEmail.error);
         return;
       }
-
       console.log("Registro estudiante:", formData);
       alert("Registro exitoso");
     } else {
@@ -275,7 +323,7 @@ export default function AuthForm() {
           {/* EMAIL */}
           <input
             name="email"
-            placeholder={isRegister ? "nombre.apellido20XX-X@alumnos.ubiobio.cl" : "usuario@ubiobio.cl"}
+            placeholder={isRegister ? "nombre.apellido2201@alumnos.ubiobio.cl" : "usuario@ubiobio.cl"}
             value={formData.email}
             disabled={isRegister && emailBloqueado}
             onChange={handleChange}
