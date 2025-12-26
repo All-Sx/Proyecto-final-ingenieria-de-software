@@ -121,15 +121,7 @@ export const register = async (req, res) => {
       nombre_completo,
       email,
       password_hash: passwordHash,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
       rol: rolEntity,  // Ahora usa el rol que encontramos
-=======
-      rol: rol,  
->>>>>>> Stashed changes
-=======
-      rol: rol,  
->>>>>>> Stashed changes
       activo: true
     });
 
