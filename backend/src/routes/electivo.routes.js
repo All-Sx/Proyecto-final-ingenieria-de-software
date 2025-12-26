@@ -1,6 +1,6 @@
 import { Router } from "express";
 // Importamos el NUEVO controlador getMisElectivos
-import { createElectivo, getElectivos, getMisElectivos, updateElectivo } from "../controllers/electivo.controller.js";
+import { createElectivo, getElectivos, getMisElectivos, updateElectivo, asignarCuposManual } from "../controllers/electivo.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
 
@@ -33,6 +33,14 @@ router.put("/:id",
     authMiddleware, 
     isAdmin(["Jefe de Carrera"]), // Solo el Jefe puede editar
     updateElectivo
+);
+
+// POST /api/electivos/:id/asignar-cupos
+// Para asignar cupos manualmente a electivos que ya fueron aprobados
+router.post("/:id/asignar-cupos", 
+    authMiddleware, 
+    isAdmin(["Jefe de Carrera"]), // Solo el Jefe puede asignar cupos
+    asignarCuposManual
 );
 
 export default router;
