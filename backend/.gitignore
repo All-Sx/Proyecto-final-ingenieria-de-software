@@ -6,4 +6,3 @@ node_modules
 
 #database
 database.sqlite
-config/
