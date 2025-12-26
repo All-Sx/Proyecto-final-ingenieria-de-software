@@ -3,38 +3,48 @@ import { PeriodoAcademico } from "../entities/academico.entity.js";
 
 const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
-// Función auxiliar para convertir fechas DD-MM-YYYY a objeto Date
-function parseFecha(fechaStr) {
-    // Si la fecha viene en formato DD-MM-YYYY
-    if (fechaStr.includes('-')) {
-        const partes = fechaStr.split('-');
-        if (partes[0].length <= 2) {
-            // Formato DD-MM-YYYY
-            const [dia, mes, anio] = partes;
-            return new Date(`${anio}-${mes}-${dia}`);
-        }
+// Funciones helper para manejo de fechas en formato dd-mm-aaaa
+function parseDateFromDDMMYYYY(dateString) {
+    if (!dateString) return null;
+    
+    const parts = dateString.split('-');
+    if (parts.length !== 3) {
+        throw new Error(`Formato de fecha inválido: ${dateString}. Use dd-mm-aaaa`);
     }
-    // Si no, intentar parsear directamente
-    return new Date(fechaStr);
+    
+    const [day, month, year] = parts;
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        throw new Error(`Formato de fecha inválido: ${dateString}. Use dd-mm-aaaa`);
+    }
+    
+    const date = new Date(year, month - 1, day);
+    
+    if (date.getDate() != day || date.getMonth() != month - 1 || date.getFullYear() != year) {
+        throw new Error(`Fecha inválida: ${dateString}`);
+    }
+    
+    return date;
 }
 
-// Función auxiliar para formatear fecha a DD-MM-YYYY
-function formatFecha(fecha) {
-    if (!fecha) return null;
-    const d = new Date(fecha);
-    const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).padStart(2, '0');
-    const anio = d.getFullYear();
-    return `${dia}-${mes}-${anio}`;
+function formatDateToDDMMYYYY(date) {
+    if (!date) return null;
+    
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    
+    return `${day}-${month}-${year}`;
 }
 
-// Función para formatear un periodo completo
-function formatPeriodo(periodo) {
+function formatPeriodoResponse(periodo) {
     if (!periodo) return null;
+    
     return {
         ...periodo,
-        fecha_inicio: formatFecha(periodo.fecha_inicio),
-        fecha_fin: formatFecha(periodo.fecha_fin)
+        fecha_inicio: formatDateToDDMMYYYY(periodo.fecha_inicio),
+        fecha_fin: formatDateToDDMMYYYY(periodo.fecha_fin)
     };
 }
 
@@ -49,25 +59,25 @@ export async function createPeriodoService(data) {
         throw new Error("Ya existe un periodo académico con ese nombre.");
     }
 
-    // Convertir fechas
-    const fechaInicio = parseFecha(fecha_inicio);
-    const fechaFin = parseFecha(fecha_fin);
+    // Parsear fechas del formato dd-mm-aaaa
+    const parsedFechaInicio = parseDateFromDDMMYYYY(fecha_inicio);
+    const parsedFechaFin = parseDateFromDDMMYYYY(fecha_fin);
 
     // Validar que la fecha de inicio sea anterior a la fecha de fin
-    if (fechaInicio >= fechaFin) {
+    if (parsedFechaInicio >= parsedFechaFin) {
         throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
     }
 
     // Crear el nuevo periodo
     const nuevoPeriodo = periodoRepository.create({
         nombre,
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
+        fecha_inicio: parsedFechaInicio,
+        fecha_fin: parsedFechaFin,
         estado: estado || "PLANIFICACION"
     });
 
-    const periodoGuardado = await periodoRepository.save(nuevoPeriodo);
-    return formatPeriodo(periodoGuardado);
+    const savedPeriodo = await periodoRepository.save(nuevoPeriodo);
+    return formatPeriodoResponse(savedPeriodo);
 }
 
 // Actualizar fechas de un periodo existente
@@ -80,24 +90,24 @@ export async function updatePeriodoFechasService(id, data) {
 
     const { fecha_inicio, fecha_fin, estado } = data;
 
-    // Convertir fechas si están presentes
-    const fechaInicio = fecha_inicio ? parseFecha(fecha_inicio) : null;
-    const fechaFin = fecha_fin ? parseFecha(fecha_fin) : null;
+    // Parsear fechas si se proporcionan
+    const parsedFechaInicio = fecha_inicio ? parseDateFromDDMMYYYY(fecha_inicio) : null;
+    const parsedFechaFin = fecha_fin ? parseDateFromDDMMYYYY(fecha_fin) : null;
 
     // Validar que la fecha de inicio sea anterior a la fecha de fin
-    if (fechaInicio && fechaFin) {
-        if (fechaInicio >= fechaFin) {
+    if (parsedFechaInicio && parsedFechaFin) {
+        if (parsedFechaInicio >= parsedFechaFin) {
             throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
         }
     }
 
     // Actualizar solo los campos proporcionados
-    if (fechaInicio) periodo.fecha_inicio = fechaInicio;
-    if (fechaFin) periodo.fecha_fin = fechaFin;
+    if (parsedFechaInicio) periodo.fecha_inicio = parsedFechaInicio;
+    if (parsedFechaFin) periodo.fecha_fin = parsedFechaFin;
     if (estado) periodo.estado = estado;
 
-    const periodoActualizado = await periodoRepository.save(periodo);
-    return formatPeriodo(periodoActualizado);
+    const savedPeriodo = await periodoRepository.save(periodo);
+    return formatPeriodoResponse(savedPeriodo);
 }
 
 // Obtener todos los periodos académicos
@@ -105,13 +115,13 @@ export async function getAllPeriodosService() {
     const periodos = await periodoRepository.find({
         order: { fecha_inicio: "DESC" }
     });
-    return periodos.map(periodo => formatPeriodo(periodo));
+    return periodos.map(formatPeriodoResponse);
 }
 
 // Obtener un periodo por ID
 export async function getPeriodoByIdService(id) {
     const periodo = await periodoRepository.findOneBy({ id });
-    return formatPeriodo(periodo);
+    return formatPeriodoResponse(periodo);
 }
 
 // Obtener el periodo actual (en estado INSCRIPCION)
@@ -120,7 +130,7 @@ export async function getPeriodoActualService() {
         where: { estado: "INSCRIPCION" },
         order: { fecha_inicio: "DESC" }
     });
-    return formatPeriodo(periodo);
+    return formatPeriodoResponse(periodo);
 }
 
 // Cambiar el estado de un periodo
@@ -137,6 +147,6 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
     }
 
     periodo.estado = nuevoEstado;
-    const periodoActualizado = await periodoRepository.save(periodo);
-    return formatPeriodo(periodoActualizado);
+    const savedPeriodo = await periodoRepository.save(periodo);
+    return formatPeriodoResponse(savedPeriodo);
 }
