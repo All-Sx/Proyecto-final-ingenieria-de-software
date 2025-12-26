@@ -35,12 +35,15 @@ export async function createElectivoService(data) {
         return { error: "Ya existe un electivo con ese nombre." };
     }
 
-    //crear el electivo
+    // Crear el electivo
+    // Importante: El estado siempre se fuerza a "PENDIENTE" sin importar lo que venga en data
+    // Esto asegura que todos los electivos necesiten aprobación del jefe de carrera
     const nuevoElectivo = electivoRepository.create({
         nombre: data.nombre,
         descripcion: data.descripcion,
-        creditos: data.creditos || 5, //usar 5 por defecto si no envia nada
-        cupos: data.cupos
+        creditos: data.creditos || 5, // Usar 5 por defecto si no envia nada es lo creditos minimos de la malla
+        cupos: data.cupos,
+        estado: "PENDIENTE" // ⬅️ Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
