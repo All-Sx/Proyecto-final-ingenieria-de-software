@@ -16,7 +16,7 @@ export async function createPeriodo(req, res) {
 
         
         if (!nombre || !fecha_inicio || !fecha_fin) {
-            return handleErrorClient(res, 400, "Faltan datos obligatorios (nombre, fecha_inicio, fecha_fin)");
+            return handleErrorClient(res, 400, "Faltan datos obligatorios (nombre, fecha_inicio, fecha_fin). Las fechas deben estar en formato dd-mm-aaaa");
         }
 
         const nuevoPeriodo = await createPeriodoService({
@@ -29,7 +29,7 @@ export async function createPeriodo(req, res) {
         handleSuccess(res, 201, "Periodo académico creado exitosamente", nuevoPeriodo);
 
     } catch (error) {
-        if (error.message.includes("ya existe") || error.message.includes("fecha")) {
+        if (error.message.includes("ya existe") || error.message.includes("fecha") || error.message.includes("Formato") || error.message.includes("inválido")) {
             handleErrorClient(res, 409, error.message);
         } else {
             handleErrorServer(res, 500, "Error al crear el periodo académico", error.message);
@@ -44,7 +44,7 @@ export async function updatePeriodoFechas(req, res) {
         const { fecha_inicio, fecha_fin, estado } = req.body;
 
         if (!fecha_inicio && !fecha_fin && !estado) {
-            return handleErrorClient(res, 400, "Debe proporcionar al menos fecha_inicio, fecha_fin o estado");
+            return handleErrorClient(res, 400, "Debe proporcionar al menos fecha_inicio, fecha_fin o estado. Las fechas deben estar en formato dd-mm-aaaa");
         }
 
         const periodoActualizado = await updatePeriodoFechasService(id, {
@@ -56,7 +56,7 @@ export async function updatePeriodoFechas(req, res) {
         handleSuccess(res, 200, "Periodo académico actualizado exitosamente", periodoActualizado);
 
     } catch (error) {
-        if (error.message.includes("no encontrado") || error.message.includes("fecha")) {
+        if (error.message.includes("no encontrado") || error.message.includes("fecha") || error.message.includes("Formato") || error.message.includes("inválido")) {
             handleErrorClient(res, 404, error.message);
         } else {
             handleErrorServer(res, 500, "Error al actualizar el periodo", error.message);
