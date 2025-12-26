@@ -1,6 +1,7 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
 import { PeriodoAcademico } from "../entities/academico.entity.js";
+import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 
 // Ahora recibimos también el nombre del profesor que crea el electivo
 export async function createElectivoService(data, nombreProfesor) {
@@ -33,19 +34,19 @@ export async function createElectivoService(data, nombreProfesor) {
     //validar si el nombre ya existe
     const electivoExist = await electivoRepository.findOneBy({ nombre: data.nombre });
     if (electivoExist) {
-        return { error: "Ya existe un electivo con ese nombre." };
+      return { error: "Ya existe un electivo con ese nombre." };
     }
 
     // Crear el electivo
     // Importante: El estado siempre se fuerza a "PENDIENTE" sin importar lo que venga en data
     // Esto asegura que todos los electivos necesiten aprobación del jefe de carrera
     const nuevoElectivo = electivoRepository.create({
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        creditos: data.creditos || 5, // Usar 5 por defecto si no envia nada es lo creditos minimos de la malla
-        cupos: data.cupos,
-        estado: "PENDIENTE", // Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
-        nombre_profesor: nombreProfesor // Guardamos quién creó este electivo
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      creditos: data.creditos || 5, // Usar 5 por defecto si no envia nada es lo creditos minimos de la malla
+      cupos: data.cupos,
+      estado: "PENDIENTE", // Siempre inicia en PENDIENTE, solo el jefe puede APROBA o RECHAZAR
+      nombre_profesor: nombreProfesor // Guardamos quién creó este electivo
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
@@ -60,7 +61,7 @@ export async function createElectivoService(data, nombreProfesor) {
 export async function getElectivosService() {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
-    
+
     const electivos = await electivoRepository.find();
 
     return { data: electivos };
@@ -75,7 +76,7 @@ export async function getElectivosService() {
 export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
-    
+
     // Buscar todos los electivos donde nombre_profesor coincida
     const electivos = await electivoRepository.find({
       where: { nombre_profesor: nombreProfesor } // Filtro: solo los del profesor
@@ -111,5 +112,35 @@ export async function updateElectivoService(id, data) {
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
     return { error: "Error interno al actualizar el electivo." };
+  }
+}
+
+export async function getElectivosAprovadosService() {
+  try {
+    //Establecer la fecha actual
+    const ahora = new Date();
+
+    const periodos = AppDataSource.getRepository(PeriodoAcademico);
+
+    const periodoActual = await periodos.findOne({
+      where: {
+        fecha_fin: MoreThanOrEqual(ahora),        //Fecha anterior a hoy
+        fecha_inicio: LessThanOrEqual(ahora),     //Fecha despues de hoy
+        estado: "INSCRIPCION"                     //Y que sea periodo de inscripcion
+      }
+    })
+
+    if (!periodoActual) return { error: "No existe periodo en inscripcion de asignaturas" };
+
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+
+    const aprobados = await electivoRepository.find({
+      where: { estado: 'APROBADO' }
+    });
+
+    return { data: aprobados };
+  } catch (error) {
+    console.error("Error al obtener electivos aprovados: ", error);
+    return { error: "Error interno al listar los electivos." };
   }
 }
