@@ -8,7 +8,7 @@ const router = Router();
 // POST /api/electivos
 router.post("/", 
     authMiddleware,               // 1. ¿Tiene token válido?
-    isAdmin(["Jefe de Carrera"]), // 2. ¿Es Jefe de Carrera?
+    isAdmin(["Jefe de Carrera", "Profesor"]), // 2. ¿Es Jefe de Carrera o Profesor?
     createElectivo                // 3. Crear el electivo
 );
 

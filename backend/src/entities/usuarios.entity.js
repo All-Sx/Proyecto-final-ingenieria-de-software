@@ -48,7 +48,7 @@ export const Usuario = new EntitySchema({
     rol: {
       target: "Rol",
       type: "many-to-one",
-      joinColumn: { name: "rol_id" }, // Nombre de la columna en BD
+      joinColumn: { name: "rol_id" }, 
       nullable: false,
     },
   },

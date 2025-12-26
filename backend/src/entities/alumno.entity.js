@@ -26,7 +26,7 @@ export const Alumno = new EntitySchema({
     usuario: {
       target: "Usuario",
       type: "one-to-one",
-      joinColumn: { name: "usuario_id" }, // Comparte ID con usuario
+      joinColumn: { name: "usuario_id" },
       onDelete: "CASCADE",
     },
     carrera: {
