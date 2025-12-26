@@ -1,4 +1,4 @@
-import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, getElectivosAprovadosService } from "../services/electivo.service.js";
+import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, asignarCuposPorCarreraService, getElectivosAprovadosService } from "../services/electivo.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
@@ -111,6 +111,27 @@ export const updateElectivo = async (req, res) => {
 
     return res.status(200).json({
       message: "Electivo actualizado correctamente",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const asignarCuposManual = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await asignarCuposPorCarreraService(Number(id));
+
+    if (result.error) {
+      const status = result.error.includes("no encontrado") ? 404 : 400;
+      return handleErrorClient(res, status, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Cupos asignados exitosamente por carrera",
       data: result.data
     });
 

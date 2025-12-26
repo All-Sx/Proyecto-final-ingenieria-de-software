@@ -1,6 +1,6 @@
 import { Router } from "express";
 // Importamos el NUEVO controlador getMisElectivos
-import { createElectivo, getElectivos, getElectivosAprovados, getMisElectivos, updateElectivo } from "../controllers/electivo.controller.js";
+import { createElectivo, getElectivos, getMisElectivos, updateElectivo, asignarCuposManual, getElectivosAprovados } from "../controllers/electivo.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
 
@@ -35,6 +35,14 @@ router.put("/:id",
     updateElectivo
 );
 
+// POST /api/electivos/:id/asignar-cupos
+// Para asignar cupos manualmente a electivos que ya fueron aprobados
+router.post("/:id/asignar-cupos", 
+    authMiddleware, 
+    isAdmin(["Jefe de Carrera"]), // Solo el Jefe puede asignar cupos
+    asignarCuposManual
+);
+
 //GET api/electivos/aprobados
 //El ALUMNO dentro del periodo de INSCRIPCIÓN puede ver los electivos en estado APROBADO
 router.get("/aprobados",
@@ -42,4 +50,5 @@ router.get("/aprobados",
     isAdmin(["Alumno"]),
     getElectivosAprovados
 );
+
 export default router;
