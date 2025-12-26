@@ -4,6 +4,83 @@ import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
 
+const normalizarTexto = (texto) =>
+  texto.trim().toLowerCase().split(/\s+/);
+
+const validarNombresOApellidos = (valor, tipo) => {
+  if (!valor.trim()) {
+    return `Debes ingresar tus ${tipo}.`;
+  }
+
+  const palabras = normalizarTexto(valor);
+
+  if (palabras.length < 2) {
+    return `Ingresa todos tus ${tipo}.`;
+  }
+
+  const regex = /^[a-záéíóúñ]+$/;
+
+  for (const palabra of palabras) {
+    if (!regex.test(palabra)) {
+      return `Los ${tipo} no pueden contener números ni caracteres especiales.`;
+    }
+  }
+
+  return null;
+};
+
+const validarRut = (rut) => {
+  if (!rut.trim()) {
+    return "Debes ingresar tu RUT.";
+  }
+
+  const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dk]$/;
+
+  if (!regex.test(rut)) {
+    return "El RUT debe tener el formato XX.XXX.XXX-X";
+  }
+
+  return null;
+};
+
+const validarCorreoEstudiante = (email, nombres, apellidos) => {
+  const regex =
+    /^([a-z]+)\.([a-z]+)(20\d{2})-([12])@alumnos\.ubiobio\.cl$/;
+
+  const match = email.match(regex);
+
+  if (!match) {
+    return "El correo no cumple el formato institucional requerido.";
+  }
+
+  const nombreEmail = match[1];
+  const apellidoEmail = match[2];
+  const anioIngreso = parseInt(match[3], 10);
+  const semestre = match[4];
+  const anioActual = new Date().getFullYear();
+
+  if (anioIngreso > anioActual) {
+    return "El año de ingreso no puede ser mayor al año actual.";
+  }
+
+  if (!["1", "2"].includes(semestre)) {
+    return "El semestre de ingreso debe ser 1 o 2.";
+  }
+
+  const nombresArray = normalizarTexto(nombres);
+  const apellidosArray = normalizarTexto(apellidos);
+
+  if (nombreEmail !== nombresArray[0]) {
+    return "El nombre del correo no coincide con tu primer nombre.";
+  }
+
+  if (apellidoEmail !== apellidosArray[0]) {
+    return "El apellido del correo no coincide con tu primer apellido.";
+  }
+
+  return null;
+};
+
 export default function AuthForm() {
   const [isRegister, setIsRegister] = useState(false);
   const [userType, setUserType] = useState(""); // estudiante o profesor
@@ -11,7 +88,8 @@ export default function AuthForm() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
+    nombres: "",
+    apellidos: "",
     rut: "",
     email: "",
     password: "",
@@ -25,13 +103,67 @@ export default function AuthForm() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
   };
 
-  /**
-   * FUNCIÓN PARA LOGIN DE DEMOSTRACIÓN
-   * Esta función permite acceso rápido sin registro para probar la aplicación
-   * @param {string} role - El rol del usuario: "profesor", "estudiante" o "jefe"
-   */
+  const errorNombres = validarNombresOApellidos(
+    formData.nombres,
+    "nombres"
+  );
+  const errorApellidos = validarNombresOApellidos(
+    formData.apellidos,
+    "apellidos"
+  );
+
+  const emailBloqueado = !!errorNombres || !!errorApellidos;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (isRegister) {
+      if (errorNombres) return setError(errorNombres);
+      if (errorApellidos) return setError(errorApellidos);
+
+      if (!formData.rut || !formData.password || !formData.carrera) {
+        setError("Por favor, completa todos los campos requeridos.");
+        return;
+      }
+
+      const errorRut = validarRut(formData.rut);
+      if (errorRut) {
+        setError(errorRut);
+        return;
+      }
+
+      const errorEmail = validarCorreoEstudiante(
+        formData.email,
+        formData.nombres,
+        formData.apellidos
+      );
+
+      if (errorEmail) {
+        setError(errorEmail);
+        return;
+      }
+
+      console.log("Registro estudiante:", formData);
+      alert("Registro exitoso");
+    } else {
+      if (!formData.email || !formData.password) {
+        setError("Ingresa tus credenciales.");
+        return;
+      }
+    }
+
+    navigate("/dashboard");
+  };
+
+  const handleRutChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setFormData({ ...formData, rut: value });
+    setError("");
+  };
+
   const handleDemoLogin = (role) => {
     let user;
 
@@ -68,50 +200,6 @@ export default function AuthForm() {
     navigate("/dashboard", { state: { user } });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (isRegister) {
-      if (
-        !formData.name ||
-        !formData.rut ||
-        !formData.email ||
-        !formData.password
-      ) {
-        setError("Por favor, completa todos los campos requeridos.");
-        return;
-      }
-
-      if (!formData.carrera) {
-        setError("Por favor, selecciona tu carrera.");
-        return;
-      }
-
-      setError("");
-      console.log("Registro:", { ...formData, userType: "estudiante" });
-      alert("Registro exitoso");
-    } else {
-      if (!formData.email || !formData.password) {
-        setError("Ingresa tus credenciales para iniciar sesión.");
-        return;
-      }
-      setError("");
-      console.log("Login:", formData);
-      alert("Inicio de sesión");
-    }
-
-    navigate("/dashboard", {
-      state: {
-        user: {
-          nombre: "Estudiante Demo",
-          correo: formData.email,
-          tipo: isRegister ? "Estudiante" : "Profesor",
-          foto: "https://i.pravatar.cc/150?img=12",
-        },
-      },
-    });
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <motion.div
@@ -121,7 +209,7 @@ export default function AuthForm() {
         className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8"
       >
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-          {isRegister ? "Crear Cuenta (Alumno)" : "Iniciar Sesión"}
+          {isRegister ? "Registro de Estudiantes" : "Iniciar Sesión"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -136,47 +224,35 @@ export default function AuthForm() {
                 transition={{ duration: 0.3 }}
                 className="space-y-5"
               >
-                {/* Nombre */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre y Apellido
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 text-gray-400" size={18} />
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Juan Pérez"
-                    />
-                  </div>
-                </div>
+                {/* Nombres */}
+                <input
+                  name="nombres"
+                  placeholder="Nombres"
+                  value={formData.nombres}
+                  onChange={handleChange}
+                  className="w-full border rounded-xl p-2"
+                />
+
+                {/* Apellidos */}
+                <input
+                  name="apellidos"
+                  placeholder="Apellidos"
+                  value={formData.apellidos}
+                  onChange={handleChange}
+                  className="w-full border rounded-xl p-2"
+                />
 
                 {/* RUT */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    RUT
-                  </label>
-                  <div className="relative">
-                    <IdCard className="absolute left-3 top-3 text-gray-400" size={18} />
-                    <input
-                      type="text"
-                      name="rut"
-                      value={formData.rut}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="12.345.678-9"
-                    />
-                  </div>
-                </div>
+                <input
+                  name="rut"
+                  placeholder="12.345.678-9"
+                  value={formData.rut}
+                  onChange={handleRutChange}
+                  className="w-full border rounded-xl p-2"
+                />
 
                 {/* Carrera */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Carrera universitaria
-                  </label>
                   <select
                     name="carrera"
                     value={formData.carrera}
@@ -195,46 +271,40 @@ export default function AuthForm() {
             )}
           </AnimatePresence>
 
-          {/* Campos comunes (login y registro) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo institucional
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="usuario@ubiobio.cl"
-              />
-            </div>
-          </div>
+          {/* EMAIL */}
+          <input
+            name="email"
+            placeholder={isRegister ? "nombre.apellido20XX-X@alumnos.ubiobio.cl" : "usuario@ubiobio.cl"}
+            value={formData.email}
+            disabled={isRegister && emailBloqueado}
+            onChange={handleChange}
+            className={`w-full border rounded-xl p-2 ${emailBloqueado && "bg-gray-100 cursor-not-allowed"
+              }`}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+          {isRegister && emailBloqueado && (
+            <p className="text-xs text-red-500">
+              Ingresa primero todos tus nombres y apellidos correctamente antes de poder ingresar tu correo institucional.
+            </p>
+          )}
+
+          {/* PASSWORD */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Contraseña"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full border rounded-xl p-2"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-2"
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </button>
           </div>
 
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
@@ -246,16 +316,15 @@ export default function AuthForm() {
             {isRegister ? "Registrarme" : "Entrar"}
           </button>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-sm">
             {isRegister ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
             <button
               type="button"
+              className="text-blue-600"
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError("");
-                setUserType("");
               }}
-              className="text-blue-600 hover:underline font-medium"
             >
               {isRegister ? "Inicia sesión" : "Regístrate"}
             </button>
