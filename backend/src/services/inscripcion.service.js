@@ -88,7 +88,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     const nuevaSolicitud = solicitudRepository.create({
         alumno: alumno,
         electivo: electivo,
-        prioridad: prioridad || 1, // Si no envía prioridad, asumimos 1
+        prioridad: prioridad || 1, 
         fecha_solicitud: new Date()
     });
 
@@ -110,11 +110,11 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
 
     const solicitudes = await solicitudRepository.find({
       where: {
-        alumno: { id: alumnoId } // Filtramos por el alumno logueado
+        alumno: { id: alumnoId } 
       },
-      relations: ["electivo"], // ¡Importante! Para ver los datos del ramo
+      relations: ["electivo"], 
       order: {
-        fecha_solicitud: "DESC" // Las más recientes primero
+        fecha_solicitud: "DESC" 
       }
     });
 
