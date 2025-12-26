@@ -76,7 +76,7 @@ export const register = async (req, res) => {
 
     const { rut, nombre_completo, email, password, rol } = req.body;
 
-    // Validación básica
+    
     if (!rut || !nombre_completo || !email || !password) {
       return res.status(400).json({ 
         message: "Faltan datos requeridos (rut, nombre, email, password)" 
