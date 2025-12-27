@@ -1,131 +1,15 @@
+import { login, register } from "../services/auth.service";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
-
-const normalizarTexto = (texto) =>
-  texto.trim().toLowerCase().split(/\s+/);
-
-const quitarTildes = (texto) =>
-  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-const validarNombresOApellidos = (valor, tipo) => {
-  if (!valor.trim()) {
-    return `Debes ingresar tus ${tipo}.`;
-  }
-
-  const palabras = normalizarTexto(valor);
-
-  if (palabras.length < 2) {
-    return `Ingresa todos tus ${tipo}.`;
-  }
-
-  const regex = /^[a-záéíóúñ]+$/;
-
-  for (const palabra of palabras) {
-    if (!regex.test(palabra)) {
-      return `Los ${tipo} no pueden contener números ni caracteres especiales.`;
-    }
-  }
-
-  return null;
-};
-
-const validarRut = (rut) => {
-  if (!rut.trim()) {
-    return "Debes ingresar tu RUT.";
-  }
-
-  const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dk]$/;
-
-  if (!regex.test(rut)) {
-    return "El RUT debe tener el formato XX.XXX.XXX-X";
-  }
-
-  return null;
-};
-
-const validarCorreoEstudiante = (email, nombres, apellidos) => {
-  const regex =
-    /^([a-z]+)\.([a-z]+)(\d{2})0([12])@alumnos\.ubiobio\.cl$/;
-
-  const match = email.match(regex);
-
-  if (!match) {
-    return {
-      valid: false,
-      error:
-        "Formato inválido",
-    };
-  }
-
-  const nombreEmail = match[1];
-  const apellidoEmail = match[2];
-  const anioIngreso = parseInt(match[3], 10);
-  const semestre = match[4];
-  const anioActual = new Date().getFullYear() % 100;
-
-  if (anioIngreso > anioActual) {
-    return {
-      valid: false,
-      error: "El año de ingreso no puede ser mayor al año actual.",
-    };
-  }
-
-  if (semestre !== "1" && semestre !== "2") {
-    return {
-      valid: false,
-      error: "El semestre debe ser 1 o 2.",
-    };
-  }
-
-  const nombresArray = normalizarTexto(nombres);
-  const apellidosArray = normalizarTexto(apellidos);
-
-  if (
-    quitarTildes(nombreEmail) !==
-    quitarTildes(nombresArray[0])
-  ) {
-    return {
-      valid: false,
-      error:
-        "El nombre del correo no coincide con tu primer nombre.",
-    };
-  }
-
-  if (
-    quitarTildes(apellidoEmail) !==
-    quitarTildes(apellidosArray[0])
-  ) {
-    return {
-      valid: false,
-      error:
-        "El apellido del correo no coincide con tu primer apellido.",
-    };
-  }
-
-  return { valid: true };
-};
-
-const validarPassword = (password) => {
-  if (!password) {
-    return "Debes ingresar una contraseña.";
-  }
-
-  if (password.length < 8) {
-    return "La contraseña debe tener al menos 8 caracteres.";
-  }
-
-  const tieneLetra = /[a-zA-Z]/.test(password);
-  const tieneNumero = /\d/.test(password);
-
-  if (!tieneLetra || !tieneNumero) {
-    return "La contraseña debe contener letras y números.";
-  }
-
-  return null;
-};
+import {
+  validarNombresOApellidos,
+  validarRut,
+  validarPassword,
+  validarCorreoEstudiante,
+} from "../helpers/validators";
 
 const initialFormData = {
   nombres: "",
@@ -142,11 +26,6 @@ export default function AuthForm() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
-
-  const carreras = [
-    "Ingeniería Civil Informática",
-    "Ingeniería de Ejecución en Computación e Informática"
-  ];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -170,13 +49,11 @@ export default function AuthForm() {
 
     try {
       if (isRegister) {
-        // 🔎 Validaciones locales (las tuyas)
+        const errorNombres = validarNombresOApellidos(formData.nombres, "nombres");
         if (errorNombres) return setError(errorNombres);
-        if (errorApellidos) return setError(errorApellidos);
 
-        if (!formData.rut || !formData.password || !formData.carrera) {
-          return setError("Por favor, completa todos los campos requeridos.");
-        }
+        const errorApellidos = validarNombresOApellidos(formData.apellidos, "apellidos");
+        if (errorApellidos) return setError(errorApellidos);
 
         const errorRut = validarRut(formData.rut);
         if (errorRut) return setError(errorRut);
@@ -192,23 +69,12 @@ export default function AuthForm() {
 
         if (!errorEmail.valid) return setError(errorEmail.error);
 
-        //  REGISTRO REAL
-        const response = await fetch(`${API_URL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            rut: formData.rut,
-            nombre_completo: `${formData.nombres} ${formData.apellidos}`,
-            email: formData.email,
-            password: formData.password
-          })
+        await register({
+          rut: formData.rut,
+          nombre_completo: `${formData.nombres} ${formData.apellidos}`,
+          email: formData.email,
+          password: formData.password,
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          return setError(data.message || "Error al registrar usuario.");
-        }
 
         alert("Registro exitoso, ahora puedes iniciar sesión.");
         setIsRegister(false);
@@ -221,30 +87,19 @@ export default function AuthForm() {
         return setError("Ingresa tus credenciales.");
       }
 
-      const response = await fetch(`${API_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const { data } = await login({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return setError(data.message || "Credenciales inválidas.");
-      }
-
-      // Guardar sesión
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
+      console.log("LOGIN DATA:", data);
       navigate("/dashboard");
 
     } catch (err) {
       console.error(err);
-      setError("Error de conexión con el servidor.");
     }
   };
 
@@ -265,23 +120,7 @@ export default function AuthForm() {
         rol: "profesor",
         tipo: "Profesor"
       };
-    } else if (role === "estudiante") {
-      user = {
-        nombre: "Estudiante Demo",
-        correo: "estudiante.demo@alumnos.ubiobio.cl",
-        rol: "estudiante",
-        tipo: "Estudiante"
-      };
-    } else if (role === "jefe") {
-      // Caso específico para el Jefe de Carrera
-      user = {
-        nombre: "Jefe de Carrera",
-        correo: "jefe.carrera@ubiobio.cl",
-        rol: "jefe",  // Identificador único para el jefe
-        tipo: "Jefe de Carrera"
-      };
-    }
-
+    } 
     // GUARDAR usuario en localStorage para persistencia entre páginas
     // Convertimos el objeto a string JSON para almacenarlo
     localStorage.setItem("user", JSON.stringify(user));
@@ -340,23 +179,6 @@ export default function AuthForm() {
                   onChange={handleRutChange}
                   className="w-full border rounded-xl p-2"
                 />
-
-                {/* Carrera */}
-                <div>
-                  <select
-                    name="carrera"
-                    value={formData.carrera}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Selecciona tu carrera...</option>
-                    {carreras.map((carrera) => (
-                      <option key={carrera} value={carrera}>
-                        {carrera}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -435,28 +257,8 @@ export default function AuthForm() {
             >
               Entrar como Profesor (Demo)
             </button>
-
-            {/* Botón para login demo como ESTUDIANTE */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("estudiante")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Estudiante (Demo)
-            </button>
-
-            {/* Botón para login demo como JEFE DE CARRERA */}
-            {/* Este botón usa color púrpura para diferenciarlo de los otros roles */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("jefe")}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Jefe de Carrera (Demo)
-            </button>
           </div>
         </div>
-
       </motion.div>
     </div>
   );
