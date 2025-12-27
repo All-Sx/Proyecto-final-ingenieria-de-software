@@ -1,10 +1,12 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Rol } from "../entities/rol.entity.js";
 import { Usuario } from "../entities/usuarios.entity.js"; 
+import { Carrera } from "../entities/academico.entity.js";
 import bcrypt from "bcryptjs"; 
 
 export async function createData() {
   await seedRoles();      
+  await seedCarreras();
   await seedUserAdmin();  
 }
 
@@ -22,6 +24,23 @@ async function seedRoles() {
   }
 }
 
+async function seedCarreras() {
+  const carreraRepository = AppDataSource.getRepository(Carrera);
+  
+  const carreras = [
+    { codigo: "ICI", nombre: "Ingeniería Civil en Informática" },
+    { codigo: "IECI", nombre: "Ingeniería de Ejecución en Computación e Informática" },
+  ];
+
+  for (const carreraData of carreras) {
+    const carreraExistente = await carreraRepository.findOneBy({ codigo: carreraData.codigo });
+    if (!carreraExistente) {
+      const nuevaCarrera = carreraRepository.create(carreraData);
+      await carreraRepository.save(nuevaCarrera);
+      console.log(`[SEED] Carrera creada: ${carreraData.codigo} - ${carreraData.nombre}`);
+    }
+  }
+}
 
 async function seedUserAdmin() {
   const userRepository = AppDataSource.getRepository(Usuario);

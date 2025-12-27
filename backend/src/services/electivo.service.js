@@ -219,3 +219,40 @@ export async function asignarCuposPorCarreraService(electivoId) {
     return { error: "Error interno al asignar cupos por carrera." };
   }
 }
+
+/**
+ * Obtiene la lista de electivos aprobados disponibles para los alumnos.
+ * Solo muestra electivos si el periodo de inscripción está activo (estado INSCRIPCION).
+ * Si el periodo está CERRADO, no permite ver los electivos aprobados.
+ * 
+ * @returns {Object} { data: Array<Electivo> } o { error: string }
+ */
+export async function getElectivosAprobadosService() {
+  try {
+    const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+
+    // 1. Verificar si hay un periodo activo de inscripción
+    const periodoActivo = await periodoRepository.findOne({
+      where: { estado: "INSCRIPCION" }
+    });
+
+    // 2. Si no hay periodo activo o el periodo está CERRADO, no permitir ver electivos
+    if (!periodoActivo) {
+      return { 
+        error: "No hay un periodo de inscripción activo. No se pueden ver los electivos en este momento." 
+      };
+    }
+
+    // 3. Obtener solo los electivos que están en estado APROBADO
+    const electivosAprobados = await electivoRepository.find({
+      where: { estado: "APROBADO" }
+    });
+
+    return { data: electivosAprobados };
+
+  } catch (error) {
+    console.error("Error al obtener electivos aprobados:", error);
+    return { error: "Error interno al obtener electivos aprobados." };
+  }
+}
