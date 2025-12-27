@@ -140,11 +140,11 @@ export const asignarCuposManual = async (req, res) => {
   }
 };
 
-export const getElectivosAprovados = async (req, res) => {
+export const getElectivosAprobados = async (req, res) => {
   try {
     const result = await getElectivosAprovadosService();
 
-    if (result.error) return handleErrorClient(res, 500, result.error);
+    if (result.error) return handleErrorClient(res, 400, result.error);
 
     return res.status(200).json({
       message: "Lista de electivos aprobados",
