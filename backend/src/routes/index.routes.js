@@ -11,15 +11,15 @@ import alumnoRoutes from "./alumno.routes.js";
 export function routerApi(app) {
     const router = Router();
     
-    // Aquí defines la URL base, ej: http://localhost:3000/api
+    
     app.use("/api", router);
 
-    // Rutas hijas
-    router.use("/auth", authRoutes);      // /api/auth
-    router.use("/electivos", electivoRoutes); // /api/electivos
-    router.use("/periodos", periodoRoutes); // /api/periodos
-    router.use("/usuarios", userRoutes);     // /api/usuarios
-    router.use("/inscripciones", inscripcionRoutes); // /api/inscripciones
-    router.use("/carreras", carreraRoutes); // /api/carreras
-    router.use("/alumnos", alumnoRoutes);   // /api/alumnos
+    
+    router.use("/auth", authRoutes);      
+    router.use("/electivos", electivoRoutes); 
+    router.use("/periodos", periodoRoutes); 
+    router.use("/usuarios", userRoutes);     
+    router.use("/inscripciones", inscripcionRoutes); 
+    router.use("/carreras", carreraRoutes); 
+    router.use("/alumnos", alumnoRoutes);   
 }
