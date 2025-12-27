@@ -85,7 +85,7 @@ export async function getProfesoresService() {
     const profesores = await userRepository.find({
       where: { rol: { id: rolProfesor.id } },
       relations: ["rol"],
-      select: ["id", "rut", "nombre_completo", "email", "activo", "created_at"]
+      select: ["id", "rut", "nombre_completo", "email", "activo"]
     });
 
     return { data: profesores };

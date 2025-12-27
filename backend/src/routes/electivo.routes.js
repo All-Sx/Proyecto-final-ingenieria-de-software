@@ -37,6 +37,7 @@ router.get("/aprobados",
 router.put("/:id", 
     authMiddleware, 
     isAdmin(["Jefe de Carrera"]), 
+    updateElectivo
 );
 
 export default router;
