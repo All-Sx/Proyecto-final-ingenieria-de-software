@@ -1,6 +1,6 @@
 import { Router } from "express";
 // Importamos el NUEVO controlador getMisElectivos
-import { createElectivo, getElectivos, getMisElectivos, updateElectivo, asignarCuposManual, getElectivosAprovados } from "../controllers/electivo.controller.js";
+import { createElectivo, getElectivos, getMisElectivos, updateElectivo, asignarCuposManual, getElectivosAprobados } from "../controllers/electivo.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
 
@@ -48,7 +48,7 @@ router.post("/:id/asignar-cupos",
 router.get("/aprobados",
     authMiddleware,
     isAdmin(["Alumno"]),
-    getElectivosAprovados
+    getElectivosAprobados
 );
 
 export default router;

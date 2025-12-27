@@ -227,7 +227,7 @@ export async function asignarCuposPorCarreraService(electivoId) {
  * 
  * @returns {Object} { data: Array<Electivo> } o { error: string }
  */
-export async function getElectivosAprovadosService() {
+export async function getElectivosAprobadosService() {
   try {
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
     const electivoRepository = AppDataSource.getRepository(Electivo);

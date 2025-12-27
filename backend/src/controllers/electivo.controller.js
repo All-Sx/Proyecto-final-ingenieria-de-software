@@ -1,4 +1,4 @@
-import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, asignarCuposPorCarreraService, getElectivosAprovadosService } from "../services/electivo.service.js";
+import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, asignarCuposPorCarreraService, getElectivosAprobadosService } from "../services/electivo.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
@@ -142,7 +142,7 @@ export const asignarCuposManual = async (req, res) => {
 
 export const getElectivosAprobados = async (req, res) => {
   try {
-    const result = await getElectivosAprovadosService();
+    const result = await getElectivosAprobadosService();
 
     if (result.error) return handleErrorClient(res, 400, result.error);
 
