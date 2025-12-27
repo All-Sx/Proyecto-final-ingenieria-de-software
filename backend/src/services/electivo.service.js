@@ -115,7 +115,7 @@ export async function updateElectivoService(id, data) {
   }
 }
 
-export async function getElectivosAprovadosService() {
+export async function getElectivosAprobadosService() {
   try {
     //Establecer la fecha actual
     const ahora = new Date();
