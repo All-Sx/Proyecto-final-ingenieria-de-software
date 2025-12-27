@@ -54,6 +54,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     // 5. Contar inscripciones ACEPTADAS y PENDIENTES de alumnos de esta carrera en este electivo
     // IMPORTANTE: Contamos PENDIENTES también porque están ocupando un cupo mientras se procesan
+    // NO contamos LISTA_ESPERA ni RECHAZADAS porque no ocupan cupos
     const inscripcionesOcupadas = await solicitudRepository
         .createQueryBuilder("solicitud")
         .innerJoin("solicitud.alumno", "usuario")
@@ -64,14 +65,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         .andWhere("solicitud.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
         .getCount();
 
-    // 6. Validar que no se exceda el cupo asignado a la carrera
-    if (inscripcionesOcupadas >= cupoCarrera.cantidad_reservada) {
-        return { 
-            error: `No hay cupos disponibles para tu carrera (${carreraAlumno.nombre}). Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${inscripcionesOcupadas}` 
-        };
-    }
-
-    // 7. Verificar si ya existe una solicitud de este alumno para este electivo
+    // 6. Verificar si ya existe una solicitud de este alumno para este electivo
     const solicitudExistente = await solicitudRepository.findOne({
         where: {
             alumno: { id: alumnoId },
@@ -80,46 +74,38 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     });
 
     if (solicitudExistente) {
-        return { error: "Ya tienes una solicitud pendiente o aceptada para este electivo." };
+        return { error: "Ya tienes una solicitud para este electivo." };
     }
 
-    // 8. Crear la solicitud
-    // Nota: El estado se pone automáticamente en 'PENDIENTE' por la BD
+    // 7. Determinar el estado inicial de la solicitud según disponibilidad de cupos
+    let estadoInicial = "PENDIENTE";
+    let mensajeResultado = "";
+
+    if (inscripcionesOcupadas >= cupoCarrera.cantidad_reservada) {
+        // NO hay cupos disponibles → Crear solicitud en LISTA_ESPERA
+        estadoInicial = "LISTA_ESPERA";
+        mensajeResultado = `No hay cupos disponibles. Tu solicitud quedó en LISTA DE ESPERA. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${inscripcionesOcupadas}`;
+        console.log(`[INSCRIPCIÓN - LISTA ESPERA] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) en lista de espera para "${electivo.nombre}". Cupos: ${inscripcionesOcupadas}/${cupoCarrera.cantidad_reservada}`);
+    } else {
+        // SÍ hay cupos disponibles → Crear solicitud en PENDIENTE
+        mensajeResultado = `Solicitud enviada exitosamente. Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`;
+        console.log(`[INSCRIPCIÓN - PENDIENTE] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
+    }
+
+    // 8. Crear la solicitud con el estado correspondiente
     const nuevaSolicitud = solicitudRepository.create({
         alumno: alumno,
         electivo: electivo,
         prioridad: prioridad || 1, 
+        estado: estadoInicial,  // PENDIENTE o LISTA_ESPERA
         fecha_solicitud: new Date()
     });
 
     const solicitudGuardada = await solicitudRepository.save(nuevaSolicitud);
     
-    console.log(`[INSCRIPCIÓN] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
-    
     return { 
-      data: {
-        prioridad: solicitudGuardada.prioridad,
-        fecha_solicitud: solicitudGuardada.fecha_solicitud,
-        alumno: {
-          id: solicitudGuardada.alumno.id,
-          rut: solicitudGuardada.alumno.rut,
-          email: solicitudGuardada.alumno.email,
-          nombre_completo: solicitudGuardada.alumno.nombre_completo,
-          password_hash: solicitudGuardada.alumno.password_hash,
-          activo: solicitudGuardada.alumno.activo
-        },
-        electivo: {
-          id: solicitudGuardada.electivo.id,
-          nombre: solicitudGuardada.electivo.nombre,
-          descripcion: solicitudGuardada.electivo.descripcion,
-          creditos: solicitudGuardada.electivo.creditos,
-          cupos: solicitudGuardada.electivo.cupos,
-          estado: solicitudGuardada.electivo.estado,
-          nombre_profesor: solicitudGuardada.electivo.nombre_profesor
-        },
-        id: solicitudGuardada.id,
-        estado: solicitudGuardada.estado
-      }
+        data: solicitudGuardada,
+        message: mensajeResultado 
     };
 
   } catch (error) {
