@@ -96,7 +96,31 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     
     console.log(`[INSCRIPCIÓN] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
     
-    return { data: solicitudGuardada };
+    return { 
+      data: {
+        prioridad: solicitudGuardada.prioridad,
+        fecha_solicitud: solicitudGuardada.fecha_solicitud,
+        alumno: {
+          id: solicitudGuardada.alumno.id,
+          rut: solicitudGuardada.alumno.rut,
+          email: solicitudGuardada.alumno.email,
+          nombre_completo: solicitudGuardada.alumno.nombre_completo,
+          password_hash: solicitudGuardada.alumno.password_hash,
+          activo: solicitudGuardada.alumno.activo
+        },
+        electivo: {
+          id: solicitudGuardada.electivo.id,
+          nombre: solicitudGuardada.electivo.nombre,
+          descripcion: solicitudGuardada.electivo.descripcion,
+          creditos: solicitudGuardada.electivo.creditos,
+          cupos: solicitudGuardada.electivo.cupos,
+          estado: solicitudGuardada.electivo.estado,
+          nombre_profesor: solicitudGuardada.electivo.nombre_profesor
+        },
+        id: solicitudGuardada.id,
+        estado: solicitudGuardada.estado
+      }
+    };
 
   } catch (error) {
     console.error("Error al crear solicitud:", error);
