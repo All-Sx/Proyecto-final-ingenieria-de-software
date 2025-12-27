@@ -73,7 +73,7 @@ Proyecto final de Ingeniería de Software. Aplicación web full-stack para inscr
         ```
         La aplicación estará disponible en `http://localhost:5173` (o el puerto que indique Vite).
 
-## 👨‍💻 Autores
+## Autores
 
 Un agradecimiento a los miembros del equipo.
 
