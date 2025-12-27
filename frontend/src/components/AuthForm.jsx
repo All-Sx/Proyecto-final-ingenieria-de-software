@@ -10,6 +10,7 @@ import {
   validarPassword,
   validarCorreoEstudiante,
 } from "../helpers/validators";
+import { ROLES } from "../helpers/roles";
 
 const initialFormData = {
   nombres: "",
@@ -17,7 +18,6 @@ const initialFormData = {
   rut: "",
   email: "",
   password: "",
-  carrera: "",
 };
 
 export default function AuthForm() {
@@ -109,6 +109,21 @@ export default function AuthForm() {
 
     } catch (err) {
       console.error(err);
+
+      // Mostrar mensaje al usuario
+      if (err.response) {
+        // Axios error con respuesta del backend
+        if (err.response.status === 401) {
+          setError("Email o contraseña incorrectos.");
+        } else if (err.response.data?.message) {
+          setError(err.response.data.message);
+        } else {
+          setError("Ocurrió un error. Intenta nuevamente.");
+        }
+      } else {
+        // Error de red u otro
+        setError("No se pudo conectar con el servidor.");
+      }
     }
   };
 
@@ -126,7 +141,7 @@ export default function AuthForm() {
       user = {
         nombre: "Profesor Demo",
         correo: "profesor.demo@ubiobio.cl",
-        rol: "profesor",
+        rol: ROLES.PROFESOR,
         tipo: "Profesor"
       };
     }
