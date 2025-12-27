@@ -152,7 +152,7 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
     }
 
     if (nuevoEstado === "CERRADO" && periodo.activo) {
-        periodo.activo = false; // se archiva automáticamente al cerrar
+        periodo.activo = false; 
     }
 
     periodo.estado = nuevoEstado;
