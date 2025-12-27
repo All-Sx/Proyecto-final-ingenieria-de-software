@@ -5,20 +5,19 @@ export const createUserAdmin = async (req, res) => {
   try {
     const { rut, nombre_completo, email, password, rol } = req.body;
 
-    // 1. Validaciones básicas
+    
     if (!rut || !nombre_completo || !email || !password || !rol) {
       return handleErrorClient(res, 400, "Faltan datos obligatorios.");
     }
 
-    // 2. SEGURIDAD: Validar que solo cree roles permitidos
-    // El Jefe de Carrera no debería poder crear un "SuperAdmin" o roles inventados
+    
     const rolesPermitidos = ["Jefe de Carrera", "Profesor"];
     
     if (!rolesPermitidos.includes(rol)) {
       return handleErrorClient(res, 400, "Rol no válido. Solo puedes crear: 'Jefe de Carrera' o 'Profesor'.");
     }
 
-    // 3. Llamar al servicio
+   
     const result = await createUserWithRoleService({
       rut,
       nombre_completo,
@@ -41,7 +40,7 @@ export const createUserAdmin = async (req, res) => {
   }
 };
 
-// Obtener todos los alumnos
+
 export const getAlumnos = async (req, res) => {
   try {
     const result = await getAlumnosService();
@@ -57,7 +56,7 @@ export const getAlumnos = async (req, res) => {
   }
 };
 
-// Obtener todos los profesores
+
 export const getProfesores = async (req, res) => {
   try {
     const result = await getProfesoresService();

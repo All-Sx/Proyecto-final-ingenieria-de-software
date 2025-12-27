@@ -5,10 +5,10 @@ import { isAdmin } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-// PUT /api/alumnos/:id/asignar-carrera
+
 router.put("/:id/asignar-carrera", 
     authMiddleware, 
-    isAdmin(["Jefe de Carrera"]), // Solo el Jefe asigna carreras
+    isAdmin(["Jefe de Carrera"]), 
     asignarCarrera
 );
 
