@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { createDatabaseIfNotExists } from "./config/setup.db.js";
 import { AppDataSource, connectDB } from "./config/configdb.js";
 import { routerApi } from "./routes/index.routes.js";
 import { HOST, PORT} from "./config/configenv.js";
@@ -23,24 +22,17 @@ app.get("/", (req, res) => {
   res.send("¡Bienvenido a mi API REST con TypeORM!");
 });
 
-async function main() {
-  try {
-    await createDatabaseIfNotExists();
-
-    await connectDB();
-
-    await createData();
-
+connectDB()
+  .then(async () => {
+    await createData(); 
     routerApi(app);
 
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Servidor iniciado en http://${HOST}:${PORT}`);
     });
-
-  } catch (error) {
-    console.error(" Error crítico al iniciar la aplicación:", error);
+  })
+  .catch((error) => {
+    console.log("Error al conectar con la base de datos:", error);
     process.exit(1);
-  }
-}
-
-main();
+  });
