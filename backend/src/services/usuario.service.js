@@ -1,5 +1,6 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js";
+import { Alumno } from "../entities/alumno.entity.js";
 import { Rol } from "../entities/rol.entity.js";
 import bcrypt from "bcryptjs";
 
@@ -92,5 +93,67 @@ export async function getProfesoresService() {
   } catch (error) {
     console.error("Error en getProfesoresService:", error);
     return { error: "Error interno al obtener profesores." };
+  }
+}
+
+export async function getUserByIdService(id) {
+  try {
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+    const alumnoRepository = AppDataSource.getRepository(Alumno);
+
+    
+    const usuario = await usuarioRepository.findOne({
+      where: { id: id },
+      relations: ["rol"] 
+    });
+
+    if (!usuario) {
+      return { error: "Usuario no encontrado" };
+    }
+
+    const { password_hash, ...usuarioSinPass } = usuario;
+
+    if (usuario.rol.nombre === "Alumno") {
+        const datosAlumno = await alumnoRepository.findOne({
+            where: { usuario_id: id },
+            relations: ["carrera"] 
+        });
+
+        if (datosAlumno) {
+            return { data: { ...usuarioSinPass, datos_academicos: datosAlumno } };
+        }
+    }
+
+    // 3. Si es Jefe de Carrera o Profesor, devolvemos solo el usuario
+    return { data: usuarioSinPass };
+
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    return { error: "Error interno." };
+  }
+}
+
+export async function updateUserService(id, data) {
+  try {
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+
+    const usuario = await usuarioRepository.findOneBy({ id: id });
+
+    if (!usuario) {
+      return { error: "Usuario no encontrado" };
+    }
+
+    if (data.nombre_completo) usuario.nombre_completo = data.nombre_completo;
+    if (data.email) usuario.email = data.email;
+
+    await usuarioRepository.save(usuario);
+
+    const usuarioActualizadoCompleto = await getUserByIdService(id);
+
+    return usuarioActualizadoCompleto;
+
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    return { error: "Error interno al actualizar datos." };
   }
 }

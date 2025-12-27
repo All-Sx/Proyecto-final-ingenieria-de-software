@@ -29,3 +29,14 @@ export async function createCarreraService(data) {
     return { error: "Error interno al crear la carrera." };
   }
 }
+
+export async function getAllCarrerasService() {
+  try {
+    const carreraRepository = AppDataSource.getRepository(Carrera);
+    const carreras = await carreraRepository.find();
+    return { data: carreras };
+  } catch (error) {
+    console.error("Error al obtener carreras:", error);
+    return { error: "Error interno al obtener las carreras." };
+  }
+}

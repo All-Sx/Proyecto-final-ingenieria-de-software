@@ -44,7 +44,17 @@ export async function createElectivoService(data, nombreProfesor) {
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
-    return { data: electivoGuardado };
+    return { 
+      data: {
+        id: electivoGuardado.id,
+        nombre: electivoGuardado.nombre,
+        descripcion: electivoGuardado.descripcion,
+        creditos: electivoGuardado.creditos,
+        cupos: electivoGuardado.cupos,
+        estado: electivoGuardado.estado,
+        nombre_profesor: electivoGuardado.nombre_profesor
+      }
+    };
 
   } catch (error) {
     console.error("Error en createElectivoService:", error);
@@ -149,7 +159,17 @@ export async function updateElectivoService(id, data) {
       console.log(`[ÉXITO] Cupos asignados correctamente para el electivo "${electivoActualizado.nombre}"`);
     }
 
-    return { data: electivoActualizado };
+    return { 
+      data: {
+        id: electivoActualizado.id,
+        nombre: electivoActualizado.nombre,
+        descripcion: electivoActualizado.descripcion,
+        creditos: electivoActualizado.creditos,
+        cupos: electivoActualizado.cupos,
+        estado: electivoActualizado.estado,
+        nombre_profesor: electivoActualizado.nombre_profesor
+      } 
+    };
 
   } catch (error) {
     console.error("Error al actualizar electivo:", error);

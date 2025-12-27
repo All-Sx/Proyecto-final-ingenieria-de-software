@@ -18,8 +18,9 @@ export const createSolicitud = async (req, res) => {
         return handleErrorClient(res, status, result.error);
     }
 
+    // Usar el mensaje del servicio (puede ser PENDIENTE o LISTA_ESPERA)
     return res.status(201).json({
-        message: "Solicitud enviada exitosamente",
+        message: result.message || "Solicitud enviada exitosamente",
         data: result.data
     });
 
