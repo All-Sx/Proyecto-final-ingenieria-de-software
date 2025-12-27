@@ -45,5 +45,9 @@ export const PeriodoAcademico = new EntitySchema({
       enum: ["PLANIFICACION", "INSCRIPCION", "SELECCION", "CERRADO"],
       default: "PLANIFICACION",
     },
+    activo: {
+      type: "boolean",
+      default: true,
+    },
   },
 });

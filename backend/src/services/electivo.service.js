@@ -1,7 +1,8 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js";
 import { PeriodoAcademico, Carrera } from "../entities/academico.entity.js";
 import { CupoPorCarrera } from "../entities/inscripcion.entity.js";
+import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 
 export async function createElectivoService(data, nombreProfesor) {
   try {
@@ -34,16 +35,26 @@ export async function createElectivoService(data, nombreProfesor) {
     }
 
     const nuevoElectivo = electivoRepository.create({
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        creditos: data.creditos || 5, 
-        cupos: data.cupos,
-        estado: "PENDIENTE", 
-        nombre_profesor: nombreProfesor 
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      creditos: data.creditos || 5, 
+      cupos: data.cupos,
+      estado: "PENDIENTE", 
+      nombre_profesor: nombreProfesor
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
-    return { data: electivoGuardado };
+    return { 
+      data: {
+        id: electivoGuardado.id,
+        nombre: electivoGuardado.nombre,
+        descripcion: electivoGuardado.descripcion,
+        creditos: electivoGuardado.creditos,
+        cupos: electivoGuardado.cupos,
+        estado: electivoGuardado.estado,
+        nombre_profesor: electivoGuardado.nombre_profesor
+      }
+    };
 
   } catch (error) {
     console.error("Error en createElectivoService:", error);
@@ -55,7 +66,17 @@ export async function getElectivosService() {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     
-    const electivos = await electivoRepository.find();
+    const electivos = await electivoRepository.find({
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        creditos: true,
+        cupos: true,
+        estado: true,
+        nombre_profesor: true
+      }
+    });
 
     return { data: electivos };
   } catch (error) {
@@ -67,9 +88,9 @@ export async function getElectivosService() {
 export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
-    
+
     const electivos = await electivoRepository.find({
-      where: { nombre_profesor: nombreProfesor } 
+      where: { nombre_profesor: nombreProfesor }
     });
 
     return { data: electivos };
@@ -94,10 +115,10 @@ export async function updateElectivoService(id, data) {
     const estadoAnterior = electivo.estado;
     const cuposAnteriores = electivo.cupos;
 
-    // 2. Actualizar los campos que vengan en 'data'
-    // Esto mezcla los datos antiguos con los nuevos
+    
     electivoRepository.merge(electivo, data);
 
+    
     
     const electivoActualizado = await electivoRepository.save(electivo);
 
@@ -138,7 +159,17 @@ export async function updateElectivoService(id, data) {
       console.log(`[ÉXITO] Cupos asignados correctamente para el electivo "${electivoActualizado.nombre}"`);
     }
 
-    return { data: electivoActualizado };
+    return { 
+      data: {
+        id: electivoActualizado.id,
+        nombre: electivoActualizado.nombre,
+        descripcion: electivoActualizado.descripcion,
+        creditos: electivoActualizado.creditos,
+        cupos: electivoActualizado.cupos,
+        estado: electivoActualizado.estado,
+        nombre_profesor: electivoActualizado.nombre_profesor
+      } 
+    };
 
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
@@ -156,6 +187,28 @@ export async function updateElectivoService(id, data) {
  */
 export async function asignarCuposPorCarreraService(electivoId) {
   try {
+    const ahora = new Date();
+
+    const periodos = AppDataSource.getRepository(PeriodoAcademico);
+
+    const periodoActual = await periodos.findOne({
+      where: {
+        fecha_fin: MoreThanOrEqual(ahora),
+        fecha_inicio: LessThanOrEqual(ahora)
+      }
+    });
+
+    if (!periodoActual) {
+      return { error: "No existe un periodo académico activo" };
+    }
+
+    if (periodoActual.estado !== "INSCRIPCION") {
+      if (periodoActual.estado === "CERRADO") {
+        return { error: "El periodo de inscripción está cerrado. No se pueden visualizar electivos aprobados." };
+      }
+      return { error: "No existe periodo en inscripcion de asignaturas" };
+    }
+
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const carreraRepository = AppDataSource.getRepository(Carrera);
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
@@ -246,7 +299,16 @@ export async function getElectivosAprobadosService() {
 
     // 3. Obtener solo los electivos que están en estado APROBADO
     const electivosAprobados = await electivoRepository.find({
-      where: { estado: "APROBADO" }
+      where: { estado: "APROBADO" },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        creditos: true,
+        cupos: true,
+        estado: true,
+        nombre_profesor: true
+      }
     });
 
     return { data: electivosAprobados };

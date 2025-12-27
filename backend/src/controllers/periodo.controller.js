@@ -5,7 +5,9 @@ import {
     getPeriodoByIdService,
     getPeriodoActualService,
     updateEstadoPeriodoService,
-    deletePeriodoService
+    deletePeriodoService,
+    getPeriodosHistorialService,
+    archivarPeriodoService
 } from "../services/periodo.service.js";
 
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js";
@@ -68,7 +70,10 @@ export async function updatePeriodoFechas(req, res) {
 
 export async function getAllPeriodos(req, res) {
     try {
-        const periodos = await getAllPeriodosService();
+        const { incluir_historial } = req.query;
+        const incluirInactivos = incluir_historial === 'true';
+        
+        const periodos = await getAllPeriodosService(incluirInactivos);
 
         if (!periodos || periodos.length === 0) {
             return handleSuccess(res, 200, "No hay periodos académicos registrados", []);
@@ -150,6 +155,38 @@ export async function deletePeriodo(req, res) {
             handleErrorClient(res, 404, error.message);
         } else {
             handleErrorServer(res, 500, "Error al eliminar el periodo", error.message);
+        }
+    }
+}
+
+export async function getPeriodosHistorial(req, res) {
+    try {
+        const periodosHistorial = await getPeriodosHistorialService();
+
+        if (!periodosHistorial || periodosHistorial.length === 0) {
+            return handleSuccess(res, 200, "No hay periodos en el historial", []);
+        }
+
+        handleSuccess(res, 200, "Historial de periodos cerrados", periodosHistorial);
+
+    } catch (error) {
+        handleErrorServer(res, 500, "Error al obtener el historial de periodos", error.message);
+    }
+}
+
+export async function archivarPeriodo(req, res) {
+    try {
+        const { id } = req.params;
+
+        const periodoArchivado = await archivarPeriodoService(id);
+
+        handleSuccess(res, 200, "Periodo archivado exitosamente", periodoArchivado);
+
+    } catch (error) {
+        if (error.message.includes("no encontrado") || error.message.includes("archivado")) {
+            handleErrorClient(res, 404, error.message);
+        } else {
+            handleErrorServer(res, 500, "Error al archivar el periodo", error.message);
         }
     }
 }
