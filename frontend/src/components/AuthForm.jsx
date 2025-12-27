@@ -27,11 +27,6 @@ export default function AuthForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
 
-  const carreras = [
-    "Ingeniería Civil Informática",
-    "Ingeniería de Ejecución en Computación e Informática"
-  ];
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
@@ -114,6 +109,26 @@ export default function AuthForm() {
     setError("");
   };
 
+  const handleDemoLogin = (role) => {
+    let user;
+
+    // Verificar el rol y crear el objeto de usuario correspondiente
+    if (role === "profesor") {
+      user = {
+        nombre: "Profesor Demo",
+        correo: "profesor.demo@ubiobio.cl",
+        rol: "profesor",
+        tipo: "Profesor"
+      };
+    } 
+    // GUARDAR usuario en localStorage para persistencia entre páginas
+    // Convertimos el objeto a string JSON para almacenarlo
+    localStorage.setItem("user", JSON.stringify(user));
+
+    // Navegar al dashboard y pasar el usuario también por state (método alternativo)
+    navigate("/dashboard", { state: { user } });
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
       <motion.div
@@ -164,23 +179,6 @@ export default function AuthForm() {
                   onChange={handleRutChange}
                   className="w-full border rounded-xl p-2"
                 />
-
-                {/* Carrera */}
-                <div>
-                  <select
-                    name="carrera"
-                    value={formData.carrera}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Selecciona tu carrera...</option>
-                    {carreras.map((carrera) => (
-                      <option key={carrera} value={carrera}>
-                        {carrera}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -245,6 +243,22 @@ export default function AuthForm() {
             </button>
           </p>
         </form>
+
+        {/* Botones temporales para acceso sin registro */}
+        <div className="mt-6 border-t pt-4 text-center">
+          <p className="text-sm text-gray-500 mb-3">Modo demostración:</p>
+
+          <div className="flex flex-col gap-3">
+            {/* Botón para login demo como PROFESOR */}
+            <button
+              type="button"
+              onClick={() => handleDemoLogin("profesor")}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition-colors"
+            >
+              Entrar como Profesor (Demo)
+            </button>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

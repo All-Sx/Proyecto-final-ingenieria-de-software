@@ -106,22 +106,3 @@ export const validarCorreoEstudiante = (email, nombres, apellidos) => {
 
   return { valid: true };
 };
-
-const validarPassword = (password) => {
-  if (!password) {
-    return "Debes ingresar una contraseña.";
-  }
-
-  if (password.length < 8) {
-    return "La contraseña debe tener al menos 8 caracteres.";
-  }
-
-  const tieneLetra = /[a-zA-Z]/.test(password);
-  const tieneNumero = /\d/.test(password);
-
-  if (!tieneLetra || !tieneNumero) {
-    return "La contraseña debe contener letras y números.";
-  }
-
-  return null;
-};
