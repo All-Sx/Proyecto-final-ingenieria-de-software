@@ -51,11 +51,15 @@ export async function createElectivoService(data, nombreProfesor) {
   }
 }
 
-export async function getElectivosService() {
+export async function getElectivosService(estado) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     
-    const electivos = await electivoRepository.find();
+    const filtro = estado ? { estado: estado } : {};
+
+    const electivos = await electivoRepository.find({
+      where: filtro
+    });
 
     return { data: electivos };
   } catch (error) {
