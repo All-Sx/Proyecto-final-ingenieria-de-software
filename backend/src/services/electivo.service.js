@@ -1,10 +1,8 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; 
-import { PeriodoAcademico } from "../entities/academico.entity.js";
-import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js";
 import { PeriodoAcademico, Carrera } from "../entities/academico.entity.js";
 import { CupoPorCarrera } from "../entities/inscripcion.entity.js";
+import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 
 export async function createElectivoService(data, nombreProfesor) {
   try {
@@ -42,13 +40,7 @@ export async function createElectivoService(data, nombreProfesor) {
       creditos: data.creditos || 5, 
       cupos: data.cupos,
       estado: "PENDIENTE", 
-      nombre_profesor: nombreProfesor 
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        creditos: data.creditos || 5, 
-        cupos: data.cupos,
-        estado: "PENDIENTE", 
-        nombre_profesor: nombreProfesor 
+      nombre_profesor: nombreProfesor
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
@@ -87,10 +79,8 @@ export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
 
-    
     const electivos = await electivoRepository.find({
-      where: { nombre_profesor: nombreProfesor } 
-      where: { nombre_profesor: nombreProfesor } 
+      where: { nombre_profesor: nombreProfesor }
     });
 
     return { data: electivos };
@@ -304,8 +294,6 @@ export async function getElectivosAprobadosService() {
     return { data: electivosAprobados };
 
   } catch (error) {
-    console.error("Error al obtener electivos aprobados: ", error);
-    return { error: "Error interno al listar los electivos." };
     console.error("Error al obtener electivos aprobados:", error);
     return { error: "Error interno al obtener electivos aprobados." };
   }
