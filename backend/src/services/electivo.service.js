@@ -55,7 +55,17 @@ export async function getElectivosService() {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     
-    const electivos = await electivoRepository.find();
+    const electivos = await electivoRepository.find({
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        creditos: true,
+        cupos: true,
+        estado: true,
+        nombre_profesor: true
+      }
+    });
 
     return { data: electivos };
   } catch (error) {
@@ -246,7 +256,16 @@ export async function getElectivosAprobadosService() {
 
     // 3. Obtener solo los electivos que están en estado APROBADO
     const electivosAprobados = await electivoRepository.find({
-      where: { estado: "APROBADO" }
+      where: { estado: "APROBADO" },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        creditos: true,
+        cupos: true,
+        estado: true,
+        nombre_profesor: true
+      }
     });
 
     return { data: electivosAprobados };
