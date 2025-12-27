@@ -62,20 +62,14 @@ export async function createElectivoService(data, nombreProfesor) {
   }
 }
 
-export async function getElectivosService() {
+export async function getElectivosService(estado) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     
+    const filtro = estado ? { estado: estado } : {};
+
     const electivos = await electivoRepository.find({
-      select: {
-        id: true,
-        nombre: true,
-        descripcion: true,
-        creditos: true,
-        cupos: true,
-        estado: true,
-        nombre_profesor: true
-      }
+      where: filtro
     });
 
     return { data: electivos };

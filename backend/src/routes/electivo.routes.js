@@ -16,7 +16,7 @@ router.post("/",
 
 router.get("/", 
     authMiddleware,
-    isAdmin(["Jefe de Carrera"]), 
+    isAdmin(["Jefe de Carrera", "Alumno"]), 
     getElectivos
 );
 
