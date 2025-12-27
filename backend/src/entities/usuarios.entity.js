@@ -52,5 +52,10 @@ export const Usuario = new EntitySchema({
       nullable: false,
       onDelete: "CASCADE",
     },
+    alumno: {
+      target: "Alumno",
+      type: "one-to-one",
+      inverseSide: "usuario",
+    },
   },
 });

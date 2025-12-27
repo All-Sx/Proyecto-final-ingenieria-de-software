@@ -18,20 +18,15 @@ app.use(cors({origin: [
   credentials: true
 }));
 
-// Ruta principal de bienvenida
 app.get("/", (req, res) => {
   res.send("¡Bienvenido a mi API REST con TypeORM!");
 });
 
-// Inicializa la conexión a la base de datos
 connectDB()
   .then(async () => {
-    // Crea el usuario admin por defecto si no existe
     await createData(); 
-    // Carga todas las rutas de la aplicación
     routerApi(app);
 
-    // Levanta el servidor Express
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Servidor iniciado en http://${HOST}:${PORT}`);

@@ -1,4 +1,4 @@
-import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService } from "../services/electivo.service.js";
+import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, asignarCuposPorCarreraService, getElectivosAprobadosService } from "../services/electivo.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
@@ -9,7 +9,7 @@ export const createElectivo = async (req, res) => {
     // PASO 1: Obtener el nombre del profesor del usuario autenticado
     // req.user viene del authMiddleware que decodifica el JWT
     const nombreProfesor = req.user?.nombre_completo;
-    
+
     // Validar que el usuario esté autenticado y tenga nombre
     if (!nombreProfesor) {
       return handleErrorClient(res, 401, "Usuario no autenticado o sin nombre.");
@@ -73,7 +73,7 @@ export const getMisElectivos = async (req, res) => {
   try {
     // PASO 1: Obtener el nombre del profesor del token JWT
     const nombreProfesor = req.user?.nombre_completo;
-    
+
     if (!nombreProfesor) {
       return handleErrorClient(res, 401, "Usuario no autenticado.");
     }
@@ -104,9 +104,9 @@ export const updateElectivo = async (req, res) => {
     const result = await updateElectivoService(Number(id), datosActualizar);
 
     if (result.error) {
-        // Si no encontrado devuelve 404, sino 500
-        const status = result.error === "Electivo no encontrado" ? 404 : 500;
-        return handleErrorClient(res, status, result.error);
+      // Si no encontrado devuelve 404, sino 500
+      const status = result.error === "Electivo no encontrado" ? 404 : 500;
+      return handleErrorClient(res, status, result.error);
     }
 
     return res.status(200).json({
@@ -118,3 +118,39 @@ export const updateElectivo = async (req, res) => {
     return handleErrorClient(res, 500, "Error en el servidor", error.message);
   }
 };
+
+export const asignarCuposManual = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await asignarCuposPorCarreraService(Number(id));
+
+    if (result.error) {
+      const status = result.error.includes("no encontrado") ? 404 : 400;
+      return handleErrorClient(res, status, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Cupos asignados exitosamente por carrera",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const getElectivosAprobados = async (req, res) => {
+  try {
+    const result = await getElectivosAprobadosService();
+
+    if (result.error) return handleErrorClient(res, 400, result.error);
+
+    return res.status(200).json({
+      message: "Lista de electivos aprobados",
+      data: result.data
+    });
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error interno del servidor", error.message);
+  }
+}

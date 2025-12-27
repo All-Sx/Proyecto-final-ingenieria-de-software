@@ -5,7 +5,7 @@ import { isAdmin } from "../middleware/authorization.middleware.js";
 
 const router = Router();
 
-// POST /api/carreras
+
 router.post("/", 
     authMiddleware, 
     isAdmin(["Jefe de Carrera"]), 
