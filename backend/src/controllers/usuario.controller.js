@@ -11,10 +11,10 @@ export const createUserAdmin = async (req, res) => {
     }
 
     
-    const rolesPermitidos = ["Jefe de Carrera", "Profesor"];
+    const rolesPermitidos = ["Alumno", "Profesor"];
     
     if (!rolesPermitidos.includes(rol)) {
-      return handleErrorClient(res, 400, "Rol no válido. Solo puedes crear: 'Jefe de Carrera' o 'Profesor'.");
+      return handleErrorClient(res, 400, "Rol no válido. Solo puedes crear: 'Alumno' o 'Profesor'. Para crear Jefes de Carrera usa el endpoint /api/jefe-carrera");
     }
 
    

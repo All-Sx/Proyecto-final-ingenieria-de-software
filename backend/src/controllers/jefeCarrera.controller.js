@@ -1,4 +1,4 @@
-import { createJefeCarreraService, deleteUsuarioDeAlumnoByRutService, findAllJefesService, findJefeByRutService } from "../services/jefeCarrera.service.js";
+import { createJefeCarreraService, deleteUsuarioDeAlumnoByRutService, findAllJefesService, findJefeByRutService, getSolicitudesPorCarreraService } from "../services/jefeCarrera.service.js";
 
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js";
 
@@ -16,7 +16,11 @@ export async function createJefeCarrera(req, res) {
 
     } catch (error) {
 
-        if (error.message.includes("ya existe") || error.message.includes("rol")) {
+        if (error.message.includes("ya existe") || 
+            error.message.includes("obligatorio") || 
+            error.message.includes("Ya existen") ||
+            error.message.includes("Ya existe un Jefe") ||
+            error.message.includes("no existe")) {
             handleErrorClient(res, 409, "Error al crear usuario", { reason: error.message });
         } else {
             handleErrorServer(res, 500, "Error interno al crear Jefe de Carrera", error.message);
@@ -82,5 +86,27 @@ export async function deleteUsuarioDeAlumnoByRut(req, res) {
         } else {
             handleErrorServer(res, 500, "Error interno al eliminar alumno", error.message);
         }
+    }
+}
+
+export async function getSolicitudesPendientes(req, res) {
+    try {
+        const { id: jefeId } = req.user;
+        
+        const { estado, electivo_id } = req.query;
+        
+        const result = await getSolicitudesPorCarreraService(jefeId, { 
+            estado, 
+            electivo_id 
+        });
+
+        if (result.error) {
+            return handleErrorClient(res, 400, result.error);
+        }
+
+        handleSuccess(res, 200, "Solicitudes obtenidas", result.data);
+
+    } catch (error) {
+        handleErrorServer(res, 500, "Error al obtener solicitudes", error.message);
     }
 }
