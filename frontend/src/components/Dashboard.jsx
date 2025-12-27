@@ -12,6 +12,7 @@ import {
 } from "lucide-react"; // Iconos
 import ModoOscuro from "./ModoOscuro"; // Componente de modo oscuro
 import { useTheme } from "../context/ThemeContext"; // Context API para tema
+import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 
 
 // Este es el PANEL PRINCIPAL después del login
@@ -24,15 +25,13 @@ export default function Dashboard() {
 
   // Prioridad: localStorage > state de navegación > usuario demo
   const storedUser = JSON.parse(localStorage.getItem("user"));
-  const user =
-    storedUser ||
-    state?.user || {
-      nombre: "Estudiante Demo",
-      correo: "estudiante@universidad.cl",
-      tipo: "Estudiante",
-      rol: "estudiante",
-      foto: "https://i.pravatar.cc/150?img=5",
-    };
+
+  if (!storedUser) {
+    navigate("/");
+    return null;
+  }
+
+  const user = storedUser;
 
   const handleOpenElectivo = () => {
     // Lleva al formulario de creación de electivos (solo profesores)
@@ -54,7 +53,7 @@ export default function Dashboard() {
   // Controla qué contenido mostrar en el área principal
   // Opciones: "inicio", "electivos", "perfil", "configuracion", "editarPerfil"
   const [vistaActual, setVistaActual] = useState(
-    user.rol === "estudiante" ? "electivos" : "inicio"
+    isAlumno(user.rol) ? "electivos" : "inicio"
   );
 
   // === ESTADO PARA EDITAR PERFIL ===
@@ -175,7 +174,7 @@ export default function Dashboard() {
 
 
   // Si el usuario es jefe, reemplazamos los electivos con tareas administrativas
-  if (user.rol === "jefe") {
+  if (isJefe(user.rol)) {
     electivos = [
       {
         id: "admin-001",
@@ -268,7 +267,7 @@ export default function Dashboard() {
             </button>
 
             {/* === MENÚ ESPECÍFICO PARA JEFE DE CARRERA === */}
-            {user.rol === "jefe" ? (
+            {isJefe(user.rol) ? (
               <button
                 onClick={() => setVistaActual("inicio")}
                 className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition"
@@ -276,7 +275,7 @@ export default function Dashboard() {
                 <GraduationCap size={18} />
                 <span>Gestión</span>
               </button>
-            ) : user.tipo === "Profesor" ? (
+            ) : isProfesor(user.rol) ? (
               /* === MENÚ ESPECÍFICO PARA PROFESOR === */
               <>
                 <button
@@ -342,7 +341,7 @@ export default function Dashboard() {
         {/* ======== INICIO ======== */}
         {vistaActual === "inicio" && (
           <>
-            {user.rol === "jefe" ? (
+            {isJefe(user.rol) ? (
               <>
                 <h2
                   className={`text-2xl font-bold mb-4 ${darkMode ? "text-gray-100" : "text-gray-800"
@@ -418,7 +417,7 @@ export default function Dashboard() {
                   ))}
                 </motion.div>
               </>
-            ) : user.tipo === "Profesor" ? (
+            ) : isProfesor(user.rol) ? (
               <>
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -506,7 +505,7 @@ export default function Dashboard() {
         )}
 
         {/* ELECTIVOS */}
-        {vistaActual === "electivos" && user.rol === "estudiante" && (
+        {vistaActual === "electivos" && isAlumno(user.rol) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
