@@ -1,4 +1,7 @@
 import { AppDataSource } from "../config/configdb.js";
+import { Electivo } from "../entities/oferta.entity.js"; 
+import { PeriodoAcademico } from "../entities/academico.entity.js";
+import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
 import { PeriodoAcademico, Carrera } from "../entities/academico.entity.js";
 import { CupoPorCarrera } from "../entities/inscripcion.entity.js";
@@ -34,6 +37,12 @@ export async function createElectivoService(data, nombreProfesor) {
     }
 
     const nuevoElectivo = electivoRepository.create({
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      creditos: data.creditos || 5, 
+      cupos: data.cupos,
+      estado: "PENDIENTE", 
+      nombre_profesor: nombreProfesor 
         nombre: data.nombre,
         descripcion: data.descripcion,
         creditos: data.creditos || 5, 
@@ -77,8 +86,10 @@ export async function getElectivosService() {
 export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
+
     
     const electivos = await electivoRepository.find({
+      where: { nombre_profesor: nombreProfesor } 
       where: { nombre_profesor: nombreProfesor } 
     });
 
@@ -104,10 +115,10 @@ export async function updateElectivoService(id, data) {
     const estadoAnterior = electivo.estado;
     const cuposAnteriores = electivo.cupos;
 
-    // 2. Actualizar los campos que vengan en 'data'
-    // Esto mezcla los datos antiguos con los nuevos
+    
     electivoRepository.merge(electivo, data);
 
+    
     
     const electivoActualizado = await electivoRepository.save(electivo);
 
@@ -166,6 +177,28 @@ export async function updateElectivoService(id, data) {
  */
 export async function asignarCuposPorCarreraService(electivoId) {
   try {
+    const ahora = new Date();
+
+    const periodos = AppDataSource.getRepository(PeriodoAcademico);
+
+    const periodoActual = await periodos.findOne({
+      where: {
+        fecha_fin: MoreThanOrEqual(ahora),
+        fecha_inicio: LessThanOrEqual(ahora)
+      }
+    });
+
+    if (!periodoActual) {
+      return { error: "No existe un periodo académico activo" };
+    }
+
+    if (periodoActual.estado !== "INSCRIPCION") {
+      if (periodoActual.estado === "CERRADO") {
+        return { error: "El periodo de inscripción está cerrado. No se pueden visualizar electivos aprobados." };
+      }
+      return { error: "No existe periodo en inscripcion de asignaturas" };
+    }
+
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const carreraRepository = AppDataSource.getRepository(Carrera);
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
@@ -271,6 +304,8 @@ export async function getElectivosAprobadosService() {
     return { data: electivosAprobados };
 
   } catch (error) {
+    console.error("Error al obtener electivos aprobados: ", error);
+    return { error: "Error interno al listar los electivos." };
     console.error("Error al obtener electivos aprobados:", error);
     return { error: "Error interno al obtener electivos aprobados." };
   }
