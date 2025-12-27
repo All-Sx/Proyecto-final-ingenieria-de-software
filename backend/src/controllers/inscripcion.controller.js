@@ -1,4 +1,4 @@
-import { createSolicitudService, getSolicitudesPorAlumnoService } from "../services/inscripcion.service.js";
+import { createSolicitudService, getSolicitudesPorAlumnoService, getCuposPorCarreraService } from "../services/inscripcion.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createSolicitud = async (req, res) => {
@@ -43,6 +43,31 @@ export const getMisSolicitudes = async (req, res) => {
     
     return res.status(200).json({
       message: "Historial de solicitudes",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const getCuposPorCarrera = async (req, res) => {
+  try {
+    const { electivo_id } = req.params;
+
+    if (!electivo_id) {
+      return handleErrorClient(res, 400, "Debes especificar el electivo_id.");
+    }
+
+    const result = await getCuposPorCarreraService(parseInt(electivo_id));
+
+    if (result.error) {
+      const status = result.error.includes("no existe") ? 404 : 500;
+      return handleErrorClient(res, status, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Cupos disponibles por carrera",
       data: result.data
     });
 
