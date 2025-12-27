@@ -7,6 +7,7 @@ import VistaElectivos from "../components/Dashboard/VistaElectivos";
 import VistaPerfil from "../components/Dashboard/VistaPerfil";
 import VistaConfiguracion from "../components/Dashboard/VistaConfiguracion";
 import VistaEditarPerfil from "../components/Dashboard/VistaEditarPerfil";
+import ElectivoForm from "../components/Dashboard/ElectivoForm";
 import ModoOscuro from "../components/ModoOscuro";
 
 export default function Dashboard() {
@@ -60,6 +61,7 @@ export default function Dashboard() {
       <main className="flex-1 p-8">
         {vistaActual === "inicio" && <VistaInicio user={user} darkMode={darkMode} />}
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
+        {vistaActual === "registrarElectivo" && <ElectivoForm darkMode={darkMode}/>}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
           <VistaConfiguracion
