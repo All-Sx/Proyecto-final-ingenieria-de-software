@@ -4,7 +4,9 @@ import {
     getJefesCarrera, 
     getJefeByRut, 
     deleteUsuarioDeAlumnoByRut,
-    getSolicitudesPendientes
+    getSolicitudesPendientes,
+    cambiarEstadoSolicitud,
+    moverListaEsperaAPendiente
 } from "../controllers/jefeCarrera.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
@@ -26,6 +28,22 @@ router.get("/solicitudes/pendientes",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
     getSolicitudesPendientes
+);
+
+// PATCH /api/jefe-carrera/solicitudes/:id/estado
+// Cambiar el estado de una solicitud PENDIENTE a ACEPTADO o RECHAZADO
+router.patch("/solicitudes/:id/estado", 
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]),
+    cambiarEstadoSolicitud
+);
+
+// PATCH /api/jefe-carrera/solicitudes/:id/mover-a-pendiente
+// Mover una solicitud de LISTA_ESPERA a PENDIENTE manualmente
+router.patch("/solicitudes/:id/mover-a-pendiente", 
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]),
+    moverListaEsperaAPendiente
 );
 
 // DELETE /api/jefe-carrera/alumno

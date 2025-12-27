@@ -1,4 +1,4 @@
-import { createJefeCarreraService, deleteUsuarioDeAlumnoByRutService, findAllJefesService, findJefeByRutService, getSolicitudesPorCarreraService } from "../services/jefeCarrera.service.js";
+import { createJefeCarreraService, deleteUsuarioDeAlumnoByRutService, findAllJefesService, findJefeByRutService, getSolicitudesPorCarreraService, cambiarEstadoSolicitudService, moverListaEsperaAPendienteService } from "../services/jefeCarrera.service.js";
 
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/response.handlers.js";
 
@@ -108,5 +108,75 @@ export async function getSolicitudesPendientes(req, res) {
 
     } catch (error) {
         handleErrorServer(res, 500, "Error al obtener solicitudes", error.message);
+    }
+}
+
+/**
+ * Controlador para cambiar el estado de una solicitud PENDIENTE
+ * Permite aprobar (ACEPTADO) o rechazar (RECHAZADO) solicitudes
+ */
+export async function cambiarEstadoSolicitud(req, res) {
+    try {
+        const { id: solicitudId } = req.params;
+        const { estado } = req.body;
+        const { id: jefeId } = req.user;
+
+        // Validar que se proporcione el estado
+        if (!estado) {
+            return handleErrorClient(res, 400, "El campo 'estado' es obligatorio");
+        }
+
+        // Validar que el estado sea válido
+        const estadosPermitidos = ["ACEPTADO", "RECHAZADO"];
+        if (!estadosPermitidos.includes(estado)) {
+            return handleErrorClient(res, 400, 
+                "Estado inválido. Debe ser: ACEPTADO o RECHAZADO");
+        }
+
+        // Llamar al servicio
+        const result = await cambiarEstadoSolicitudService(
+            Number(solicitudId), 
+            estado, 
+            jefeId
+        );
+
+        if (result.error) {
+            const status = result.error.includes("no encontrada") ? 404 : 
+                          result.error.includes("permisos") ? 403 : 400;
+            return handleErrorClient(res, status, result.error);
+        }
+
+        handleSuccess(res, 200, "Estado de solicitud actualizado", result.data);
+
+    } catch (error) {
+        handleErrorServer(res, 500, "Error al actualizar estado", error.message);
+    }
+}
+
+/**
+ * Controlador para mover una solicitud de LISTA_ESPERA a PENDIENTE
+ * El jefe decide manualmente cuándo revisar solicitudes en lista de espera
+ */
+export async function moverListaEsperaAPendiente(req, res) {
+    try {
+        const { id: solicitudId } = req.params;
+        const { id: jefeId } = req.user;
+
+        // Llamar al servicio
+        const result = await moverListaEsperaAPendienteService(
+            Number(solicitudId),
+            jefeId
+        );
+
+        if (result.error) {
+            const status = result.error.includes("no encontrada") ? 404 : 
+                          result.error.includes("permisos") ? 403 : 400;
+            return handleErrorClient(res, status, result.error);
+        }
+
+        handleSuccess(res, 200, "Solicitud movida a revisión", result.data);
+
+    } catch (error) {
+        handleErrorServer(res, 500, "Error al mover solicitud", error.message);
     }
 }

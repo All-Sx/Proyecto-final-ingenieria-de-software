@@ -2,7 +2,7 @@ import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js"; 
 import { Rol } from "../entities/rol.entity.js";
 import { Carrera } from "../entities/academico.entity.js";
-import { SolicitudInscripcion } from "../entities/inscripcion.entity.js";
+import { SolicitudInscripcion, CupoPorCarrera } from "../entities/inscripcion.entity.js";
 import { Alumno } from "../entities/alumno.entity.js";
 import bcrypt from "bcrypt";
 
@@ -212,5 +212,262 @@ export async function getSolicitudesPorCarreraService(jefeId, filtros = {}) {
     } catch (error) {
         console.error("Error al obtener solicitudes:", error);
         return { error: "Error al consultar solicitudes" };
+    }
+}
+
+/**
+ * Cambiar el estado de una solicitud PENDIENTE a ACEPTADO o RECHAZADO
+ * Solo el jefe de la carrera correspondiente (o super admin) puede hacerlo
+ * 
+ * @param {number} solicitudId - ID de la solicitud a modificar
+ * @param {string} nuevoEstado - "ACEPTADO" o "RECHAZADO"
+ * @param {number} jefeId - ID del jefe que hace el cambio
+ * @returns {Object} { data: solicitud actualizada } o { error: mensaje }
+ */
+export async function cambiarEstadoSolicitudService(solicitudId, nuevoEstado, jefeId) {
+    try {
+        const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+        const alumnoRepository = AppDataSource.getRepository(Alumno);
+        const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
+        
+        // 1. Validar que el estado sea válido (solo ACEPTADO o RECHAZADO)
+        if (!["ACEPTADO", "RECHAZADO"].includes(nuevoEstado)) {
+            return { error: "Estado inválido. Solo se permite: ACEPTADO o RECHAZADO" };
+        }
+        
+        // 2. Obtener información del jefe autenticado con su carrera
+        const jefe = await usuarioRepository.findOne({
+            where: { id: jefeId },
+            relations: ["carrera"]
+        });
+        
+        if (!jefe) {
+            return { error: "Jefe de carrera no encontrado" };
+        }
+        
+        // 3. Obtener la solicitud con sus relaciones
+        const solicitud = await solicitudRepository.findOne({
+            where: { id: solicitudId },
+            relations: ["alumno", "electivo"]
+        });
+        
+        if (!solicitud) {
+            return { error: "Solicitud no encontrada" };
+        }
+        
+        // 4. Validar que la solicitud esté en estado PENDIENTE
+        // Solo se pueden aprobar/rechazar solicitudes PENDIENTES
+        if (solicitud.estado !== "PENDIENTE") {
+            return { 
+                error: `No se puede cambiar el estado. La solicitud ya está en estado: ${solicitud.estado}` 
+            };
+        }
+        
+        // 5. Obtener información del alumno con su carrera
+        const alumnoInfo = await alumnoRepository
+            .createQueryBuilder("alumno")
+            .leftJoinAndSelect("alumno.carrera", "carrera")
+            .where("alumno.usuario_id = :usuarioId", { usuarioId: solicitud.alumno.id })
+            .getOne();
+        
+        if (!alumnoInfo || !alumnoInfo.carrera) {
+            return { error: "El alumno no tiene carrera asignada" };
+        }
+        
+        // 6. VALIDACIÓN DE PERMISOS: Verificar que el jefe pueda modificar esta solicitud
+        // Si el jefe tiene carrera asignada (NO es super admin), solo puede modificar solicitudes de SU carrera
+        if (jefe.carrera !== null) {
+            if (alumnoInfo.carrera.id !== jefe.carrera.id) {
+                return { 
+                    error: `No tienes permisos para modificar solicitudes de ${alumnoInfo.carrera.nombre}. Solo puedes gestionar solicitudes de ${jefe.carrera.nombre}` 
+                };
+            }
+        }
+        // Si jefe.carrera === null → es SUPER ADMIN → puede modificar cualquier solicitud
+        
+        // 7. Si el nuevo estado es ACEPTADO, validar que haya cupos disponibles
+        if (nuevoEstado === "ACEPTADO") {
+            // Obtener el cupo asignado para la carrera del alumno en este electivo
+            const cupoCarrera = await cupoPorCarreraRepository.findOne({
+                where: {
+                    electivo: { id: solicitud.electivo.id },
+                    carrera: { id: alumnoInfo.carrera.id }
+                }
+            });
+            
+            if (!cupoCarrera) {
+                return { error: "No hay cupos asignados para esta carrera en este electivo" };
+            }
+            
+            // Contar cuántas solicitudes ACEPTADAS hay actualmente para esta carrera en este electivo
+            const cuposOcupados = await solicitudRepository
+                .createQueryBuilder("sol")
+                .innerJoin("sol.alumno", "usuario")
+                .innerJoin("alumnos", "alumno", "alumno.usuario_id = usuario.id")
+                .innerJoin("alumno.carrera", "carrera")
+                .where("sol.electivo_id = :electivoId", { electivoId: solicitud.electivo.id })
+                .andWhere("carrera.id = :carreraId", { carreraId: alumnoInfo.carrera.id })
+                .andWhere("sol.estado = :estado", { estado: "ACEPTADO" })
+                .getCount();
+            
+            // Validar que no se exceda el cupo
+            if (cuposOcupados >= cupoCarrera.cantidad_reservada) {
+                return { 
+                    error: `No hay cupos disponibles para ${alumnoInfo.carrera.nombre}. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${cuposOcupados}` 
+                };
+            }
+            
+            console.log(`[APROBACIÓN] Jefe ${jefe.nombre_completo} aprobó solicitud de ${solicitud.alumno.nombre_completo} para "${solicitud.electivo.nombre}". Cupos restantes: ${cupoCarrera.cantidad_reservada - cuposOcupados - 1}/${cupoCarrera.cantidad_reservada}`);
+        } else {
+            // Estado RECHAZADO
+            console.log(`[RECHAZO] Jefe ${jefe.nombre_completo} rechazó solicitud de ${solicitud.alumno.nombre_completo} para "${solicitud.electivo.nombre}"`);
+        }
+        
+        // 8. Cambiar el estado de la solicitud
+        solicitud.estado = nuevoEstado;
+        const solicitudActualizada = await solicitudRepository.save(solicitud);
+        
+        // 9. Retornar la solicitud actualizada con información formateada
+        return { 
+            data: {
+                id: solicitudActualizada.id,
+                estado: solicitudActualizada.estado,
+                alumno: {
+                    nombre: solicitudActualizada.alumno.nombre_completo,
+                    rut: solicitudActualizada.alumno.rut,
+                    carrera: alumnoInfo.carrera.nombre
+                },
+                electivo: {
+                    nombre: solicitudActualizada.electivo.nombre,
+                    creditos: solicitudActualizada.electivo.creditos
+                }
+            }
+        };
+        
+    } catch (error) {
+        console.error("Error al cambiar estado de solicitud:", error);
+        return { error: "Error al actualizar el estado de la solicitud" };
+    }
+}
+
+/**
+ * Mover una solicitud de LISTA_ESPERA a PENDIENTE manualmente
+ * El jefe decide cuándo revisar la lista de espera y mover solicitudes a revisión
+ * 
+ * @param {number} solicitudId - ID de la solicitud en lista de espera
+ * @param {number} jefeId - ID del jefe que hace el cambio
+ * @returns {Object} { data: solicitud actualizada } o { error: mensaje }
+ */
+export async function moverListaEsperaAPendienteService(solicitudId, jefeId) {
+    try {
+        const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+        const alumnoRepository = AppDataSource.getRepository(Alumno);
+        const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
+        
+        // 1. Obtener información del jefe autenticado con su carrera
+        const jefe = await usuarioRepository.findOne({
+            where: { id: jefeId },
+            relations: ["carrera"]
+        });
+        
+        if (!jefe) {
+            return { error: "Jefe de carrera no encontrado" };
+        }
+        
+        // 2. Obtener la solicitud con sus relaciones
+        const solicitud = await solicitudRepository.findOne({
+            where: { id: solicitudId },
+            relations: ["alumno", "electivo"]
+        });
+        
+        if (!solicitud) {
+            return { error: "Solicitud no encontrada" };
+        }
+        
+        // 3. Validar que la solicitud esté en LISTA_ESPERA
+        if (solicitud.estado !== "LISTA_ESPERA") {
+            return { 
+                error: `Esta solicitud no está en lista de espera. Estado actual: ${solicitud.estado}` 
+            };
+        }
+        
+        // 4. Obtener información del alumno con su carrera
+        const alumnoInfo = await alumnoRepository
+            .createQueryBuilder("alumno")
+            .leftJoinAndSelect("alumno.carrera", "carrera")
+            .where("alumno.usuario_id = :usuarioId", { usuarioId: solicitud.alumno.id })
+            .getOne();
+        
+        if (!alumnoInfo || !alumnoInfo.carrera) {
+            return { error: "El alumno no tiene carrera asignada" };
+        }
+        
+        // 5. VALIDACIÓN DE PERMISOS: Verificar que el jefe pueda modificar esta solicitud
+        if (jefe.carrera !== null) {
+            if (alumnoInfo.carrera.id !== jefe.carrera.id) {
+                return { 
+                    error: `No tienes permisos para modificar solicitudes de ${alumnoInfo.carrera.nombre}` 
+                };
+            }
+        }
+        
+        // 6. Validar que haya cupos disponibles antes de mover a PENDIENTE
+        // Obtener el cupo asignado para la carrera del alumno
+        const cupoCarrera = await cupoPorCarreraRepository.findOne({
+            where: {
+                electivo: { id: solicitud.electivo.id },
+                carrera: { id: alumnoInfo.carrera.id }
+            }
+        });
+        
+        if (!cupoCarrera) {
+            return { error: "No hay cupos asignados para esta carrera en este electivo" };
+        }
+        
+        // Contar solicitudes ACEPTADAS + PENDIENTES (ocupan cupos temporalmente)
+        const cuposOcupados = await solicitudRepository
+            .createQueryBuilder("sol")
+            .innerJoin("sol.alumno", "usuario")
+            .innerJoin("alumnos", "alumno", "alumno.usuario_id = usuario.id")
+            .innerJoin("alumno.carrera", "carrera")
+            .where("sol.electivo_id = :electivoId", { electivoId: solicitud.electivo.id })
+            .andWhere("carrera.id = :carreraId", { carreraId: alumnoInfo.carrera.id })
+            .andWhere("sol.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
+            .getCount();
+        
+        // Validar que haya espacio
+        if (cuposOcupados >= cupoCarrera.cantidad_reservada) {
+            return { 
+                error: `No se puede mover a revisión. No hay cupos disponibles para ${alumnoInfo.carrera.nombre}. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${cuposOcupados}` 
+            };
+        }
+        
+        // 7. Mover de LISTA_ESPERA → PENDIENTE
+        solicitud.estado = "PENDIENTE";
+        const solicitudActualizada = await solicitudRepository.save(solicitud);
+        
+        console.log(`[LISTA ESPERA → PENDIENTE] Jefe ${jefe.nombre_completo} movió a revisión la solicitud de ${solicitud.alumno.nombre_completo} para "${solicitud.electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - cuposOcupados - 1}/${cupoCarrera.cantidad_reservada}`);
+        
+        // 8. Retornar la solicitud actualizada
+        return { 
+            data: {
+                id: solicitudActualizada.id,
+                estado: solicitudActualizada.estado,
+                alumno: {
+                    nombre: solicitudActualizada.alumno.nombre_completo,
+                    rut: solicitudActualizada.alumno.rut,
+                    carrera: alumnoInfo.carrera.nombre
+                },
+                electivo: {
+                    nombre: solicitudActualizada.electivo.nombre,
+                    creditos: solicitudActualizada.electivo.creditos
+                },
+                cuposDisponibles: cupoCarrera.cantidad_reservada - cuposOcupados - 1
+            }
+        };
+        
+    } catch (error) {
+        console.error("Error al mover solicitud de lista de espera:", error);
+        return { error: "Error al mover la solicitud a revisión" };
     }
 }
