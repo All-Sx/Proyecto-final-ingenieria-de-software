@@ -1,4 +1,4 @@
-import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, getElectivosAprovadosService } from "../services/electivo.service.js";
+import { createElectivoService, getElectivosService, getElectivosByProfesorService, updateElectivoService, asignarCuposPorCarreraService, getElectivosAprobadosService } from "../services/electivo.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
@@ -119,14 +119,35 @@ export const updateElectivo = async (req, res) => {
   }
 };
 
-export const getElectivosAprovados = async (req, res) => {
+export const asignarCuposManual = async (req, res) => {
   try {
-    const result = await getElectivosAprovadosService();
+    const { id } = req.params;
 
-    if (result.error) return handleErrorClient(res, 500, result.error);
+    const result = await asignarCuposPorCarreraService(Number(id));
+
+    if (result.error) {
+      const status = result.error.includes("no encontrado") ? 404 : 400;
+      return handleErrorClient(res, status, result.error);
+    }
 
     return res.status(200).json({
-      message: "Lista de electivos aprovados",
+      message: "Cupos asignados exitosamente por carrera",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const getElectivosAprobados = async (req, res) => {
+  try {
+    const result = await getElectivosAprobadosService();
+
+    if (result.error) return handleErrorClient(res, 400, result.error);
+
+    return res.status(200).json({
+      message: "Lista de electivos aprobados",
       data: result.data
     });
   } catch (error) {
