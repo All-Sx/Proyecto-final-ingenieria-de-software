@@ -1,4 +1,4 @@
-import { handleErrorClient } from "../handlers/response.handlers.js"; // Ajusta el nombre si tu archivo es responsehandlers.js
+import { handleErrorClient } from "../handlers/response.handlers.js"; 
 
 export const isAdmin = (allowedRoles) => {
   return (req, res, next) => {
