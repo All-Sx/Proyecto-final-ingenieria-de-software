@@ -10,6 +10,7 @@ import VistaEditarPerfil from "./EditarPerfil";
 import ModoOscuro from "../components/ModoOscuro";
 import VistaCrearElectivo from "./CrearElectivo";
 import InscripcionesPage from "../pages/Inscripciones";
+import { updateClave, updateMyProfile } from "../services/perfil.service";
 import GestionElectivos from "./GestionElectivos";
 
 export default function Dashboard() {
@@ -30,20 +31,49 @@ export default function Dashboard() {
     correo: user.correo,
     telefonoPersonal: user.telefonoPersonal || "",
     correoPersonal: user.correoPersonal || "",
-    passwordActual: "",
-    passwordNueva: "",
-    passwordConfirmar: "",
+    password: "",
+    newPassword: "",
+    passwordVerification: "",
   });
 
   const [mensajeEdicion, setMensajeEdicion] = useState({ tipo: "", texto: "" });
+  const [mensajeClave, setMensajeClave] = useState({ tipo: "", texto: "" });
 
   const handleChangeEdicion = (e) =>
     setDatosEdicion({ ...datosEdicion, [e.target.name]: e.target.value });
 
-  const handleGuardarPerfil = (datosActualizados) => {
-    localStorage.setItem("user", JSON.stringify(datosActualizados));
-    setMensajeEdicion({ tipo: "success", texto: "Perfil actualizado correctamente" });
+  const handleGuardarPerfil = async () => {
+    try {
+      const { nombre, correo } = datosEdicion;
+      const data = { nombre_completo: nombre, email: correo };
+
+      const res = await updateMyProfile(data);
+
+      localStorage.setItem("user", JSON.stringify({ ...res.data, nombre: res.data.nombre_completo, correo: res.data.email }));;
+      setMensajeEdicion({ tipo: "success", texto: "Perfil actualizado correctamente" });
+    } catch (error) {
+      setMensajeEdicion({ tipo: "error", texto: "Error al actualizar el perfil" });
+    }
   };
+
+  const handleSavePassword = async (e) => {
+
+    if (datosEdicion.newPassword !== datosEdicion.passwordVerification)
+      return setMensajeClave({ tipo: "error", texto: "Las nuevas contraseñas no coinciden" });
+
+    try {
+      const data = {
+        password: datosEdicion.password,
+        newPassword: datosEdicion.newPassword,
+        passwordVerification: datosEdicion.passwordVerification
+      }
+      await updateClave(data);
+      setMensajeClave({ tipo: "success", texto: "Contraseña cambiada con éxito" });
+      setDatosEdicion({ ...datosEdicion, password: "", newPassword: "", passwordVerification: "" });
+    } catch (error) {
+      setMensajeClave({ tipo: "error", texto: "La contraseña actual es incorrecta" });
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -80,6 +110,8 @@ export default function Dashboard() {
             handleChangeEdicion={handleChangeEdicion}
             handleGuardarPerfil={handleGuardarPerfil}
             mensajeEdicion={mensajeEdicion}
+            handleSavePassword={handleSavePassword}
+            mensajeClave={mensajeClave}
             setVistaActual={setVistaActual}
             darkMode={darkMode}
           />
