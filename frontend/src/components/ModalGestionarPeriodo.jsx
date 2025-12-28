@@ -60,7 +60,7 @@ export default function ModalGestionarPeriodo({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className={`p-8 rounded-2xl w-full max-w-lg ${darkMode ? "bg-gray-900" : "bg-white"}`}>
                 <h2 className="text-xl font-bold mb-6">Gestionar período</h2>
-
+                {/*  NO BORRAR */}
                 {/* NOMBRE */}
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-1">Nombre del período</label>

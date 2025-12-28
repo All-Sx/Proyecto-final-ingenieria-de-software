@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import CardElectivo from "../components/CardElectivo";
 import ModalInscripcion from "../components/ModalInscripcion";
+import PeriodoCerrado from "../components/PeriodoCerrado";
 import { getElectivos } from "../services/electivo.service";
 import { getMisSolicitudes } from "../services/inscripcion.service";
+import { obtenerPeriodoActual } from "../services/periodos.service";
+import { normalizarPeriodo } from "../helpers/fechas";
 import { isAlumno } from "../helpers/roles";
 
 export default function Electivos({ user, darkMode }) {
   const [electivos, setElectivos] = useState([]);
   const [solicitudes, setSolicitudes] = useState([]);
+  const [periodo, setPeriodo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalInscripcion, setModalInscripcion] = useState(null);
@@ -20,12 +24,22 @@ export default function Electivos({ user, darkMode }) {
   const cargarDatos = async () => {
     try {
       setLoading(true);
+      
+      if (isAlumno(user.rol)) {
+        try {
+          const resPeriodo = await obtenerPeriodoActual();
+          setPeriodo(normalizarPeriodo(resPeriodo.data.data));
+        } catch (err) {
+          console.log("No hay periodo vigente:", err);
+          setPeriodo(null);
+        }
+      }
+
       const data = await getElectivos();
       console.log("ESTO ES LO QUE ENVÍA EL BACKEND:", data);
       
       setElectivos(data);
 
-      // Si es alumno, cargar sus solicitudes
       if (isAlumno(user.rol)) {
         try {
           const misSolicitudes = await getMisSolicitudes();
@@ -53,10 +67,8 @@ export default function Electivos({ user, darkMode }) {
       texto: resultado.message || "Inscripción realizada exitosamente"
     });
     
-    // Recargar las solicitudes
     await cargarDatos();
     
-    // Limpiar mensaje después de 5 segundos
     setTimeout(() => setMensaje(null), 5000);
   };
 
@@ -66,6 +78,17 @@ export default function Electivos({ user, darkMode }) {
 
   if (loading) return <div className="p-8 text-center">Cargando electivos...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+
+  if (isAlumno(user.rol) && (!periodo || periodo.estado === "CERRADO")) {
+    return (
+      <div className="p-6">
+        <h2 className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}>
+          Catálogo de Electivos
+        </h2>
+        <PeriodoCerrado darkMode={darkMode} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

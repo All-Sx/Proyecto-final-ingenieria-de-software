@@ -21,7 +21,6 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
       const data = await getCarreras();
       setCarreras(data);
       
-      // Si el alumno ya tiene carrera, preseleccionarla
       if (alumno.alumno?.carrera) {
         setCarreraSeleccionada(alumno.alumno.carrera.codigo);
       }

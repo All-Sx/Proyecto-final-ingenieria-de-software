@@ -20,19 +20,15 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
       setLoading(true);
       setError(null);
 
-      // Obtener todas las solicitudes existentes del alumno
       const solicitudes = await getMisSolicitudes();
       
-      // Extraer las prioridades ya usadas
       const prioridadesEnUso = solicitudes.map(s => s.prioridad);
       setPrioridadesUsadas(prioridadesEnUso);
 
-      // Obtener cantidad de electivos aprobados para determinar prioridad máxima
       const electivos = await getElectivos();
       const electivosAprobados = electivos.filter(e => e.estado === "APROBADO");
       setMaxPrioridad(electivosAprobados.length);
 
-      // Establecer la primera prioridad disponible
       let prioridadInicial = 1;
       while (prioridadesEnUso.includes(prioridadInicial) && prioridadInicial <= electivosAprobados.length) {
         prioridadInicial++;
@@ -108,7 +104,7 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
               onClick={onClose}
               className={`text-2xl ${darkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"}`}
             >
-              ×
+              
             </button>
           </div>
 
