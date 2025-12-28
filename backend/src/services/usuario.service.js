@@ -48,7 +48,7 @@ export async function createUserWithRoleService(data) {
         nombre: userSaved.rol.nombre
       } : null
     };
-    
+
     return { data: respuestaLimpia };
 
   } catch (error) {
@@ -112,10 +112,10 @@ export async function getUserByIdService(id) {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
     const alumnoRepository = AppDataSource.getRepository(Alumno);
 
-    
+
     const usuario = await usuarioRepository.findOne({
       where: { id: id },
-      relations: ["rol"] 
+      relations: ["rol"]
     });
 
     if (!usuario) {
@@ -136,24 +136,24 @@ export async function getUserByIdService(id) {
     };
 
     if (usuario.rol.nombre === "Alumno") {
-        const datosAlumno = await alumnoRepository.findOne({
-            where: { usuario_id: id },
-            relations: ["carrera"] 
-        });
+      const datosAlumno = await alumnoRepository.findOne({
+        where: { usuario_id: id },
+        relations: ["carrera"]
+      });
 
-        if (datosAlumno) {
-            const datosAcademicosLimpios = {
-              usuario_id: datosAlumno.usuario_id,
-              anio_ingreso: datosAlumno.anio_ingreso,
-              creditos_acumulados: datosAlumno.creditos_acumulados,
-              carrera: datosAlumno.carrera ? {
-                id: datosAlumno.carrera.id,
-                codigo: datosAlumno.carrera.codigo,
-                nombre: datosAlumno.carrera.nombre
-              } : null
-            };
-            return { data: { ...usuarioLimpio, datos_academicos: datosAcademicosLimpios } };
-        }
+      if (datosAlumno) {
+        const datosAcademicosLimpios = {
+          usuario_id: datosAlumno.usuario_id,
+          anio_ingreso: datosAlumno.anio_ingreso,
+          creditos_acumulados: datosAlumno.creditos_acumulados,
+          carrera: datosAlumno.carrera ? {
+            id: datosAlumno.carrera.id,
+            codigo: datosAlumno.carrera.codigo,
+            nombre: datosAlumno.carrera.nombre
+          } : null
+        };
+        return { data: { ...usuarioLimpio, datos_academicos: datosAcademicosLimpios } };
+      }
     }
 
     // 3. Si es Jefe de Carrera o Profesor, devolvemos solo el usuario
@@ -187,5 +187,47 @@ export async function updateUserService(id, data) {
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
     return { error: "Error interno al actualizar datos." };
+  }
+}
+
+export async function updateClaveService(id, data) {
+  try {
+    //verificar que el usuario exista
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+
+    const usuario = await usuarioRepository.findOneBy({ id: id });
+    if (!usuario) {
+      return { error: "Usuario no encontrado" };
+    }
+
+    const { password, newPassword, passwordVerification } = data;
+    //encriptar y comparar contraseña
+    const validPassword = await bcrypt.compare(password, usuario.password_hash)
+
+    if (!validPassword) return { error: "Clave incorrecta" };
+
+    //encriptar la nueva contraseña y asegurar que su verificacion sea igual
+
+    if (String(newPassword) != String(passwordVerification)) return { error: "La verificacion debe ser igual a la nueva clave" }
+
+    const equals = await bcrypt.compare(newPassword, usuario.password_hash);
+    if (equals) return { error: "La nueva clave no puede ser igual a la anterior" }
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+
+
+    if (newHash) {
+      usuario.password_hash = newHash;
+    } else {
+      return { error: "Error al actualizar clave" }
+    }
+
+    const actualizar = await usuarioRepository.save(usuario);
+
+    return actualizar;
+
+  } catch (error) {
+    console.error("Error al actualizar clave:", error);
+    return { error: "Error interno al actualizar clave." };
   }
 }
