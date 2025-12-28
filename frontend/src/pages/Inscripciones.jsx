@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import SinPeriodo from "../components/SinPeriodo";
 import PeriodoVigente from "../components/PeriodoVigente";
 import ModalCrearPeriodo from "../components/ModalCrearPeriodo";
+import ModalGestionarPeriodo from "../components/ModalGestionarPeriodo";
 import { isJefe } from "../helpers/roles";
 import {
     obtenerPeriodoActual,
     crearPeriodo,
+    actualizarPeriodo,
+    cambiarEstadoPeriodo
 } from "../services/periodos.service"
-import { normalizarPeriodo } from "../helpers/fechas";
+import { normalizarPeriodo, formatearFecha } from "../helpers/fechas";
 
 export default function InscripcionesPage({ user, darkMode }) {
     if (!isJefe(user.rol)) {
@@ -17,6 +20,7 @@ export default function InscripcionesPage({ user, darkMode }) {
     const [periodo, setPeriodo] = useState(null);
     const [mostrarModal, setMostrarModal] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [mostrarGestion, setMostrarGestion] = useState(false);
 
     useEffect(() => {
         cargarPeriodo();
@@ -45,6 +49,42 @@ export default function InscripcionesPage({ user, darkMode }) {
         }
     };
 
+    const handleGuardarGestion = async ({
+        nombre,
+        fechaInicio,
+        fechaFin,
+        estado
+    }) => {
+
+        console.log("📤 FRONT envia:", {
+            nombre,
+            fecha_inicio: formatearFecha(fechaInicio),
+            fecha_fin: formatearFecha(fechaFin),
+            estado
+        });
+
+        try {
+            await actualizarPeriodo(periodo.id, {
+                nombre,
+                fecha_inicio: formatearFecha(fechaInicio),
+                fecha_fin: formatearFecha(fechaFin),
+            });
+
+            // SOLO cambia estado si es distinto
+            if (estado !== periodo.estado) {
+                await cambiarEstadoPeriodo(periodo.id, estado);
+            }
+
+            await cargarPeriodo();
+            setMostrarGestion(false);
+
+        } catch (error) {
+            console.error("❌ Error FRONT:", error);
+            alert("Error al actualizar período (frontend)");
+        }
+    };
+
+
     if (loading) {
         return <p className="text-center mt-10">Cargando...</p>;
     }
@@ -56,13 +96,26 @@ export default function InscripcionesPage({ user, darkMode }) {
             {!periodo ? (
                 <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
             ) : (
-                <PeriodoVigente periodo={periodo} darkMode={darkMode} />
+                <PeriodoVigente
+                    periodo={periodo}
+                    darkMode={darkMode}
+                    onGestionar={() => setMostrarGestion(true)}
+                />
             )}
 
             {mostrarModal && (
                 <ModalCrearPeriodo
                     onClose={() => setMostrarModal(false)}
                     onCrear={handleCrearPeriodo}
+                    darkMode={darkMode}
+                />
+            )}
+
+            {mostrarGestion && (
+                <ModalGestionarPeriodo
+                    periodo={periodo}
+                    onClose={() => setMostrarGestion(false)}
+                    onGuardar={handleGuardarGestion}
                     darkMode={darkMode}
                 />
             )}
