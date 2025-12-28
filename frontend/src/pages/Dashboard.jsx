@@ -10,6 +10,7 @@ import VistaEditarPerfil from "./EditarPerfil";
 import ModoOscuro from "../components/ModoOscuro";
 import VistaCrearElectivo from "./CrearElectivo";
 import InscripcionesPage from "../pages/Inscripciones";
+import VistaGestionAlumnos from "./GestionAlumnos";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ export default function Dashboard() {
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
+        {vistaActual === "gestionAlumnos" && <VistaGestionAlumnos user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
           <VistaConfiguracion
