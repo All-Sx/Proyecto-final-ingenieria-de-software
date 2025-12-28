@@ -14,3 +14,17 @@ export function formatearFecha(date) {
 
     return `${dia}-${mes}-${año}`;
 }
+
+export const normalizarPeriodo = (periodo) => {
+    if (!periodo) return null;
+
+    return {
+        ...periodo,
+        fechaInicio: new Date(
+            periodo.fecha_inicio.split("-").reverse().join("-")
+        ),
+        fechaFin: new Date(
+            periodo.fecha_fin.split("-").reverse().join("-")
+        ),
+    };
+};

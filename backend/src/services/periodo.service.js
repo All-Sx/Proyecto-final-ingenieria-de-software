@@ -79,11 +79,19 @@ export async function getPeriodoByIdService(id) {
     return formatPeriodoResponse(periodo);
 }
 
-export async function getPeriodoActualService() {
+export async function getPeriodoActualService({ incluirPlanificacion = false } = {}) {
+    const whereCondition = incluirPlanificacion
+        ? [
+            { estado: "INSCRIPCION", activo: true },
+            { estado: "PLANIFICACION", activo: true }
+          ]
+        : { estado: "INSCRIPCION", activo: true };
+
     const periodo = await periodoRepository.findOne({
-        where: { estado: "INSCRIPCION", activo: true },
+        where: whereCondition,
         order: { fecha_inicio: "DESC" }
     });
+
     return formatPeriodoResponse(periodo);
 }
 

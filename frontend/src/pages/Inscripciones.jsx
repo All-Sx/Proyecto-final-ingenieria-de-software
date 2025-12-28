@@ -7,7 +7,7 @@ import {
     obtenerPeriodoActual,
     crearPeriodo,
 } from "../services/periodos.service"
-import { formatearFecha } from "../helpers/fechas";
+import { normalizarPeriodo } from "../helpers/fechas";
 
 export default function InscripcionesPage({ user, darkMode }) {
     if (!isJefe(user.rol)) {
@@ -25,26 +25,23 @@ export default function InscripcionesPage({ user, darkMode }) {
     const cargarPeriodo = async () => {
         try {
             const res = await obtenerPeriodoActual();
-            setPeriodo(res.data.data);
-        } catch {
+
+            setPeriodo(normalizarPeriodo(res.data.data));
+        } catch (error) {
+            console.error("Error al obtener periodo actual:", error);
             setPeriodo(null);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCrearPeriodo = async ({ fechaInicio, fechaFin }) => {
+    const handleCrearPeriodo = async (periodoData) => {
         try {
-            await crearPeriodo({
-                nombre: `Periodo ${new Date().getFullYear()}`,
-                fecha_inicio: formatearFecha(fechaInicio),
-                fecha_fin: formatearFecha(fechaFin),
-            });
-
+            const response = await crearPeriodo(periodoData);
+            setPeriodo(normalizarPeriodo(response.data.data));
             setMostrarModal(false);
-            cargarPeriodo(); // volver a consultar backend
         } catch (error) {
-            alert(error.response?.data?.message || "Error al crear periodo");
+            alert(error.response?.data?.message || "Error al crear período");
         }
     };
 
