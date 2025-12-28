@@ -9,7 +9,7 @@ const carrerasDisponibles = [
   { id: 2, nombre: "Ingeniería Ejecución en Computación e Informática" },
 ];
 
-export default function ElectivoForm() {
+export default function VistaCrearElectivo() {
   const { darkMode } = useTheme();
 
   const [formData, setFormData] = useState({
@@ -186,12 +186,11 @@ export default function ElectivoForm() {
                     onChange={(e) => handleCuposCarrera(c.id, e.target.value)}
                     placeholder="Cupos"
                     disabled={!c.seleccionada}
-                    className={`ml-auto w-20 border rounded-xl py-1 px-2 focus:ring-2 focus:ring-blue-500 ${c.seleccionada
-                      ? darkMode
+                    className={`ml-auto w-20 border rounded-xl py-1 px-2 focus:ring-2 focus:ring-blue-500 ${darkMode
                         ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900"
-                      : "bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
+                        : "bg-white border-gray-300 text-gray-900"}
+                      ${c.seleccionada} "cursor-not-allowed"`}
+                      
                   />
                 </div>
               ))}

@@ -7,8 +7,9 @@ import VistaElectivos from "../components/Dashboard/VistaElectivos";
 import VistaPerfil from "../components/Dashboard/VistaPerfil";
 import VistaConfiguracion from "../components/Dashboard/VistaConfiguracion";
 import VistaEditarPerfil from "../components/Dashboard/VistaEditarPerfil";
-import ElectivoForm from "../components/Dashboard/ElectivoForm";
 import ModoOscuro from "../components/ModoOscuro";
+import VistaCrearElectivo from "../components/Dashboard/VistaCrearElectivo";
+import InscripcionesPage from "./Inscripciones";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Dashboard() {
   }
 
   const user = storedUser;
-  const [vistaActual, setVistaActual] = useState(user.rol === "alumno" ? "electivos" : "inicio");
+  const [vistaActual, setVistaActual] = useState("inicio");
 
   const [datosEdicion, setDatosEdicion] = useState({
     nombre: user.nombre,
@@ -61,7 +62,8 @@ export default function Dashboard() {
       <main className="flex-1 p-8">
         {vistaActual === "inicio" && <VistaInicio user={user} darkMode={darkMode} />}
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
-        {vistaActual === "registrarElectivo" && <ElectivoForm darkMode={darkMode}/>}
+        {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
+        {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
           <VistaConfiguracion
