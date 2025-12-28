@@ -59,8 +59,7 @@ export async function createPeriodoService(data) {
         throw new Error("Ya existe un periodo académico activo con ese nombre.");
     }
 
-    // Verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
-    const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
+     const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
         where: [
             { estado: "PLANIFICACION", activo: true },
             { estado: "INSCRIPCION", activo: true }
