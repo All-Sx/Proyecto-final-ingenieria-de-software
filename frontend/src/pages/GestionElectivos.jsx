@@ -1,5 +1,5 @@
 // === IMPORTACIONES ===
-import {React,  useState } from "react"; 
+import React, { useState } from "react"; 
 import { useNavigate } from "react-router-dom"; // para navegación entre rutas
 import { motion } from "framer-motion"; // Librería para animaciones suaves
 import {

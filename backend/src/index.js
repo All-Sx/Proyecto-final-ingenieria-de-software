@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(cors({origin: [
   "http://localhost:5173",
-  "http://localhost:5177",
+  "http://localhost:5174",
   "http://146.83.198.35:1351"],
   credentials: true
 }));
