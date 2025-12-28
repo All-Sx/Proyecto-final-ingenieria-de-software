@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import Sidebar from "../components/Dashboard/Sidebar";
-import VistaInicio from "../components/Dashboard/VistaInicio";
-import VistaElectivos from "../components/Dashboard/VistaElectivos";
-import VistaPerfil from "../components/Dashboard/VistaPerfil";
-import VistaConfiguracion from "../components/Dashboard/VistaConfiguracion";
-import VistaEditarPerfil from "../components/Dashboard/VistaEditarPerfil";
+import Sidebar from "../components/Sidebar";
+import VistaInicio from "../components/VistaInicio";
+import VistaElectivos from "../pages/VistaElectivos";
+import VistaPerfil from "../pages/VistaPerfil";
+import VistaConfiguracion from "../pages/VistaConfiguracion";
+import VistaEditarPerfil from "../pages/VistaEditarPerfil";
 import ModoOscuro from "../components/ModoOscuro";
-import VistaCrearElectivo from "../components/Dashboard/VistaCrearElectivo";
-import InscripcionesPage from "./Inscripciones";
+import VistaCrearElectivo from "../pages/VistaCrearElectivo";
+import InscripcionesPage from "../pages/Inscripciones";
 
 export default function Dashboard() {
   const navigate = useNavigate();

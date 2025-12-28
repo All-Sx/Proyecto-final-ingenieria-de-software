@@ -1,5 +1,5 @@
 // === IMPORTACIONES ===
-import React, { useState } from "react"; 
+import {React,  useState } from "react"; 
 import { useNavigate } from "react-router-dom"; // para navegación entre rutas
 import { motion } from "framer-motion"; // Librería para animaciones suaves
 import {
@@ -16,7 +16,7 @@ import {
   Eye,
 } from "lucide-react"; // Iconos modernos 
 import { useTheme } from "../context/ThemeContext"; // Context para el modo oscuro
-import ModoOscuro from "./ModoOscuro"; // Componente del botón flotante de modo oscuro
+import ModoOscuro from "../components/ModoOscuro"; // Componente del botón flotante de modo oscuro
 
 
 // Este componente es el PANEL DE GESTIÓN para el JEFE DE CARRERA

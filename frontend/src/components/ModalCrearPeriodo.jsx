@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { diasPorMes } from "../../helpers/fechas";
+import { diasPorMes } from "../helpers/fechas";
 
 const meses = [
     { value: 1, label: "Enero" },

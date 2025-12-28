@@ -1,4 +1,4 @@
-import api from "./axios";
+import api from "../config/axios";
 
 export const login = (credentials) => {
   return api.post("/login", credentials);
