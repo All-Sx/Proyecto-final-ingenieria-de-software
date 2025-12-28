@@ -1,5 +1,5 @@
 // === IMPORTACIONES ===
-import React, { useState } from "react"; 
+import React, { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom"; // para navegación entre rutas
 import { motion } from "framer-motion"; // Librería para animaciones suaves
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react"; // Iconos modernos 
 import { useTheme } from "../context/ThemeContext"; // Context para el modo oscuro
 import ModoOscuro from "../components/ModoOscuro"; // Componente del botón flotante de modo oscuro
+import { getElectivos } from "../services/electivo.service"; // Servicio para obtener electivos desde la API
 
 
 // Este componente es el PANEL DE GESTIÓN para el JEFE DE CARRERA
@@ -36,60 +37,27 @@ export default function GestionElectivos() {
   const [busqueda, setBusqueda] = useState(""); // Búsqueda por texto (nombre o profesor)
   const [electroSeleccionado, setElectroSeleccionado] = useState(null); // Electivo seleccionado para ver detalles
 
- 
-  // son datos estáticos
-  // Cuando conectemos con el backend, esto vendrá de una llamada API
-  const [electivos, setElectivos] = useState([
-    // Cada objeto representa un electivo propuesto por un profesor desde el formulario
-    {
-      id: 1, 
-      nombre: "Inteligencia Artificial Aplicada", 
-      profesor: "Dr. Carlos Mendoza",
-      carrera: "Ingeniería Civil Informática", 
-      semestre: "2025-1", 
-      creditos: 3, 
-      cuposDisponibles: 30, 
-      estado: "pendiente", 
-      descripcion: "Curso enfocado en técnicas modernas de IA, incluyendo machine learning y redes neuronales.",
-      requisitos: "Inteligencia Artificial, Análisis y Diseño de Algoritmos", 
-    },
-    {
-      id: 2,
-      nombre: "Desarrollo de Videojuegos",
-      profesor: "Mg. Ana Torres",
-      carrera: "Ingeniería Civil Informática",
-      semestre: "2025-1",
-      creditos: 2,
-      cuposDisponibles: 25,
-      estado: "pendiente",
-      descripcion: "Diseño y desarrollo de videojuegos usando Unity y C#.",
-      requisitos: "Programación orientada a objetos, Estructuras de datos, Modelamiento de Procesos e Información",
-    },
-    {
-      id: 3,
-      nombre: "Blockchain y Criptomonedas",
-      profesor: "Dr. Roberto Silva",
-      carrera: "Ingeniería Civil Informática",
-      semestre: "2025-2",
-      creditos: 3,
-      cuposDisponibles: 20,
-      estado: "aprobado",
-      descripcion: "Fundamentos de blockchain, contratos inteligentes y aplicaciones descentralizadas.",
-      requisitos: "Estructuras de datos",
-    },
-    {
-      id: 4,
-      nombre: "Computación Cuántica",
-      profesor: "Dra. Patricia López",
-      carrera: "Ingeniería Civil Informática",
-      semestre: "2025-1",
-      creditos: 3,
-      cuposDisponibles: 15,
-      estado: "rechazado",
-      descripcion: "Introducción a los principios de la computación cuántica.",
-      requisitos: "Ninguno",
-    },
-  ]);
+  // Estado para los electivos (se cargarán desde la API)
+  const [electivos, setElectivos] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado de carga
+
+  // Cargar electivos desde la API cuando se monta el componente
+  useEffect(() => {
+    cargarElectivos();
+  }, []);
+
+  const cargarElectivos = async () => {
+    try {
+      setLoading(true);
+      const data = await getElectivos();
+      console.log("Electivos cargados desde la API:", data);
+      setElectivos(data);
+    } catch (error) {
+      console.error("Error al cargar electivos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   // Se usa para el filtro desplegable de carreras
@@ -116,11 +84,11 @@ export default function GestionElectivos() {
   // Filtra los electivos según los criterios seleccionados por el jefe de carrera
   const electivosFiltrados = electivos.filter((e) => {
     const matchCarrera = filtroCarrera === "todas" || e.carrera === filtroCarrera;
-    const matchEstado = filtroEstado === "todos" || e.estado === filtroEstado;
+    const matchEstado = filtroEstado === "todos" || e.estado?.toUpperCase() === filtroEstado.toUpperCase();
     const matchSemestre = filtroSemestre === "todos" || e.semestre === filtroSemestre;
     const matchBusqueda =
-      e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      e.profesor.toLowerCase().includes(busqueda.toLowerCase());
+      e.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      e.nombre_profesor?.toLowerCase().includes(busqueda.toLowerCase());
     return matchCarrera && matchEstado && matchSemestre && matchBusqueda;
   });
 
@@ -128,9 +96,9 @@ export default function GestionElectivos() {
   // Calcula contadores para mostrar en las tarjetas superiores
   const stats = {
     total: electivos.length, // Total de electivos
-    pendientes: electivos.filter((e) => e.estado === "pendiente").length, // Electivos pendientes de revisar
-    aprobados: electivos.filter((e) => e.estado === "aprobado").length, // Electivos ya aprobados
-    rechazados: electivos.filter((e) => e.estado === "rechazado").length, // Electivos rechazados
+    pendientes: electivos.filter((e) => e.estado?.toUpperCase() === "PENDIENTE").length, // Electivos pendientes de revisar
+    aprobados: electivos.filter((e) => e.estado?.toUpperCase() === "APROBADO").length, // Electivos ya aprobados
+    rechazados: electivos.filter((e) => e.estado?.toUpperCase() === "RECHAZADO").length, // Electivos rechazados
   };
 
   // === RENDERIZADO DEL COMPONENTE ===
@@ -143,16 +111,6 @@ export default function GestionElectivos() {
     >
   
       <div className="mb-6">
-        {/* Botón para volver al dashboard */}
-        <button
-          onClick={() => navigate("/dashboard")}
-          className={`flex items-center gap-2 mb-4 transition ${
-            darkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          <ArrowLeft size={20} />
-          Volver al Dashboard
-        </button>
         <div>
           <h1 className="text-3xl font-bold">Gestión de Electivos</h1>
           <p className={`${darkMode ? "text-gray-400" : "text-gray-600"} mt-2`}>
@@ -301,22 +259,22 @@ export default function GestionElectivos() {
                   {e.nombre}
                 </h3>
                 <p className={darkMode ? "text-gray-400" : "text-gray-600"}>
-                  {e.profesor}
+                  {e.nombre_profesor}
                 </p>
               </div>
               {/* Badge de estado (pendiente/aprobado/rechazado) */}
               <span
                 className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  e.estado === "pendiente"
+                  e.estado?.toUpperCase() === "PENDIENTE"
                     ? "bg-yellow-200 text-yellow-900"
-                    : e.estado === "aprobado"
+                    : e.estado?.toUpperCase() === "APROBADO"
                     ? "bg-green-200 text-green-900"
                     : "bg-red-200 text-red-900"
                 }`}
               >
-                {e.estado === "pendiente"
+                {e.estado?.toUpperCase() === "PENDIENTE"
                   ? "⏳ Pendiente"
-                  : e.estado === "aprobado"
+                  : e.estado?.toUpperCase() === "APROBADO"
                   ? "✓ Aprobado"
                   : "✗ Rechazado"}
               </span>
@@ -324,10 +282,8 @@ export default function GestionElectivos() {
 
             {/* INFORMACIÓN DEL ELECTIVO */}
             <div className={`space-y-2 mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
-              <p><GraduationCap size={16} className="inline mr-2" />{e.carrera}</p>
-              <p><Calendar size={16} className="inline mr-2" />Semestre {e.semestre}</p>
               <p><BookOpen size={16} className="inline mr-2" />{e.creditos} créditos</p>
-              <p><Users size={16} className="inline mr-2" />{e.cuposDisponibles} cupos</p>
+              <p><Users size={16} className="inline mr-2" />{e.cupos} cupos</p>
             </div>
 
             {/* BOTONES DE ACCIÓN */}
@@ -340,7 +296,7 @@ export default function GestionElectivos() {
                 <Eye size={18} /> Ver detalles
               </button>
               {/* Botones de aprobar/rechazar SOLO si está pendiente */}
-              {e.estado === "pendiente" && (
+              {e.estado?.toUpperCase() === "PENDIENTE" && (
                 <>
                   <button
                     onClick={() => aprobarElectivo(e.id)}
@@ -383,21 +339,21 @@ export default function GestionElectivos() {
                   {electroSeleccionado.nombre}
                 </h2>
                 <p className={`text-lg ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
-                  Profesor: {electroSeleccionado.profesor}
+                  Profesor: {electroSeleccionado.nombre_profesor}
                 </p>
               </div>
               <span
                 className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  electroSeleccionado.estado === "pendiente"
+                  electroSeleccionado.estado?.toUpperCase() === "PENDIENTE"
                     ? "bg-yellow-200 text-yellow-900"
-                    : electroSeleccionado.estado === "aprobado"
+                    : electroSeleccionado.estado?.toUpperCase() === "APROBADO"
                     ? "bg-green-200 text-green-900"
                     : "bg-red-200 text-red-900"
                 }`}
               >
-                {electroSeleccionado.estado === "pendiente"
+                {electroSeleccionado.estado?.toUpperCase() === "PENDIENTE"
                   ? "Pendiente"
-                  : electroSeleccionado.estado === "aprobado"
+                  : electroSeleccionado.estado?.toUpperCase() === "APROBADO"
                   ? "Aprobado"
                   : "Rechazado"}
               </span>
@@ -414,42 +370,23 @@ export default function GestionElectivos() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-semibold mb-1">Carrera:</h3>
-                  <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
-                    {electroSeleccionado.carrera}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Semestre:</h3>
-                  <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
-                    {electroSeleccionado.semestre}
-                  </p>
-                </div>
-                <div>
                   <h3 className="font-semibold mb-1">Créditos:</h3>
                   <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
                     {electroSeleccionado.creditos}
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Cupos disponibles:</h3>
+                  <h3 className="font-semibold mb-1">Cupos:</h3>
                   <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
-                    {electroSeleccionado.cuposDisponibles}
+                    {electroSeleccionado.cupos}
                   </p>
                 </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Requisitos:</h3>
-                <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
-                  {electroSeleccionado.requisitos}
-                </p>
               </div>
             </div>
 
             {/* Botones de acción */}
             <div className="flex gap-3">
-              {electroSeleccionado.estado === "pendiente" && (
+              {electroSeleccionado.estado?.toUpperCase() === "PENDIENTE" && (
                 <>
                   <button
                     onClick={() => aprobarElectivo(electroSeleccionado.id)}

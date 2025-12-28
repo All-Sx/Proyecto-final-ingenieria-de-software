@@ -2,42 +2,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import { isProfesor, isJefe } from "../helpers/roles";
 
-export default function VistaInicio({ user, darkMode }) {
-  // Datos de ejemplo
-  let electivos = [
-    {
-      id: 1,
-      nombre: "Inteligencia Artificial Aplicada",
-      profesor: "Dr. Carlos Mendoza",
-      carrera: "Ingeniería Civil Informática",
-      semestre: "2025-1",
-      creditos: 3,
-      cuposDisponibles: 30,
-      estado: "pendiente",
-      descripcion: "Curso enfocado en técnicas modernas de IA, incluyendo machine learning y redes neuronales.",
-      requisitos: "Inteligencia Artificial, Análisis y Diseño de Algoritmos",
-    },
-    {
-      id: 2,
-      nombre: "Desarrollo de Videojuegos",
-      profesor: "Mg. Ana Torres",
-      carrera: "Ingeniería Civil Informática",
-      semestre: "2025-1",
-      creditos: 2,
-      cuposDisponibles: 25,
-      estado: "pendiente",
-      descripcion: "Diseño y desarrollo de videojuegos usando Unity y C#.",
-      requisitos: "Programación orientada a objetos, Estructuras de datos, Modelamiento de Procesos e Información",
-    },
+export default function VistaInicio({ user, darkMode, setVistaActual }) {
+  
+  // Tarjetas administrativas solo para Jefe de Carrera (no se cargan de la API)
+  const tarjetasAdmin = [
+    { id: "admin-001", nombre: "Gestión de Electivos", descripcion: "Panel administrativo", progreso: 0.8, estado: "Revisar", pendiente: false },
+    { id: "admin-002", nombre: "Estadísticas y Reportes", descripcion: "Análisis de inscripciones", progreso: 1.0, estado: "Completado", pendiente: false },
+    { id: "admin-003", nombre: "Planificación Académica", descripcion: "Planificación de electivos", progreso: 0.3, estado: "En progreso", pendiente: true },
   ];
-
-  if (isJefe(user.rol)) {
-    electivos = [
-      { id: "admin-001", nombre: "Gestión de Electivos", descripcion: "Panel administrativo", progreso: 0.8, estado: "Revisar", pendiente: false },
-      { id: "admin-002", nombre: "Estadísticas y Reportes", descripcion: "Análisis de inscripciones", progreso: 1.0, estado: "Completado", pendiente: false },
-      { id: "admin-003", nombre: "Planificación Académica", descripcion: "Planificación de electivos", progreso: 0.3, estado: "En progreso", pendiente: true },
-    ];
-  }
 
   return (
     <>
@@ -56,7 +28,8 @@ export default function VistaInicio({ user, darkMode }) {
           transition={{ delay: 0.3 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {electivos.map((e) => (
+          {/* Solo mostramos tarjetas si es Jefe de Carrera */}
+          {isJefe(user.rol) && tarjetasAdmin.map((e) => (
             <motion.div
               key={e.id}
               whileHover={{ scale: 1.02 }}
@@ -76,11 +49,26 @@ export default function VistaInicio({ user, darkMode }) {
               <div className={`w-full rounded-full h-2 mb-3 ${darkMode ? "bg-gray-700" : "bg-gray-200"}`}>
                 <div className="bg-purple-600 h-2 rounded-full" style={{ width: `${e.progreso ? e.progreso * 100 : 0}%` }} />
               </div>
-              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition">
+              <button 
+                onClick={() => {
+                  // Si es la tarjeta de Gestión de Electivos, cambiar la vista
+                  if (e.id === "admin-001") {
+                    setVistaActual("gestionElectivos");
+                  }
+                }}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition"
+              >
                 {e.id === "admin-001" ? "Abrir panel" : e.pendiente ? "Revisar" : "Ver detalles"}
               </button>
             </motion.div>
           ))}
+          
+          {/* Mensaje para profesores */}
+          {isProfesor(user.rol) && (
+            <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+              Aquí podrás ver tus electivos propuestos.
+            </p>
+          )}
         </motion.div>
       ) : (
         <p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
