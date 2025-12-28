@@ -41,7 +41,17 @@ export const createElectivo = async (req, res) => {
 
 export const getElectivos = async (req, res) => {
   try {
-    const result = await getElectivosService();
+    //obtenemos el Rol y el filtro
+    const { rol } = req.user; 
+    let { estado } = req.query; 
+
+    //SEGURIDAD: Si es Alumno, le imponemos el filtro "APROBADO"
+    // (Ignoramos cualquier cosa que haya puesto en la URL)
+    if (rol === "Alumno") {
+        estado = "APROBADO";
+    }
+
+    const result = await getElectivosService(estado);
 
     if (result.error) {
       return handleErrorClient(res, 500, result.error);

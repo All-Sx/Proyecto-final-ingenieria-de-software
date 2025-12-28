@@ -23,14 +23,34 @@ export const validarNombresOApellidos = (valor, tipo) => {
 };
 
 export const validarRut = (rut) => {
-  if (!rut.trim()) {
+  if (!rut || !rut.trim()) {
     return "Debes ingresar tu RUT.";
   }
 
-  const regex = /^\d{1,2}\.\d{3}\.\d{3}-[\dk]$/;
-  return regex.test(rut)
-    ? null
-    : "El RUT debe tener el formato XX.XXX.XXX-X";
+  // Formato general con puntos y guión
+  const formatoGeneral = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/;
+  if (!formatoGeneral.test(rut)) {
+
+    // Contiene letras o símbolos indebidos
+    if (!/^[0-9.kK-]+$/.test(rut.replace(/\./g, ""))) {
+      return "El RUT solo puede contener números, puntos, guión y la letra K.";
+    }
+
+    // Falta el guión
+    if (!rut.includes("-")) {
+      return "El RUT debe incluir un guión antes del dígito verificador.";
+    }
+
+    // Dígito verificador inválido
+    const dv = rut.split("-")[1];
+    if (!/^[0-9kK]$/.test(dv)) {
+      return "El dígito verificador debe ser un número o la letra K.";
+    }
+
+    return "El RUT debe tener el formato XX.XXX.XXX-X.";
+  }
+
+  return null; // válido
 };
 
 export const validarPassword = (password) => {
