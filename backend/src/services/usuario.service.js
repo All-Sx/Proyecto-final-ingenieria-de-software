@@ -36,9 +36,20 @@ export async function createUserWithRoleService(data) {
 
     const userSaved = await userRepository.save(newUser);
 
-    const { password_hash, ...userSinPass } = userSaved;
+    // Limpiar respuesta eliminando campos de auditoría
+    const respuestaLimpia = {
+      id: userSaved.id,
+      rut: userSaved.rut,
+      nombre_completo: userSaved.nombre_completo,
+      email: userSaved.email,
+      activo: userSaved.activo,
+      rol: userSaved.rol ? {
+        id: userSaved.rol.id,
+        nombre: userSaved.rol.nombre
+      } : null
+    };
     
-    return { data: userSinPass };
+    return { data: respuestaLimpia };
 
   } catch (error) {
     console.error("Error en createUserWithRoleService:", error);
@@ -111,7 +122,18 @@ export async function getUserByIdService(id) {
       return { error: "Usuario no encontrado" };
     }
 
-    const { password_hash, ...usuarioSinPass } = usuario;
+    // Crear respuesta limpia base
+    const usuarioLimpio = {
+      id: usuario.id,
+      rut: usuario.rut,
+      nombre_completo: usuario.nombre_completo,
+      email: usuario.email,
+      activo: usuario.activo,
+      rol: usuario.rol ? {
+        id: usuario.rol.id,
+        nombre: usuario.rol.nombre
+      } : null
+    };
 
     if (usuario.rol.nombre === "Alumno") {
         const datosAlumno = await alumnoRepository.findOne({
@@ -120,12 +142,22 @@ export async function getUserByIdService(id) {
         });
 
         if (datosAlumno) {
-            return { data: { ...usuarioSinPass, datos_academicos: datosAlumno } };
+            const datosAcademicosLimpios = {
+              usuario_id: datosAlumno.usuario_id,
+              anio_ingreso: datosAlumno.anio_ingreso,
+              creditos_acumulados: datosAlumno.creditos_acumulados,
+              carrera: datosAlumno.carrera ? {
+                id: datosAlumno.carrera.id,
+                codigo: datosAlumno.carrera.codigo,
+                nombre: datosAlumno.carrera.nombre
+              } : null
+            };
+            return { data: { ...usuarioLimpio, datos_academicos: datosAcademicosLimpios } };
         }
     }
 
     // 3. Si es Jefe de Carrera o Profesor, devolvemos solo el usuario
-    return { data: usuarioSinPass };
+    return { data: usuarioLimpio };
 
   } catch (error) {
     console.error("Error al obtener usuario:", error);

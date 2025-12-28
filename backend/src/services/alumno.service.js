@@ -42,7 +42,19 @@ export async function asignarCarreraService(usuarioId, carreraCodigo) {
 
     const alumnoGuardado = await alumnoRepository.save(alumnoData);
 
-    return { data: alumnoGuardado };
+    // Limpiar respuesta eliminando campos de auditoría
+    const respuestaLimpia = {
+      usuario_id: alumnoGuardado.usuario_id,
+      anio_ingreso: alumnoGuardado.anio_ingreso,
+      creditos_acumulados: alumnoGuardado.creditos_acumulados,
+      carrera: alumnoGuardado.carrera ? {
+        id: alumnoGuardado.carrera.id,
+        codigo: alumnoGuardado.carrera.codigo,
+        nombre: alumnoGuardado.carrera.nombre
+      } : null
+    };
+
+    return { data: respuestaLimpia };
 
   } catch (error) {
     console.error("Error al asignar carrera:", error);

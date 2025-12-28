@@ -22,7 +22,15 @@ export async function createCarreraService(data) {
     });
 
     const carreraGuardada = await carreraRepository.save(nuevaCarrera);
-    return { data: carreraGuardada };
+    
+    // Limpiar respuesta eliminando campos de auditoría
+    const respuestaLimpia = {
+      id: carreraGuardada.id,
+      codigo: carreraGuardada.codigo,
+      nombre: carreraGuardada.nombre
+    };
+    
+    return { data: respuestaLimpia };
 
   } catch (error) {
     console.error("Error al crear carrera:", error);
@@ -34,7 +42,15 @@ export async function getAllCarrerasService() {
   try {
     const carreraRepository = AppDataSource.getRepository(Carrera);
     const carreras = await carreraRepository.find();
-    return { data: carreras };
+    
+    // Limpiar respuesta eliminando campos de auditoría
+    const carrerasLimpias = carreras.map(c => ({
+      id: c.id,
+      codigo: c.codigo,
+      nombre: c.nombre
+    }));
+    
+    return { data: carrerasLimpias };
   } catch (error) {
     console.error("Error al obtener carreras:", error);
     return { error: "Error interno al obtener las carreras." };

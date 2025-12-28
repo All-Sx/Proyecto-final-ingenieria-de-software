@@ -3,6 +3,7 @@ import { SolicitudInscripcion, CupoPorCarrera } from "../entities/inscripcion.en
 import { Electivo } from "../entities/oferta.entity.js";
 import { Usuario } from "../entities/usuarios.entity.js";
 import { Alumno } from "../entities/alumno.entity.js";
+import { PeriodoAcademico } from "../entities/academico.entity.js";
 
 export async function createSolicitudService(alumnoId, electivoId, prioridad) {
   try {
@@ -11,8 +12,30 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
     const alumnoRepository = AppDataSource.getRepository(Alumno);
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
+    const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
-    // 1. Verificar que el electivo exista y esté aprobado
+    // 1. Verificar que haya un periodo de inscripción activo
+    const periodoActivo = await periodoRepository.findOne({
+      where: { estado: "INSCRIPCION" }
+    });
+
+    if (!periodoActivo) {
+      return { error: "No hay un periodo de inscripción activo. Las inscripciones no están disponibles en este momento." };
+    }
+
+    const ahora = new Date();
+    const fechaInicio = new Date(periodoActivo.fecha_inicio);
+    const fechaFin = new Date(periodoActivo.fecha_fin);
+
+    if (ahora < fechaInicio) {
+      return { error: `El periodo de inscripción aún no ha iniciado. Comienza el ${fechaInicio.toLocaleDateString()}.` };
+    }
+
+    if (ahora > fechaFin) {
+      return { error: `El periodo de inscripción ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
+    }
+
+    // 2. Verificar que el electivo exista y esté aprobado
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
         return { error: "El electivo no existe." };
@@ -22,13 +45,13 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: "El electivo no está disponible para inscripción. Debe estar aprobado." };
     }
 
-    // 2. Verificar que el alumno exista (por seguridad)
+    // 3. Verificar que el alumno exista (por seguridad)
     const alumno = await usuarioRepository.findOneBy({ id: alumnoId });
     if (!alumno) {
         return { error: "Alumno no encontrado." };
     }
 
-    // 3. Obtener información del alumno incluyendo su carrera
+    // 4. Obtener información del alumno incluyendo su carrera
     const alumnoInfo = await alumnoRepository.findOne({
         where: { usuario_id: alumnoId },
         relations: ["carrera"]
@@ -40,19 +63,37 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     const carreraAlumno = alumnoInfo.carrera;
 
-    // 4. Obtener el cupo asignado para la carrera del alumno en este electivo
-    const cupoCarrera = await cupoPorCarreraRepository.findOne({
-        where: {
-            electivo: { id: electivoId },
-            carrera: { id: carreraAlumno.id }
-        }
-    });
+    console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
+
+    // 5. Obtener el cupo asignado para la carrera del alumno en este electivo
+    const cupoCarrera = await cupoPorCarreraRepository
+        .createQueryBuilder("cupo")
+        .leftJoinAndSelect("cupo.electivo", "electivo")
+        .leftJoinAndSelect("cupo.carrera", "carrera")
+        .where("cupo.electivo_id = :electivoId", { electivoId })
+        .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
+        .getOne();
+
+    console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
 
     if (!cupoCarrera) {
+        // Verificar si hay cupos para este electivo sin filtrar por carrera
+        const todosCupos = await cupoPorCarreraRepository
+            .createQueryBuilder("cupo")
+            .leftJoinAndSelect("cupo.carrera", "carrera")
+            .where("cupo.electivo_id = :electivoId", { electivoId })
+            .getMany();
+        
+        console.log(`[DEBUG] Todos los cupos para este electivo:`, todosCupos.map(c => ({ 
+            carrera_id: c.carrera?.id, 
+            carrera_nombre: c.carrera?.nombre,
+            cantidad: c.cantidad_reservada 
+        })));
+        
         return { error: `No hay cupos asignados para tu carrera (${carreraAlumno.nombre}) en este electivo.` };
     }
 
-    // 5. Contar inscripciones ACEPTADAS y PENDIENTES de alumnos de esta carrera en este electivo
+    // 6. Contar inscripciones ACEPTADAS y PENDIENTES de alumnos de esta carrera en este electivo
     // IMPORTANTE: Contamos PENDIENTES también porque están ocupando un cupo mientras se procesan
     // NO contamos LISTA_ESPERA ni RECHAZADAS porque no ocupan cupos
     const inscripcionesOcupadas = await solicitudRepository
@@ -65,7 +106,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         .andWhere("solicitud.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
         .getCount();
 
-    // 6. Verificar si ya existe una solicitud de este alumno para este electivo
+    // 7. Verificar si ya existe una solicitud de este alumno para este electivo
     const solicitudExistente = await solicitudRepository.findOne({
         where: {
             alumno: { id: alumnoId },
@@ -77,7 +118,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: "Ya tienes una solicitud para este electivo." };
     }
 
-    // 7. Determinar el estado inicial de la solicitud según disponibilidad de cupos
+    // 8. Determinar el estado inicial de la solicitud según disponibilidad de cupos
     let estadoInicial = "PENDIENTE";
     let mensajeResultado = "";
 
@@ -92,7 +133,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         console.log(`[INSCRIPCIÓN - PENDIENTE] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
     }
 
-    // 8. Crear la solicitud con el estado correspondiente
+    // 9. Crear la solicitud con el estado correspondiente
     const nuevaSolicitud = solicitudRepository.create({
         alumno: alumno,
         electivo: electivo,
@@ -103,8 +144,32 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     const solicitudGuardada = await solicitudRepository.save(nuevaSolicitud);
     
+    // Crear respuesta limpia sin campos de auditoría
+    const respuestaLimpia = {
+        id: solicitudGuardada.id,
+        prioridad: solicitudGuardada.prioridad,
+        estado: solicitudGuardada.estado,
+        fecha_solicitud: solicitudGuardada.fecha_solicitud,
+        alumno: solicitudGuardada.alumno ? {
+            id: solicitudGuardada.alumno.id,
+            rut: solicitudGuardada.alumno.rut,
+            email: solicitudGuardada.alumno.email,
+            nombre_completo: solicitudGuardada.alumno.nombre_completo,
+            activo: solicitudGuardada.alumno.activo
+        } : null,
+        electivo: solicitudGuardada.electivo ? {
+            id: solicitudGuardada.electivo.id,
+            nombre: solicitudGuardada.electivo.nombre,
+            descripcion: solicitudGuardada.electivo.descripcion,
+            creditos: solicitudGuardada.electivo.creditos,
+            cupos: solicitudGuardada.electivo.cupos,
+            estado: solicitudGuardada.electivo.estado,
+            nombre_profesor: solicitudGuardada.electivo.nombre_profesor
+        } : null
+    };
+    
     return { 
-        data: solicitudGuardada,
+        data: respuestaLimpia,
         message: mensajeResultado 
     };
 
@@ -128,7 +193,24 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
       }
     });
 
-    return { data: solicitudes };
+    // Limpiar respuesta eliminando campos de auditoría
+    const solicitudesLimpias = solicitudes.map(solicitud => ({
+      id: solicitud.id,
+      prioridad: solicitud.prioridad,
+      estado: solicitud.estado,
+      fecha_solicitud: solicitud.fecha_solicitud,
+      electivo: solicitud.electivo ? {
+        id: solicitud.electivo.id,
+        nombre: solicitud.electivo.nombre,
+        descripcion: solicitud.electivo.descripcion,
+        creditos: solicitud.electivo.creditos,
+        cupos: solicitud.electivo.cupos,
+        estado: solicitud.electivo.estado,
+        nombre_profesor: solicitud.electivo.nombre_profesor
+      } : null
+    }));
+
+    return { data: solicitudesLimpias };
 
   } catch (error) {
     console.error("Error al obtener solicitudes del alumno:", error);
