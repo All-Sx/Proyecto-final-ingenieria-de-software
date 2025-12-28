@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import Sidebar from "../components/Sidebar";
 import VistaInicio from "../components/VistaInicio";
-import VistaElectivos from "../pages/VistaElectivos";
-import VistaPerfil from "../pages/VistaPerfil";
-import VistaConfiguracion from "../pages/VistaConfiguracion";
-import VistaEditarPerfil from "../pages/VistaEditarPerfil";
+import VistaElectivos from "./Electivos";
+import VistaPerfil from "./Perfil";
+import VistaConfiguracion from "./Configuracion";
+import VistaEditarPerfil from "./EditarPerfil";
 import ModoOscuro from "../components/ModoOscuro";
-import VistaCrearElectivo from "../pages/VistaCrearElectivo";
+import VistaCrearElectivo from "./CrearElectivo";
 import InscripcionesPage from "../pages/Inscripciones";
 
 export default function Dashboard() {
