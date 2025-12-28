@@ -31,9 +31,7 @@ export default function GestionElectivos() {
 
   
   // Estos estados controlan los filtros de búsqueda y filtrado de electivos
-  const [filtroCarrera, setFiltroCarrera] = useState("todas"); // Filtro por carrera
   const [filtroEstado, setFiltroEstado] = useState("todos"); // Filtro por estado (pendiente/aprobado/rechazado)
-  const [filtroSemestre, setFiltroSemestre] = useState("todos"); // Filtro por semestre
   const [busqueda, setBusqueda] = useState(""); // Búsqueda por texto (nombre o profesor)
   const [electroSeleccionado, setElectroSeleccionado] = useState(null); // Electivo seleccionado para ver detalles
 
@@ -60,13 +58,6 @@ export default function GestionElectivos() {
   };
 
 
-  // Se usa para el filtro desplegable de carreras
-  const carreras = [
-    "Ingeniería Civil Informática",
-    "Ingeniería de Ejecución en Computación e Informática",
-  ];
-
-
   // Estas funciones cambian el estado de un electivo específico
   const aprobarElectivo = (id) => {
     // Busca el electivo por ID y cambia su estado a "aprobado"
@@ -83,13 +74,11 @@ export default function GestionElectivos() {
  
   // Filtra los electivos según los criterios seleccionados por el jefe de carrera
   const electivosFiltrados = electivos.filter((e) => {
-    const matchCarrera = filtroCarrera === "todas" || e.carrera === filtroCarrera;
     const matchEstado = filtroEstado === "todos" || e.estado?.toUpperCase() === filtroEstado.toUpperCase();
-    const matchSemestre = filtroSemestre === "todos" || e.semestre === filtroSemestre;
     const matchBusqueda =
       e.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
       e.nombre_profesor?.toLowerCase().includes(busqueda.toLowerCase());
-    return matchCarrera && matchEstado && matchSemestre && matchBusqueda;
+    return matchEstado && matchBusqueda;
   });
 
 
@@ -111,12 +100,7 @@ export default function GestionElectivos() {
     >
   
       <div className="mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Electivos</h1>
-          <p className={`${darkMode ? "text-gray-400" : "text-gray-600"} mt-2`}>
-            Revisa, valida y aprueba las propuestas de electivos
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold">Gestión de Electivos</h1>
       </div>
 
       {/* === TARJETAS DE ESTADÍSTICAS === */}
@@ -162,8 +146,8 @@ export default function GestionElectivos() {
           <h2 className="text-lg font-semibold">Filtros</h2>
         </div>
 
-        {/* Grid de 4 columnas para los filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Grid de 2 columnas para los filtros */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 1. BARRA DE BÚSQUEDA POR TEXTO */}
           <div className="relative">
             <Search
@@ -185,57 +169,21 @@ export default function GestionElectivos() {
             />
           </div>
 
-          {/* 2, 3, 4. SELECTORES DESPLEGABLES (Carrera, Estado, Semestre) */}
-          {/* Usamos un array y map para evitar repetir código */}
-          {[filtroCarrera, filtroEstado, filtroSemestre].map((filtro, i) => (
-            <select
-              key={i}
-              value={
-                i === 0 ? filtroCarrera : i === 1 ? filtroEstado : filtroSemestre
-              }
-              onChange={(e) =>
-                i === 0
-                  ? setFiltroCarrera(e.target.value) // Actualiza filtro de carrera
-                  : i === 1
-                  ? setFiltroEstado(e.target.value) // Actualiza filtro de estado
-                  : setFiltroSemestre(e.target.value) // Actualiza filtro de semestre
-              }
-              className={`border rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                darkMode
-                  ? "bg-gray-700 border-gray-600 text-gray-100"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
-            >
-              {/* Opciones del primer select (Carreras) */}
-              {i === 0 && (
-                <>
-                  <option value="todas">Todas las carreras</option>
-                  {carreras.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </>
-              )}
-              {/* Opciones del segundo select (Estados) */}
-              {i === 1 && (
-                <>
-                  <option value="todos">Todos los estados</option>
-                  <option value="pendiente">Pendientes</option>
-                  <option value="aprobado">Aprobados</option>
-                  <option value="rechazado">Rechazados</option>
-                </>
-              )}
-              {/* Opciones del tercer select (Semestres) */}
-              {i === 2 && (
-                <>
-                  <option value="todos">Todos los semestres</option>
-                  <option value="2025-1">2025-1</option>
-                  <option value="2025-2">2025-2</option>
-                </>
-              )}
-            </select>
-          ))}
+          {/* SELECTOR DE ESTADO */}
+          <select
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            className={`border rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+              darkMode
+                ? "bg-gray-700 border-gray-600 text-gray-100"
+                : "bg-white border-gray-300 text-gray-900"
+            }`}
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aprobado">Aprobados</option>
+            <option value="rechazado">Rechazados</option>
+          </select>
         </div>
       </div>
 
@@ -376,12 +324,36 @@ export default function GestionElectivos() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Cupos:</h3>
+                  <h3 className="font-semibold mb-1">Cupos totales:</h3>
                   <p className={darkMode ? "text-gray-300" : "text-gray-700"}>
                     {electroSeleccionado.cupos}
                   </p>
                 </div>
               </div>
+
+              {/* Distribución de cupos por carrera */}
+              {electroSeleccionado.distribucion_cupos && electroSeleccionado.distribucion_cupos.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Distribución de cupos por carrera:</h3>
+                  <div className="space-y-2">
+                    {electroSeleccionado.distribucion_cupos.map((cupo, index) => (
+                      <div 
+                        key={index} 
+                        className={`flex justify-between items-center p-3 rounded-lg ${
+                          darkMode ? "bg-gray-700" : "bg-gray-100"
+                        }`}
+                      >
+                        <span className={darkMode ? "text-gray-300" : "text-gray-700"}>
+                          {cupo.carrera_nombre}
+                        </span>
+                        <span className="font-semibold text-purple-500">
+                          {cupo.cantidad} cupos
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Botones de acción */}
