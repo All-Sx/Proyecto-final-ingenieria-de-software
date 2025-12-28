@@ -9,7 +9,7 @@ const carrerasDisponibles = [
   { id: 2, nombre: "Ingeniería Ejecución en Computación e Informática" },
 ];
 
-export default function VistaCrearElectivo() {
+export default function CrearElectivo() {
   const { darkMode } = useTheme();
 
   const [formData, setFormData] = useState({
