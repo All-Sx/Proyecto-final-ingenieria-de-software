@@ -3,35 +3,25 @@ import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
   try {
-    // 1. Extraer datos del cuerpo de la petición
     const { nombre, descripcion, creditos, cupos, estado } = req.body;
 
-    // PASO 1: Obtener el nombre del profesor del usuario autenticado
-    // req.user viene del authMiddleware que decodifica el JWT
     const nombreProfesor = req.user?.nombre_completo;
-
-    // Validar que el usuario esté autenticado y tenga nombre
+    
     if (!nombreProfesor) {
       return handleErrorClient(res, 401, "Usuario no autenticado o sin nombre.");
     }
 
-    // 2. Validar campos obligatorios
     if (!nombre || !cupos) {
       return handleErrorClient(res, 400, "Nombre y cupos del electivo son obligatorios.");
     }
 
-    // 3. Normalizar el estado a mayúsculas si existe
-    // Esto permite que envíen "pendiente", "Pendiente" o "PENDIENTE"
     const estadoNormalizado = estado ? estado.toUpperCase() : undefined;
 
-    // 4. Validar que no intenten enviar estados no permitidos
-    // Los profesores solo pueden crear electivos en estado PENDIENTE (o no enviar estado)
-    // No pueden crear directamente como APROBADO o RECHAZADO
+  
     if (estadoNormalizado && estadoNormalizado !== "PENDIENTE") {
       return handleErrorClient(res, 400, "Solo puedes crear electivos en estado PENDIENTE. Los estados APROBADO y RECHAZADO solo pueden ser asignados por el Jefe de Carrera.");
     }
 
-    // PASO 2: Llamar al servicio pasando los datos Y el nombre del profesor
     const result = await createElectivoService({ nombre, descripcion, creditos, cupos }, nombreProfesor);
 
     if (result.error) {
@@ -51,7 +41,17 @@ export const createElectivo = async (req, res) => {
 
 export const getElectivos = async (req, res) => {
   try {
-    const result = await getElectivosService();
+    //obtenemos el Rol y el filtro
+    const { rol } = req.user; 
+    let { estado } = req.query; 
+
+    //SEGURIDAD: Si es Alumno, le imponemos el filtro "APROBADO"
+    // (Ignoramos cualquier cosa que haya puesto en la URL)
+    if (rol === "Alumno") {
+        estado = "APROBADO";
+    }
+
+    const result = await getElectivosService(estado);
 
     if (result.error) {
       return handleErrorClient(res, 500, result.error);
@@ -67,25 +67,24 @@ export const getElectivos = async (req, res) => {
   }
 };
 
-// NUEVO CONTROLADOR: Para que un profesor vea SOLO sus electivos
-// Filtra por el nombre del profesor que está en el token JWT
+
 export const getMisElectivos = async (req, res) => {
   try {
-    // PASO 1: Obtener el nombre del profesor del token JWT
+ 
     const nombreProfesor = req.user?.nombre_completo;
-
+    
     if (!nombreProfesor) {
       return handleErrorClient(res, 401, "Usuario no autenticado.");
     }
 
-    // PASO 2: Llamar al servicio que filtra por nombre_profesor
+
     const result = await getElectivosByProfesorService(nombreProfesor);
 
     if (result.error) {
       return handleErrorClient(res, 500, result.error);
     }
 
-    // PASO 3: Devolver solo los electivos de este profesor
+   
     return res.status(200).json({
       message: "Lista de tus electivos",
       data: result.data
@@ -98,15 +97,15 @@ export const getMisElectivos = async (req, res) => {
 
 export const updateElectivo = async (req, res) => {
   try {
-    const { id } = req.params; // Viene de la URL (ej: /api/electivos/5)
-    const datosActualizar = req.body; // Viene del JSON (ej: { "cupos": 50 })
+    const { id } = req.params; 
+    const datosActualizar = req.body; 
 
     const result = await updateElectivoService(Number(id), datosActualizar);
 
     if (result.error) {
-      // Si no encontrado devuelve 404, sino 500
-      const status = result.error === "Electivo no encontrado" ? 404 : 500;
-      return handleErrorClient(res, status, result.error);
+
+        const status = result.error === "Electivo no encontrado" ? 404 : 500;
+        return handleErrorClient(res, status, result.error);
     }
 
     return res.status(200).json({
@@ -119,37 +118,20 @@ export const updateElectivo = async (req, res) => {
   }
 };
 
-export const asignarCuposManual = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await asignarCuposPorCarreraService(Number(id));
-
-    if (result.error) {
-      const status = result.error.includes("no encontrado") ? 404 : 400;
-      return handleErrorClient(res, status, result.error);
-    }
-
-    return res.status(200).json({
-      message: "Cupos asignados exitosamente por carrera",
-      data: result.data
-    });
-
-  } catch (error) {
-    return handleErrorClient(res, 500, "Error en el servidor", error.message);
-  }
-};
-
 export const getElectivosAprobados = async (req, res) => {
   try {
     const result = await getElectivosAprobadosService();
 
-    if (result.error) return handleErrorClient(res, 400, result.error);
+    if (result.error) {
+      const status = result.error.includes("cerrado") ? 403 : 404;
+      return handleErrorClient(res, status, result.error);
+    }
 
     return res.status(200).json({
       message: "Lista de electivos aprobados",
       data: result.data
     });
+
   } catch (error) {
     return handleErrorClient(res, 500, "Error interno del servidor", error.message);
   }

@@ -6,6 +6,7 @@ import userRoutes from "./usuario.routes.js";
 import inscripcionRoutes from "./inscripcion.routes.js";
 import carreraRoutes from "./carrera.routes.js";
 import alumnoRoutes from "./alumno.routes.js";
+import jefeCarreraRoutes from "./jefeCarrera.routes.js";
 
 
 export function routerApi(app) {
@@ -21,5 +22,6 @@ export function routerApi(app) {
     router.use("/usuarios", userRoutes);     
     router.use("/inscripciones", inscripcionRoutes); 
     router.use("/carreras", carreraRoutes); 
-    router.use("/alumnos", alumnoRoutes);   
+    router.use("/alumnos", alumnoRoutes);
+    router.use("/jefe-carrera", jefeCarreraRoutes);   
 }

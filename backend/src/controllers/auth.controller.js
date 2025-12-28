@@ -133,26 +133,24 @@ export const register = async (req, res) => {
 
     const usuarioGuardado = await userRepository.save(newUser);
 
-    // Si el rol es "Alumno", crear entrada en tabla alumnos (sin carrera asignada aún)
     if (rolEntity.nombre === "Alumno") {
       const alumnoRepository = AppDataSource.getRepository(Alumno);
       const nuevoAlumno = alumnoRepository.create({
         usuario_id: usuarioGuardado.id,
-        carrera: null,  // La carrera se asignará después
+        carrera: null,  
         anio_ingreso: new Date().getFullYear(),
         creditos_acumulados: 0
       });
       await alumnoRepository.save(nuevoAlumno);
     }
 
-    // Responder con el rol correcto
     return res.status(201).json({
       message: `Usuario registrado exitosamente como ${rolEntity.nombre}`,
       user: {
         rut: usuarioGuardado.rut,
         nombre: usuarioGuardado.nombre_completo,
         email: usuarioGuardado.email,
-        rol: rolEntity.nombre  //Ahora mostrará el rol correcto
+        rol: rolEntity.nombre  
       }
     });
 

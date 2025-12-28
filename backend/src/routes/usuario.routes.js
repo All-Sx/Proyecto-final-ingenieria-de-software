@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUserAdmin, getAlumnos, getProfesores } from "../controllers/usuario.controller.js";
+import { createUserAdmin, getAlumnos, getProfesores, getMyProfile, updateMyProfile } from "../controllers/usuario.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
 import { deleteUsuarioDeAlumnoByRut } from "../controllers/jefeCarrera.controller.js";
@@ -28,6 +28,16 @@ router.get("/profesores",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
     getProfesores
+);
+
+router.get("/profile", 
+    authMiddleware, 
+    getMyProfile
+);
+
+router.patch("/profile", 
+    authMiddleware, 
+    updateMyProfile
 );
 
 export default router;
