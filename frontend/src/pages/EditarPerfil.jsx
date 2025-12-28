@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function VistaEditarPerfil({ datosEdicion, handleChangeEdicion, handleGuardarPerfil, mensajeEdicion, setVistaActual, darkMode }) {
+export default function EditarPerfil({ datosEdicion, handleChangeEdicion, handleGuardarPerfil, mensajeEdicion, setVistaActual, darkMode }) {
   const onSubmit = (e) => {
     e.preventDefault();
     handleGuardarPerfil({ ...datosEdicion });

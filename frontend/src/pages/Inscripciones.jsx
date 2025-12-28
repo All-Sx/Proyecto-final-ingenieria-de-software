@@ -51,7 +51,7 @@ export default function InscripcionesPage({ user, darkMode }) {
 
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6">Período de Inscripción</h1>
+            <h1 className="text-3xl font-bold mb-6">Períodos de Inscripción</h1>
 
             {!periodo ? (
                 <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
