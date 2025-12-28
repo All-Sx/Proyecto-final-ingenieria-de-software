@@ -1,6 +1,6 @@
 import React from "react";
-import CardElectivo from "./CardElectivo";
-import { isAlumno, isProfesor, isJefe } from "../../helpers/roles";
+import CardElectivo from "../components/CardElectivo";
+import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 
 const electivosEjemplo = [
   {

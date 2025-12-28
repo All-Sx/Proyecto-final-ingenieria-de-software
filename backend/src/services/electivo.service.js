@@ -8,6 +8,8 @@ export async function createElectivoService(data, nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
+    const carreraRepository = AppDataSource.getRepository(Carrera);
+    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
 
     const periodoActivo = await periodoRepository.findOne({
       where: { estado: "PLANIFICACION" }
@@ -33,6 +35,33 @@ export async function createElectivoService(data, nombreProfesor) {
     if (electivoExist) {
         return { error: "Ya existe un electivo con ese nombre." };
     }
+    
+    // El frontend DEBE enviar distribucion_cupos con los cupos por carrera
+    // Ejemplo: [{ carrera_id: 1, cantidad: 50 }, { carrera_id: 2, cantidad: 10 }]
+    if (!data.distribucion_cupos || !Array.isArray(data.distribucion_cupos) || data.distribucion_cupos.length === 0) {
+      return { error: "Debe especificar la distribución de cupos por carrera." };
+    }
+
+    // Sumar todos los cupos de la distribución (50 + 10 = 60)
+    const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+
+    // Verificar que la suma sea igual al total de cupos
+    // Si el total es 60, la suma debe ser 60 (50+10 o 30+30 o lo que sea)
+    if (sumaDistribucion !== data.cupos) {
+      return { error: `La suma de la distribución (${sumaDistribucion}) no coincide con los cupos totales (${data.cupos}).` };
+    }
+
+    // Verificar que cada carrera exista en la BD y tenga cantidad válida
+    for (const item of data.distribucion_cupos) {
+      if (!item.carrera_id || item.cantidad <= 0) {
+        return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
+      }
+      
+      const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });
+      if (!carreraExiste) {
+        return { error: `La carrera con ID ${item.carrera_id} no existe.` };
+      }
+    }
 
     const nuevoElectivo = electivoRepository.create({
       nombre: data.nombre,
@@ -44,6 +73,31 @@ export async function createElectivoService(data, nombreProfesor) {
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
+
+  
+    // guardamos los cupos en la tabla CupoPorCarrera
+    // Se hace al crear el electivo (manual según lo que envió el profesor)
+    const cuposCreados = [];
+    for (const item of data.distribucion_cupos) {
+      const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
+      
+      // Crear registro en la tabla cupos_por_carrera
+      const nuevoCupo = cupoPorCarreraRepository.create({
+        electivo: electivoGuardado,
+        carrera: carrera,
+        cantidad_reservada: item.cantidad // La cantidad que definió el profesor
+      });
+      
+      const cupoGuardado = await cupoPorCarreraRepository.save(nuevoCupo);
+      cuposCreados.push({
+        carrera_id: carrera.id,
+        carrera_nombre: carrera.nombre,
+        cantidad: cupoGuardado.cantidad_reservada
+      });
+      
+      console.log(`[CUPOS] Asignados ${item.cantidad} cupos a ${carrera.nombre} para el electivo "${electivoGuardado.nombre}"`);
+    }
+
     return { 
       data: {
         id: electivoGuardado.id,
@@ -52,7 +106,8 @@ export async function createElectivoService(data, nombreProfesor) {
         creditos: electivoGuardado.creditos,
         cupos: electivoGuardado.cupos,
         estado: electivoGuardado.estado,
-        nombre_profesor: electivoGuardado.nombre_profesor
+        nombre_profesor: electivoGuardado.nombre_profesor,
+        distribucion_cupos: cuposCreados
       }
     };
 
@@ -119,6 +174,7 @@ export async function getElectivosByProfesorService(nombreProfesor) {
 export async function updateElectivoService(id, data) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
+    const carreraRepository = AppDataSource.getRepository(Carrera);
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
 
     const electivo = await electivoRepository.findOneBy({ id: id });
@@ -127,52 +183,75 @@ export async function updateElectivoService(id, data) {
       return { error: "Electivo no encontrado" };
     }
 
-    // Guardar el estado anterior y cupos anteriores para detectar cambios
+    // Guardar estado anterior para saber si se está aprobando
     const estadoAnterior = electivo.estado;
-    const cuposAnteriores = electivo.cupos;
 
-    
-    electivoRepository.merge(electivo, data);
-
-    
-    
-    const electivoActualizado = await electivoRepository.save(electivo);
-
-    // 4. Si cambiaron los cupos y el electivo ya estaba APROBADO, actualizar la distribución
-    if (estadoAnterior === "APROBADO" && cuposAnteriores !== electivoActualizado.cupos) {
-      console.log(`[ACTUALIZACIÓN CUPOS] Los cupos del electivo "${electivoActualizado.nombre}" cambiaron de ${cuposAnteriores} a ${electivoActualizado.cupos}. Redistribuyendo...`);
+  
+    // Si el Jefe de Carrera envía distribucion_cupos, actualizamos la distribución
+    if (data.distribucion_cupos && Array.isArray(data.distribucion_cupos)) {
       
-      // Eliminar cupos anteriores
-      await cupoPorCarreraRepository.delete({ electivo: { id: electivoActualizado.id } });
+      // Calcular la suma de la distribución
+      const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
       
-      // Reasignar con los nuevos cupos
-      const resultadoCupos = await asignarCuposPorCarreraService(electivoActualizado.id);
-      
-      if (resultadoCupos.error) {
-        console.error(`[ERROR] No se pudieron reasignar cupos: ${resultadoCupos.error}`);
-        return { 
-          error: `Cupos actualizados pero hubo un problema al redistribuir: ${resultadoCupos.error}` 
-        };
+      // Si también envió cupos, validar que coincidan
+      if (data.cupos && sumaDistribucion !== data.cupos) {
+        return { error: `La suma de la distribución (${sumaDistribucion}) no coincide con los cupos totales (${data.cupos}).` };
       }
       
-      console.log(`[ÉXITO] Cupos redistribuidos correctamente para el electivo "${electivoActualizado.nombre}"`);
+      // Si no envió cupos, calcularlo automáticamente
+      if (!data.cupos) {
+        data.cupos = sumaDistribucion;
+      }
+      
+      // Verificar que todas las carreras existan
+      for (const item of data.distribucion_cupos) {
+        if (!item.carrera_id || item.cantidad <= 0) {
+          return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
+        }
+        
+        const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });
+        if (!carreraExiste) {
+          return { error: `La carrera con ID ${item.carrera_id} no existe.` };
+        }
+      }
+      
+      // Eliminar distribución anterior
+      await cupoPorCarreraRepository.delete({ electivo: { id: electivo.id } });
+      
+      // Crear nueva distribución
+      for (const item of data.distribucion_cupos) {
+        const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
+        
+        const nuevoCupo = cupoPorCarreraRepository.create({
+          electivo: electivo,
+          carrera: carrera,
+          cantidad_reservada: item.cantidad
+        });
+        
+        await cupoPorCarreraRepository.save(nuevoCupo);
+        console.log(`[ACTUALIZACIÓN] ${item.cantidad} cupos asignados a ${carrera.nombre}`);
+      }
     }
 
-    // 5. Si el estado cambió a APROBADO, asignar cupos por carrera automáticamente
+    // Actualizar campos del electivo
+    electivoRepository.merge(electivo, data);
+    const electivoActualizado = await electivoRepository.save(electivo);
+
+    // ===== VALIDACIÓN AL APROBAR =====
+    // Si el Jefe de Carrera está aprobando, verificar que existan cupos asignados
     if (estadoAnterior !== "APROBADO" && electivoActualizado.estado === "APROBADO") {
-      console.log(`[APROBACIÓN] Electivo "${electivoActualizado.nombre}" fue aprobado. Asignando cupos por carrera...`);
+      console.log(`[APROBACIÓN] Verificando cupos para el electivo "${electivoActualizado.nombre}"...`);
       
-      const resultadoCupos = await asignarCuposPorCarreraService(electivoActualizado.id);
+      // Verificar que existan cupos en la tabla cupos_por_carrera
+      const cuposExistentes = await cupoPorCarreraRepository.find({
+        where: { electivo: { id: electivoActualizado.id } }
+      });
       
-      if (resultadoCupos.error) {
-        // Si falla la asignación de cupos, registramos el error pero no revertimos la aprobación
-        console.error(`[ERROR] No se pudieron asignar cupos: ${resultadoCupos.error}`);
-        return { 
-          error: `Electivo aprobado pero hubo un problema al asignar cupos: ${resultadoCupos.error}` 
-        };
+      if (cuposExistentes.length === 0) {
+        return { error: "No se puede aprobar el electivo porque no tiene cupos asignados por carrera." };
       }
       
-      console.log(`[ÉXITO] Cupos asignados correctamente para el electivo "${electivoActualizado.nombre}"`);
+      console.log(`[ÉXITO] Electivo aprobado con distribución de cupos existente.`);
     }
 
     return { 
@@ -190,102 +269,6 @@ export async function updateElectivoService(id, data) {
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
     return { error: "Error interno al actualizar el electivo." };
-  }
-}
-
-/**
- * Asigna cupos equitativamente entre las dos carreras para un electivo.
- * Divide los cupos totales del electivo en partes iguales entre las carreras.
- * Si los cupos son impares, la primera carrera recibe un cupo adicional.
- * 
- * @param {number} electivoId - ID del electivo al que se asignarán cupos
- * @returns {Object} { data: Array<CupoPorCarrera> } o { error: string }
- */
-export async function asignarCuposPorCarreraService(electivoId) {
-  try {
-    const ahora = new Date();
-
-    const periodos = AppDataSource.getRepository(PeriodoAcademico);
-
-    const periodoActual = await periodos.findOne({
-      where: {
-        fecha_fin: MoreThanOrEqual(ahora),
-        fecha_inicio: LessThanOrEqual(ahora)
-      }
-    });
-
-    if (!periodoActual) {
-      return { error: "No existe un periodo académico activo" };
-    }
-
-    if (periodoActual.estado !== "INSCRIPCION") {
-      if (periodoActual.estado === "CERRADO") {
-        return { error: "El periodo de inscripción está cerrado. No se pueden visualizar electivos aprobados." };
-      }
-      return { error: "No existe periodo en inscripcion de asignaturas" };
-    }
-
-    const electivoRepository = AppDataSource.getRepository(Electivo);
-    const carreraRepository = AppDataSource.getRepository(Carrera);
-    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
-
-    // 1. Verificar que el electivo exista
-    const electivo = await electivoRepository.findOneBy({ id: electivoId });
-    if (!electivo) {
-      return { error: "Electivo no encontrado." };
-    }
-
-    // 2. Obtener todas las carreras (asumimos que solo hay 2)
-    const carreras = await carreraRepository.find();
-    
-    if (carreras.length === 0) {
-      return { error: "No hay carreras registradas en el sistema." };
-    }
-
-    if (carreras.length !== 2) {
-      console.warn(`[ADVERTENCIA] Se esperaban 2 carreras, pero hay ${carreras.length}`);
-    }
-
-    // 3. Verificar si ya existen cupos asignados para este electivo
-    const cuposExistentes = await cupoPorCarreraRepository.find({
-      where: { electivo: { id: electivoId } }
-    });
-
-    if (cuposExistentes.length > 0) {
-      return { error: "Este electivo ya tiene cupos asignados por carrera." };
-    }
-
-    // 4. Calcular la distribución equitativa de cupos
-    const cuposTotales = electivo.cupos;
-    const numCarreras = carreras.length;
-    const cuposPorCarrera = Math.floor(cuposTotales / numCarreras);
-    const cuposRestantes = cuposTotales % numCarreras;
-
-    // 5. Crear los registros de cupos por carrera
-    const cuposCreados = [];
-    
-    for (let i = 0; i < carreras.length; i++) {
-      // Si hay cupos restantes (por ejemplo, 21 cupos / 2 = 10 con resto 1)
-      // La primera carrera recibe el cupo extra
-      const cantidad = cuposPorCarrera + (i < cuposRestantes ? 1 : 0);
-      
-      const nuevoCupo = cupoPorCarreraRepository.create({
-        electivo: electivo,
-        carrera: carreras[i],
-        cantidad_reservada: cantidad
-      });
-      
-      const cupoGuardado = await cupoPorCarreraRepository.save(nuevoCupo);
-      cuposCreados.push(cupoGuardado);
-      
-      console.log(`[CUPOS] Asignados ${cantidad} cupos a ${carreras[i].nombre} para el electivo "${electivo.nombre}"`);
-    }
-
-    return { data: cuposCreados };
-
-  } catch (error) {
-    console.error("Error al asignar cupos por carrera:", error);
-    return { error: "Error interno al asignar cupos por carrera." };
   }
 }
 

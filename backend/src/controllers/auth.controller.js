@@ -6,8 +6,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/configenv.js";
 
-import { registerValidation } from "../validators/register.validation.js";
-import { loginValidation } from "../validators/login.validation.js";
+import { registerValidation } from "../validators/register.validator.js";
+import { loginValidation } from "../validators/login.validator.js";
 
 export const login = async (req, res) => {
   try {
