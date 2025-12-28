@@ -1,4 +1,4 @@
-export default function PeriodoVigente({ periodo, darkMode }) {
+export default function PeriodoVigente({ periodo, darkMode, onGestionar }) {
   const hoy = new Date();
 
   const diasRestantes = Math.ceil(
@@ -9,8 +9,12 @@ export default function PeriodoVigente({ periodo, darkMode }) {
     <div className={`border rounded-2xl p-8 ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100"
       }`}>
       <h2 className="text-xl font-semibold mb-3">
-        Período de inscripción vigente
+        Período Actual
       </h2>
+
+      <h3 className="text-xl font-semibold mb-3">
+        Estado: {periodo.estado.toLowerCase()}
+      </h3>
 
       <p>Inicio: {periodo.fechaInicio.toLocaleDateString()}</p>
       <p>Término: {periodo.fechaFin.toLocaleDateString()}</p>
@@ -19,7 +23,10 @@ export default function PeriodoVigente({ periodo, darkMode }) {
         Quedan {diasRestantes} días para el cierre
       </p>
 
-      <button className="mt-6 bg-purple-600 text-white px-5 py-2 rounded-xl">
+      <button
+        onClick={onGestionar}
+        className="mt-6 bg-purple-600 text-white px-5 py-2 rounded-xl"
+      >
         Gestionar período
       </button>
     </div>

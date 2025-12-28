@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import Sidebar from "../components/Sidebar";
 import VistaInicio from "../components/VistaInicio";
-import VistaElectivos from "../pages/VistaElectivos";
-import VistaPerfil from "../pages/VistaPerfil";
-import VistaConfiguracion from "../pages/VistaConfiguracion";
-import VistaEditarPerfil from "../pages/VistaEditarPerfil";
+import VistaElectivos from "./Electivos";
+import VistaPerfil from "./Perfil";
+import VistaConfiguracion from "./Configuracion";
+import VistaEditarPerfil from "./EditarPerfil";
 import ModoOscuro from "../components/ModoOscuro";
-import VistaCrearElectivo from "../pages/VistaCrearElectivo";
+import VistaCrearElectivo from "./CrearElectivo";
 import InscripcionesPage from "../pages/Inscripciones";
+import GestionElectivos from "./GestionElectivos";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ export default function Dashboard() {
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
+        {vistaActual === "gestionElectivos" && <GestionElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
           <VistaConfiguracion
             setVistaActual={setVistaActual}

@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AuthForm from "./pages/AuthForm";
 import Dashboard from "./pages/Dashboard";
-import ElectivoForm from "./pages/VistaCrearElectivo";
+import ElectivoForm from "./pages/CrearElectivo";
 import GestionElectivos from "./pages/GestionElectivos"; 
 
 export default function App() {
