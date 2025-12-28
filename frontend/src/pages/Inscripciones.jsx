@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SinPeriodo from "../components/SinPeriodo";
 import PeriodoVigente from "../components/PeriodoVigente";
+import HistorialPeriodos from "../components/HistorialPeriodos";
 import ModalCrearPeriodo from "../components/ModalCrearPeriodo";
 import ModalGestionarPeriodo from "../components/ModalGestionarPeriodo";
 import { isJefe } from "../helpers/roles";
@@ -8,7 +9,7 @@ import {
     obtenerPeriodoActual,
     crearPeriodo,
     actualizarPeriodo,
-    cambiarEstadoPeriodo
+    obtenerHistorialPeriodos
 } from "../services/periodos.service"
 import { normalizarPeriodo, formatearFecha } from "../helpers/fechas";
 
@@ -18,12 +19,15 @@ export default function InscripcionesPage({ user, darkMode }) {
     }
 
     const [periodo, setPeriodo] = useState(null);
+    const [historial, setHistorial] = useState([]);
     const [mostrarModal, setMostrarModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [mostrarGestion, setMostrarGestion] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         cargarPeriodo();
+        cargarHistorial();
     }, []);
 
     const cargarPeriodo = async () => {
@@ -39,13 +43,28 @@ export default function InscripcionesPage({ user, darkMode }) {
         }
     };
 
+    const cargarHistorial = async () => {
+        try {
+            const res = await obtenerHistorialPeriodos();
+            setHistorial(res.data.data || []);
+        } catch (error) {
+            console.error("Error al obtener historial:", error);
+            setHistorial([]);
+        }
+    };
+
     const handleCrearPeriodo = async (periodoData) => {
         try {
+            setError(null);
             const response = await crearPeriodo(periodoData);
             setPeriodo(normalizarPeriodo(response.data.data));
             setMostrarModal(false);
+            await cargarHistorial(); 
         } catch (error) {
-            alert(error.response?.data?.message || "Error al crear período");
+            const mensaje = error.response?.data?.message || "Error al crear período";
+            setError(mensaje);
+            // Mantener el modal abierto para que el usuario vea el error
+            console.error("Error al crear periodo:", error);
         }
     };
 
@@ -56,7 +75,7 @@ export default function InscripcionesPage({ user, darkMode }) {
         estado
     }) => {
 
-        console.log("📤 FRONT envia:", {
+        console.log(" FRONT envia:", {
             nombre,
             fecha_inicio: formatearFecha(fechaInicio),
             fecha_fin: formatearFecha(fechaFin),
@@ -68,19 +87,19 @@ export default function InscripcionesPage({ user, darkMode }) {
                 nombre,
                 fecha_inicio: formatearFecha(fechaInicio),
                 fecha_fin: formatearFecha(fechaFin),
+                estado
             });
 
-            // SOLO cambia estado si es distinto
-            if (estado !== periodo.estado) {
-                await cambiarEstadoPeriodo(periodo.id, estado);
-            }
-
-            await cargarPeriodo();
+            // Cerrar el modal primero
             setMostrarGestion(false);
+            
+            // Recargar los datos
+            await cargarPeriodo();
+            await cargarHistorial();
 
         } catch (error) {
-            console.error("❌ Error FRONT:", error);
-            alert("Error al actualizar período (frontend)");
+            console.error(" Error FRONT:", error);
+            alert(error.response?.data?.message || "Error al actualizar período");
         }
     };
 
@@ -91,23 +110,53 @@ export default function InscripcionesPage({ user, darkMode }) {
 
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold mb-6">Períodos de Inscripción</h1>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-6">Períodos de Inscripción</h1>
+                
+                {/* Botón de acción */}
+                <button
+                    onClick={() => setMostrarModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium transition"
+                >
+                    Crear período
+                </button>
+            </div>
 
-            {!periodo ? (
-                <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
+            {/* Período Activo */}
+            {periodo ? (
+                <div className="mb-8">
+                    <h2 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                        Período Activo
+                    </h2>
+                    <PeriodoVigente
+                        periodo={periodo}
+                        darkMode={darkMode}
+                        onGestionar={() => setMostrarGestion(true)}
+                    />
+                </div>
             ) : (
-                <PeriodoVigente
-                    periodo={periodo}
-                    darkMode={darkMode}
-                    onGestionar={() => setMostrarGestion(true)}
-                />
+                <div className="mb-8">
+                    <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
+                </div>
             )}
+
+            {/* Historial de Períodos */}
+            <div>
+                <h2 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                    Historial de Períodos
+                </h2>
+                <HistorialPeriodos periodos={historial} darkMode={darkMode} />
+            </div>
 
             {mostrarModal && (
                 <ModalCrearPeriodo
-                    onClose={() => setMostrarModal(false)}
+                    onClose={() => {
+                        setMostrarModal(false);
+                        setError(null);
+                    }}
                     onCrear={handleCrearPeriodo}
                     darkMode={darkMode}
+                    errorServidor={error}
                 />
             )}
 

@@ -20,7 +20,6 @@ export async function createPeriodoService(data) {
         fecha_fin,
     });
 
-    // Verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
     const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
         where: [
             { estado: "PLANIFICACION", activo: true },
@@ -59,8 +58,26 @@ export async function updatePeriodoFechasService(id, data) {
 
     if (parsedFechaInicio) periodo.fecha_inicio = parsedFechaInicio;
     if (parsedFechaFin) periodo.fecha_fin = parsedFechaFin;
-    if (estado) periodo.estado = estado;
     if (nombre) periodo.nombre = nombre;
+    
+    if (estado && estado !== periodo.estado) {
+        validarCambioEstadoPeriodo(estado);
+        
+        if (estado === "INSCRIPCION") {
+            const periodoInscripcionActivo = await periodoRepository.findOne({
+                where: { estado: "INSCRIPCION", activo: true }
+            });
+            if (periodoInscripcionActivo && periodoInscripcionActivo.id !== periodo.id) {
+                throw new Error("Ya existe un periodo en estado de inscripción activo. Debe cerrar o cambiar el estado del periodo actual antes de activar otro.");
+            }
+        }
+        
+        if (estado === "CERRADO" && periodo.activo) {
+            periodo.activo = false;
+        }
+        
+        periodo.estado = estado;
+    }
 
     const savedPeriodo = await periodoRepository.save(periodo);
     return formatPeriodoResponse(savedPeriodo);
