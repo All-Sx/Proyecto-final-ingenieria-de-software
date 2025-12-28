@@ -68,7 +68,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                     {isJefe(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("electivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                            <button onClick={() => setVistaActual("gestionElectivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <Bookmark size={18} /> Electivos
                             </button>
                             <button onClick={() => setVistaActual("inscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>

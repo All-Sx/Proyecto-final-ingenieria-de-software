@@ -11,6 +11,7 @@ import ModoOscuro from "../components/ModoOscuro";
 import VistaCrearElectivo from "./CrearElectivo";
 import InscripcionesPage from "../pages/Inscripciones";
 import { updateClave, updateMyProfile } from "../services/perfil.service";
+import GestionElectivos from "./GestionElectivos";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ export default function Dashboard() {
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
+        {vistaActual === "gestionElectivos" && <GestionElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
           <VistaConfiguracion
             setVistaActual={setVistaActual}
