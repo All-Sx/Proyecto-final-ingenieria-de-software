@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import SinPeriodo from "../components/inscripciones/SinPeriodo";
-import PeriodoVigente from "../components/inscripciones/PeriodoVigente";
-import ModalCrearPeriodo from "../components/inscripciones/ModalCrearPeriodo";
+import SinPeriodo from "../components/SinPeriodo";
+import PeriodoVigente from "../components/PeriodoVigente";
+import ModalCrearPeriodo from "../components/ModalCrearPeriodo";
 import { isJefe } from "../helpers/roles";
 
 export default function InscripcionesPage({ user, darkMode }) {
