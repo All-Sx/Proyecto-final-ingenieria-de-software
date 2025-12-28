@@ -3,7 +3,6 @@ import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const createElectivo = async (req, res) => {
   try {
-    // Extraer datos del body, incluyendo distribucion_cupos
     const { nombre, descripcion, creditos, cupos, distribucion_cupos, estado } = req.body;
 
     const nombreProfesor = req.user?.nombre_completo;
@@ -12,24 +11,20 @@ export const createElectivo = async (req, res) => {
       return handleErrorClient(res, 401, "Usuario no autenticado o sin nombre.");
     }
 
-    // Validar campos obligatorios
     if (!nombre || !cupos) {
       return handleErrorClient(res, 400, "Nombre y cupos del electivo son obligatorios.");
     }
 
-    // Validar que se envíe la distribución de cupos
     if (!distribucion_cupos || !Array.isArray(distribucion_cupos) || distribucion_cupos.length === 0) {
       return handleErrorClient(res, 400, "Debe especificar la distribución de cupos por carrera.");
     }
 
     const estadoNormalizado = estado ? estado.toUpperCase() : undefined;
 
-  
     if (estadoNormalizado && estadoNormalizado !== "PENDIENTE") {
       return handleErrorClient(res, 400, "Solo puedes crear electivos en estado PENDIENTE. Los estados APROBADO y RECHAZADO solo pueden ser asignados por el Jefe de Carrera.");
     }
 
-    // Pasar todos los datos al servicio, incluyendo distribucion_cupos
     const result = await createElectivoService({ 
       nombre, 
       descripcion, 
@@ -55,11 +50,11 @@ export const createElectivo = async (req, res) => {
 
 export const getElectivos = async (req, res) => {
   try {
-    //obtenemos el Rol y el filtro
+    //obtenemos el Rol 
     const { rol } = req.user; 
     let { estado } = req.query; 
 
-    //Si es Alumno filtro "APROBADO"
+    //filtro por estado si es alumno
     if (rol === "Alumno") {
         estado = "APROBADO";
     }

@@ -1,7 +1,6 @@
-// === IMPORTACIONES ===
 import React, { useState } from "react"; 
-import { useNavigate } from "react-router-dom"; // para navegación entre rutas
-import { motion } from "framer-motion"; // Librería para animaciones suaves
+import { useNavigate } from "react-router-dom"; 
+import { motion } from "framer-motion"; 
 import {
   ArrowLeft,
   Search,
@@ -14,21 +13,18 @@ import {
   GraduationCap,
   Calendar,
   Eye,
-} from "lucide-react"; // Iconos modernos 
-import { useTheme } from "../context/ThemeContext"; // Context para el modo oscuro
-import ModoOscuro from "../components/ModoOscuro"; // Componente del botón flotante de modo oscuro
+} from "lucide-react"; 
+import { useTheme } from "../context/ThemeContext"; 
+import ModoOscuro from "../components/ModoOscuro"; 
 
 
-// Este componente es el PANEL DE GESTIÓN para el JEFE DE CARRERA
-// Permite revisar, aprobar y rechazar electivos propuestos por profesores
+//este componente es el PANEL DE GESTION para el JEFE DE CARRERA
+//permite revisar, aprobar y rechazar electivos propuestos por profesores
 export default function GestionElectivos() {
-  // Hook para navegación programática
   const navigate = useNavigate();
   
-  // Obtenemos el estado del tema (modo oscuro/claro) desde el contexto
   const { darkMode } = useTheme();
 
-  
   // Estos estados controlan los filtros de búsqueda y filtrado de electivos
   const [filtroCarrera, setFiltroCarrera] = useState("todas"); // Filtro por carrera
   const [filtroEstado, setFiltroEstado] = useState("todos"); // Filtro por estado (pendiente/aprobado/rechazado)
@@ -37,10 +33,9 @@ export default function GestionElectivos() {
   const [electroSeleccionado, setElectroSeleccionado] = useState(null); // Electivo seleccionado para ver detalles
 
  
-  // son datos estáticos
+  //datos de muestra
   // Cuando conectemos con el backend, esto vendrá de una llamada API
   const [electivos, setElectivos] = useState([
-    // Cada objeto representa un electivo propuesto por un profesor desde el formulario
     {
       id: 1, 
       nombre: "Inteligencia Artificial Aplicada", 
@@ -91,29 +86,22 @@ export default function GestionElectivos() {
     },
   ]);
 
-
-  // Se usa para el filtro desplegable de carreras
   const carreras = [
     "Ingeniería Civil Informática",
     "Ingeniería de Ejecución en Computación e Informática",
   ];
 
 
-  // Estas funciones cambian el estado de un electivo específico
   const aprobarElectivo = (id) => {
-    // Busca el electivo por ID y cambia su estado a "aprobado"
     setElectivos(electivos.map((e) => (e.id === id ? { ...e, estado: "aprobado" } : e)));
-    setElectroSeleccionado(null); // Cierra el modal de detalles
+    setElectroSeleccionado(null); 
   };
 
   const rechazarElectivo = (id) => {
-    // Busca el electivo por ID y cambia su estado a "rechazado"
     setElectivos(electivos.map((e) => (e.id === id ? { ...e, estado: "rechazado" } : e)));
-    setElectroSeleccionado(null); // Cierra el modal de detalles
+    setElectroSeleccionado(null); 
   };
 
- 
-  // Filtra los electivos según los criterios seleccionados por el jefe de carrera
   const electivosFiltrados = electivos.filter((e) => {
     const matchCarrera = filtroCarrera === "todas" || e.carrera === filtroCarrera;
     const matchEstado = filtroEstado === "todos" || e.estado === filtroEstado;
@@ -125,25 +113,22 @@ export default function GestionElectivos() {
   });
 
 
-  // Calcula contadores para mostrar en las tarjetas superiores
   const stats = {
-    total: electivos.length, // Total de electivos
-    pendientes: electivos.filter((e) => e.estado === "pendiente").length, // Electivos pendientes de revisar
-    aprobados: electivos.filter((e) => e.estado === "aprobado").length, // Electivos ya aprobados
-    rechazados: electivos.filter((e) => e.estado === "rechazado").length, // Electivos rechazados
+    total: electivos.length, 
+    pendientes: electivos.filter((e) => e.estado === "pendiente").length, 
+    aprobados: electivos.filter((e) => e.estado === "aprobado").length, 
+    rechazados: electivos.filter((e) => e.estado === "rechazado").length, 
   };
 
-  // === RENDERIZADO DEL COMPONENTE ===
   return (
     <div
-      // Contenedor principal - cambia colores según el modo oscuro
       className={`min-h-screen p-8 transition-colors ${
         darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
       }`}
     >
   
       <div className="mb-6">
-        {/* Botón para volver al dashboard */}
+        {/* Boton para volver al dashboard */}
         <button
           onClick={() => navigate("/dashboard")}
           className={`flex items-center gap-2 mb-4 transition ${
@@ -161,9 +146,9 @@ export default function GestionElectivos() {
         </div>
       </div>
 
-      {/* === TARJETAS DE ESTADÍSTICAS === */}
+      {/* TARJETAS DE ESTADISTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {/* Mapeamos un array de objetos con la info de cada estadística */}
+        {/* Mapeamos un array de objetos con la info de cada estadistica */}
         {[
           { icon: BookOpen, color: "text-blue-600", label: "Total Electivos", value: stats.total },
           { icon: Clock, color: "text-yellow-500", label: "Pendientes", value: stats.pendientes },
@@ -172,7 +157,6 @@ export default function GestionElectivos() {
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
-            // Animación de entrada con delay escalonado
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
@@ -193,7 +177,7 @@ export default function GestionElectivos() {
         ))}
       </div>
 
-      {/* Panel con filtros múltiples para refinar la búsqueda de electivos */}
+      {/* Panel con filtros multiples para refinar la busqueda de electivos */}
       <div
         className={`p-6 rounded-2xl shadow-md mb-6 ${
           darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
@@ -206,7 +190,7 @@ export default function GestionElectivos() {
 
         {/* Grid de 4 columnas para los filtros */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* 1. BARRA DE BÚSQUEDA POR TEXTO */}
+          {/* 1. BARRA DE BUSQUEDA POR TEXTO */}
           <div className="relative">
             <Search
               className={`absolute left-3 top-3 ${
@@ -227,8 +211,8 @@ export default function GestionElectivos() {
             />
           </div>
 
-          {/* 2, 3, 4. SELECTORES DESPLEGABLES (Carrera, Estado, Semestre) */}
-          {/* Usamos un array y map para evitar repetir código */}
+          {/* SELECTORES DESPLEGABLES (Carrera, Estado, Semestre) */}
+          {/* Usamos un array y map para evitar repetir codigo */}
           {[filtroCarrera, filtroEstado, filtroSemestre].map((filtro, i) => (
             <select
               key={i}
@@ -237,10 +221,10 @@ export default function GestionElectivos() {
               }
               onChange={(e) =>
                 i === 0
-                  ? setFiltroCarrera(e.target.value) // Actualiza filtro de carrera
+                  ? setFiltroCarrera(e.target.value) 
                   : i === 1
-                  ? setFiltroEstado(e.target.value) // Actualiza filtro de estado
-                  : setFiltroSemestre(e.target.value) // Actualiza filtro de semestre
+                  ? setFiltroEstado(e.target.value) 
+                  : setFiltroSemestre(e.target.value) 
               }
               className={`border rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                 darkMode
@@ -281,13 +265,12 @@ export default function GestionElectivos() {
         </div>
       </div>
 
-      {/* === LISTA DE ELECTIVOS (TARJETAS) === */}
+      {/* LISTA DE ELECTIVOS (TARJETAS) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Iteramos sobre los electivos FILTRADOS (no todos) */}
         {electivosFiltrados.map((e) => (
           <motion.div
             key={e.id}
-            // Animación de fade-in
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className={`rounded-2xl shadow-md p-6 hover:shadow-lg transition ${
@@ -322,7 +305,7 @@ export default function GestionElectivos() {
               </span>
             </div>
 
-            {/* INFORMACIÓN DEL ELECTIVO */}
+            {/* INFORMACION DEL ELECTIVO */}
             <div className={`space-y-2 mb-4 ${darkMode ? "text-gray-300" : "text-gray-700"}`}>
               <p><GraduationCap size={16} className="inline mr-2" />{e.carrera}</p>
               <p><Calendar size={16} className="inline mr-2" />Semestre {e.semestre}</p>
@@ -330,16 +313,16 @@ export default function GestionElectivos() {
               <p><Users size={16} className="inline mr-2" />{e.cuposDisponibles} cupos</p>
             </div>
 
-            {/* BOTONES DE ACCIÓN */}
+            {/* BOTONES DE ACCION */}
             <div className="flex gap-2">
-              {/* Botón para ver detalles completos */}
+              {/* Boton para ver detalles completos */}
               <button
                 onClick={() => setElectroSeleccionado(e)}
                 className="flex-1 flex items-center justify-center gap-2 bg-purple-100 text-purple-700 py-2 rounded-xl font-medium hover:bg-purple-200 transition"
               >
                 <Eye size={18} /> Ver detalles
               </button>
-              {/* Botones de aprobar/rechazar SOLO si está pendiente */}
+              {/* Botones de aprobar/rechazar SOLO si esta pendiente */}
               {e.estado === "pendiente" && (
                 <>
                   <button
@@ -403,7 +386,7 @@ export default function GestionElectivos() {
               </span>
             </div>
 
-            {/* Información detallada */}
+            {/* Informacion detallada */}
             <div className="space-y-4 mb-6">
               <div>
                 <h3 className="font-semibold text-lg mb-2">Descripción:</h3>
@@ -447,7 +430,7 @@ export default function GestionElectivos() {
               </div>
             </div>
 
-            {/* Botones de acción */}
+            {/* Botones de accion */}
             <div className="flex gap-3">
               {electroSeleccionado.estado === "pendiente" && (
                 <>
@@ -478,7 +461,7 @@ export default function GestionElectivos() {
         </div>
       )}
 
-      {/*  BOTÓN FLOTANTE DE MODO OSCURO */}
+      {/*  BOTON FLOTANTE DE MODO OSCURO */}
       <ModoOscuro/>
     </div>
   );

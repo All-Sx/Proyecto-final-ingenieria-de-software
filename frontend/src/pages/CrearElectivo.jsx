@@ -62,7 +62,7 @@ export default function CrearElectivo() {
       return;
     }
 
-    // Suma cupos distribuidos en cada carrera
+    //suma cupos distribuidos en cada carrera
     const sumaCupos = carrerasSeleccionadas.reduce((acc, c) => acc + (c.cupos || 0), 0);
 
     if (sumaCupos > Number(formData.cuposTotales)) {
@@ -79,7 +79,7 @@ export default function CrearElectivo() {
 
     setElectivos([...electivos, nuevoElectivo]);
 
-    // Reiniciar formulario
+    //reiniciar formulario
     setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
     setCarreras(carrerasDisponibles.map(c => ({ ...c, seleccionada: false, cupos: "" })));
 

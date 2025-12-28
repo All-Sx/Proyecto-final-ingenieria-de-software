@@ -12,15 +12,12 @@ router.post("/",
     createSolicitud
 );
 
-// GET /api/inscripciones/solicitudes
 router.get("/solicitudes", 
     authMiddleware,
     isAdmin(["Alumno"]), 
     getMisSolicitudes
 );
 
-// GET /api/inscripciones/cupos/:electivo_id
-// Consultar cupos disponibles por carrera en un electivo
 router.get("/cupos/:electivo_id", 
     authMiddleware,
     getCuposPorCarrera

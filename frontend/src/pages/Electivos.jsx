@@ -12,7 +12,6 @@ export default function Electivos({ user, darkMode }) {
       try {
         setLoading(true);
         const data = await getElectivos();
-        console.log("ESTO ES LO QUE ENVÍA EL BACKEND:", data);
         
         setElectivos(data);
       } catch (err) {

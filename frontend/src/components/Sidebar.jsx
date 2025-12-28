@@ -23,7 +23,6 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                 : "hover:bg-blue-200";
         }
 
-        // fallback por seguridad
         return darkMode
             ? "hover:bg-gray-700"
             : "hover:bg-gray-200";
@@ -33,7 +32,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
     return (
         <motion.aside
-            // Animación de entrada desde la izquierda
+            //animacion de entrada desde la izquierda
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.4 }}
@@ -100,7 +99,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                         <Settings size={18} /> Configuración
                     </button>
 
-                    {/* === SECCIÓN GESTIÓN DE USUARIOS (solo jefe) === */}
+                    {/* SECCION GESTION DE USUARIOS (solo jefe) */}
                     {isJefe(user.rol) && (
                         <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
                             <h4 className="text-xs font-semibold text-gray-500 mb-2">Gestión de Usuarios</h4>
@@ -118,7 +117,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                 </nav>
             </div>
 
-            {/* Botón de cerrar sesión */}
+            {/* Boton de cerrar sesion */}
             <div className="flex flex-col gap-3">
                 <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white transition">
                     <LogOut size={18} /> Cerrar sesión

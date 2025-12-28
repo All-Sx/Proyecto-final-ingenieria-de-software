@@ -3,7 +3,7 @@ import { handleErrorClient } from "../handlers/response.handlers.js";
 
 export const asignarCarrera = async (req, res) => {
   try {
-    const { id } = req.params; // ID del Usuario (Alumno)
+    const { id } = req.params; 
     const { carrera_codigo } = req.body; 
 
     if (!carrera_codigo) {

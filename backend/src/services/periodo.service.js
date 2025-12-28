@@ -20,7 +20,7 @@ export async function createPeriodoService(data) {
         fecha_fin,
     });
 
-    // Verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
+    //verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
     const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
         where: [
             { estado: "PLANIFICACION", activo: true },

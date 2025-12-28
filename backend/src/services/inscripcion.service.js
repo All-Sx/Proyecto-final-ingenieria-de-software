@@ -218,26 +218,20 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
   }
 }
 
-/**
- * Obtiene los cupos disponibles por carrera para un electivo específico.
- * Muestra cupos totales, cupos ocupados y cupos disponibles por cada carrera.
- * 
- * @param {number} electivoId - ID del electivo a consultar
- * @returns {Object} { data: Array<{ carrera, cuposReservados, cuposOcupados, cuposDisponibles }> } o { error: string }
- */
+
 export async function getCuposPorCarreraService(electivoId) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
 
-    // 1. Verificar que el electivo exista
+    //verificar que el electivo exista
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
       return { error: "El electivo no existe." };
     }
 
-    // 2. Obtener todos los cupos asignados por carrera para este electivo
+    //obtener todos los cupos asignados por carrera para este electivo
     const cuposPorCarrera = await cupoPorCarreraRepository.find({
       where: { electivo: { id: electivoId } },
       relations: ["carrera"]
@@ -247,13 +241,13 @@ export async function getCuposPorCarreraService(electivoId) {
       return { error: "Este electivo no tiene cupos asignados por carrera. Debe ser aprobado primero." };
     }
 
-    // 3. Para cada carrera, calcular cupos ocupados y disponibles
+    //para cada carrera, calcular cupos ocupados y disponibles
     const resultados = [];
 
     for (const cupoCarrera of cuposPorCarrera) {
       const carrera = cupoCarrera.carrera;
 
-      // Contar inscripciones ACEPTADAS de esta carrera en este electivo
+      //contar inscripciones ACEPTADAS de esta carrera en este electivo
       const cuposOcupados = await solicitudRepository
         .createQueryBuilder("solicitud")
         .innerJoin("solicitud.alumno", "usuario")

@@ -22,7 +22,7 @@ export default function CardElectivo({ electivo, darkMode, onClick, rolUsuario }
         {/*backend no manda semestre en esta consulta*/}
         <p> <strong>Semestre:</strong> {electivo.semestre || "2025-1"}</p>
         <p> <strong>Créditos:</strong> {electivo.creditos}</p>
-        <p> <strong>Cupos disponibles:</strong> {electivo.cupos}</p>
+        <p> <strong>Cupos totales:</strong> {electivo.cupos}</p>
         
         {!isAlumno(rolUsuario) && (
           <p>
