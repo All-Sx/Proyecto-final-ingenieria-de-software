@@ -1,5 +1,5 @@
 import React from "react";
-import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut } from "lucide-react";
+import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut, Users } from "lucide-react";
 import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 import { motion } from "framer-motion"
 
@@ -73,6 +73,9 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                             </button>
                             <button onClick={() => setVistaActual("inscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <GraduationCap size={18} /> Inscripciones
+                            </button>
+                            <button onClick={() => setVistaActual("gestionAlumnos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                                <Users size={18} /> Gestión Alumnos
                             </button>
                         </>
                     )}
