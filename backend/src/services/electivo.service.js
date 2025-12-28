@@ -10,11 +10,11 @@ export async function createElectivoService(data, nombreProfesor) {
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
     const periodoActivo = await periodoRepository.findOne({
-      where: { estado: "INSCRIPCION" }
+      where: { estado: "PLANIFICACION" }
     });
 
     if (!periodoActivo) {
-      return { error: "No hay un periodo de inscripción activo. Debe crear o activar un periodo primero." };
+      return { error: "No hay un periodo de planificación activo. Debe crear o activar un periodo primero." };
     }
 
     const ahora = new Date();
@@ -22,11 +22,11 @@ export async function createElectivoService(data, nombreProfesor) {
     const fechaFin = new Date(periodoActivo.fecha_fin);
 
     if (ahora < fechaInicio) {
-      return { error: `El periodo de inscripción aún no ha iniciado. Comienza el ${fechaInicio.toLocaleDateString()}.` };
+      return { error: `El periodo de planificación aún no ha iniciado. Comienza el ${fechaInicio.toLocaleDateString()}.` };
     }
 
     if (ahora > fechaFin) {
-      return { error: `El periodo de inscripción ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
+      return { error: `El periodo de planificación ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
     }
 
     const electivoExist = await electivoRepository.findOneBy({ nombre: data.nombre });
@@ -72,7 +72,18 @@ export async function getElectivosService(estado) {
       where: filtro
     });
 
-    return { data: electivos };
+    // Limpiar respuesta eliminando campos de auditoría
+    const electivosLimpios = electivos.map(e => ({
+      id: e.id,
+      nombre: e.nombre,
+      descripcion: e.descripcion,
+      creditos: e.creditos,
+      cupos: e.cupos,
+      estado: e.estado,
+      nombre_profesor: e.nombre_profesor
+    }));
+
+    return { data: electivosLimpios };
   } catch (error) {
     console.error("Error al obtener electivos:", error);
     return { error: "Error interno al listar los electivos." };
@@ -87,7 +98,18 @@ export async function getElectivosByProfesorService(nombreProfesor) {
       where: { nombre_profesor: nombreProfesor }
     });
 
-    return { data: electivos };
+    // Limpiar respuesta eliminando campos de auditoría
+    const electivosLimpios = electivos.map(e => ({
+      id: e.id,
+      nombre: e.nombre,
+      descripcion: e.descripcion,
+      creditos: e.creditos,
+      cupos: e.cupos,
+      estado: e.estado,
+      nombre_profesor: e.nombre_profesor
+    }));
+
+    return { data: electivosLimpios };
   } catch (error) {
     console.error("Error al obtener electivos del profesor:", error);
     return { error: "Error interno al listar los electivos del profesor." };
