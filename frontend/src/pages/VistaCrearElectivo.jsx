@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Users, GraduationCap } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
-import ModoOscuro from "../ModoOscuro";
+import { useTheme } from "../context/ThemeContext";
+import ModoOscuro from "../components/ModoOscuro";
 
 const carrerasDisponibles = [
   { id: 1, nombre: "Ingeniería Civil Informática" },

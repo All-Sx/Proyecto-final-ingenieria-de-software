@@ -1,54 +1,9 @@
 import { AppDataSource } from "../config/configdb.js";
 import { PeriodoAcademico } from "../entities/academico.entity.js";
+import { validarPeriodoCreacion , validarUpdatePeriodo } from "../validators/periodo.validator.js";
+import { formatPeriodoResponse } from "../mappers/periodo.mapper.js";
 
 const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
-
-function parseDateFromDDMMYYYY(dateString) {
-    if (!dateString) return null;
-    
-    const parts = dateString.split('-');
-    if (parts.length !== 3) {
-        throw new Error(`Formato de fecha inválido: ${dateString}. Use dd-mm-aaaa`);
-    }
-    
-    const [day, month, year] = parts;
-    
-    if (isNaN(day) || isNaN(month) || isNaN(year)) {
-        throw new Error(`Formato de fecha inválido: ${dateString}. Use dd-mm-aaaa`);
-    }
-    
-    const date = new Date(year, month - 1, day);
-    
-    if (date.getDate() != day || date.getMonth() != month - 1 || date.getFullYear() != year) {
-        throw new Error(`Fecha inválida: ${dateString}`);
-    }
-    
-    return date;
-}
-
-function formatDateToDDMMYYYY(date) {
-    if (!date) return null;
-    
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    
-    return `${day}-${month}-${year}`;
-}
-
-function formatPeriodoResponse(periodo) {
-    if (!periodo) return null;
-    
-    return {
-        id: periodo.id,
-        nombre: periodo.nombre,
-        fecha_inicio: formatDateToDDMMYYYY(periodo.fecha_inicio),
-        fecha_fin: formatDateToDDMMYYYY(periodo.fecha_fin),
-        estado: periodo.estado,
-        activo: periodo.activo
-    };
-}
 
 export async function createPeriodoService(data) {
     const { nombre, fecha_inicio, fecha_fin, estado } = data;
@@ -58,6 +13,12 @@ export async function createPeriodoService(data) {
     if (existingPeriodo) {
         throw new Error("Ya existe un periodo académico activo con ese nombre.");
     }
+
+    const { fechaInicio, fechaFin } = validarPeriodoCreacion({
+        nombre,
+        fecha_inicio,
+        fecha_fin,
+    });
 
     // Verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
     const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
@@ -71,22 +32,16 @@ export async function createPeriodoService(data) {
         throw new Error(`Ya existe un periodo en estado ${periodoActivoPlanificacionOInscripcion.estado} activo. Solo puede haber un periodo en PLANIFICACION o INSCRIPCION a la vez.`);
     }
 
-    const parsedFechaInicio = parseDateFromDDMMYYYY(fecha_inicio);
-    const parsedFechaFin = parseDateFromDDMMYYYY(fecha_fin);
-
-    if (parsedFechaInicio >= parsedFechaFin) {
-        throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
-    }
-
     const nuevoPeriodo = periodoRepository.create({
         nombre,
-        fecha_inicio: parsedFechaInicio,
-        fecha_fin: parsedFechaFin,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
         estado: estado || "PLANIFICACION",
         activo: true
     });
 
     const savedPeriodo = await periodoRepository.save(nuevoPeriodo);
+
     return formatPeriodoResponse(savedPeriodo);
 }
 
@@ -99,14 +54,8 @@ export async function updatePeriodoFechasService(id, data) {
 
     const { fecha_inicio, fecha_fin, estado } = data;
 
-    const parsedFechaInicio = fecha_inicio ? parseDateFromDDMMYYYY(fecha_inicio) : null;
-    const parsedFechaFin = fecha_fin ? parseDateFromDDMMYYYY(fecha_fin) : null;
-
-    if (parsedFechaInicio && parsedFechaFin) {
-        if (parsedFechaInicio >= parsedFechaFin) {
-            throw new Error("La fecha de inicio debe ser anterior a la fecha de fin.");
-        }
-    }
+    const { parsedFechaInicio, parsedFechaFin } =
+    validarUpdatePeriodo({ fecha_inicio, fecha_fin })
 
     if (parsedFechaInicio) periodo.fecha_inicio = parsedFechaInicio;
     if (parsedFechaFin) periodo.fecha_fin = parsedFechaFin;
@@ -130,11 +79,19 @@ export async function getPeriodoByIdService(id) {
     return formatPeriodoResponse(periodo);
 }
 
-export async function getPeriodoActualService() {
+export async function getPeriodoActualService({ incluirPlanificacion = false } = {}) {
+    const whereCondition = incluirPlanificacion
+        ? [
+            { estado: "INSCRIPCION", activo: true },
+            { estado: "PLANIFICACION", activo: true }
+          ]
+        : { estado: "INSCRIPCION", activo: true };
+
     const periodo = await periodoRepository.findOne({
-        where: { estado: "INSCRIPCION", activo: true },
+        where: whereCondition,
         order: { fecha_inicio: "DESC" }
     });
+
     return formatPeriodoResponse(periodo);
 }
 
@@ -145,10 +102,7 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
         throw new Error("Periodo académico no encontrado.");
     }
 
-    const estadosValidos = ["PLANIFICACION", "INSCRIPCION", "SELECCION", "CERRADO"];
-    if (!estadosValidos.includes(nuevoEstado)) {
-        throw new Error("Estado no válido.");
-    }
+    validarCambioEstadoPeriodo(nuevoEstado);
 
     if (nuevoEstado === "INSCRIPCION") {
         const periodoInscripcionActivo = await periodoRepository.findOne({
@@ -160,7 +114,7 @@ export async function updateEstadoPeriodoService(id, nuevoEstado) {
     }
 
     if (nuevoEstado === "CERRADO" && periodo.activo) {
-        periodo.activo = false; 
+        periodo.activo = false;
     }
 
     periodo.estado = nuevoEstado;
@@ -175,7 +129,7 @@ export async function deletePeriodoService(id) {
         throw new Error("Periodo académico no encontrado.");
     }
 
-   
+
     await periodoRepository.remove(periodo);
     return formatPeriodoResponse(periodo);
 }
