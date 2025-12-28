@@ -106,7 +106,7 @@ export default function ModalCrearPeriodo({ onClose, onCrear, darkMode }) {
                             onChange={e => setFin({ ...fin, dia: +e.target.value })}
                         >
                             <option value="">Día</option>
-                            {diasPorMes(inicio.mes).map(d => (
+                            {diasPorMes(fin.mes).map(d => (
                                 <option key={d} value={d}>{d}</option>
                             ))}
                         </select>
