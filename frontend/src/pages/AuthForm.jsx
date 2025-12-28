@@ -10,6 +10,7 @@ import {
   validarPassword,
   validarCorreoEstudiante,
 } from "../helpers/validators";
+import { ROLES } from "../helpers/roles";
 
 const initialFormData = {
   nombres: "",
@@ -17,7 +18,6 @@ const initialFormData = {
   rut: "",
   email: "",
   password: "",
-  carrera: "",
 };
 
 export default function AuthForm() {
@@ -42,6 +42,7 @@ export default function AuthForm() {
   );
 
   const emailBloqueado = !!errorNombres || !!errorApellidos;
+  const emailDisabled = isRegister && emailBloqueado;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,13 +94,36 @@ export default function AuthForm() {
       });
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.user.id,
+          nombre: data.user.nombre,
+          correo: data.user.email,
+          rol: data.user.rol,
+        })
+      );
 
       console.log("LOGIN DATA:", data);
       navigate("/dashboard");
 
     } catch (err) {
       console.error(err);
+
+      // Mostrar mensaje al usuario
+      if (err.response) {
+        // Axios error con respuesta del backend
+        if (err.response.status === 401) {
+          setError("Email o contraseña incorrectos.");
+        } else if (err.response.data?.message) {
+          setError(err.response.data.message);
+        } else {
+          setError("Ocurrió un error. Intenta nuevamente.");
+        }
+      } else {
+        // Error de red u otro
+        setError("No se pudo conectar con el servidor.");
+      }
     }
   };
 
@@ -117,10 +141,10 @@ export default function AuthForm() {
       user = {
         nombre: "Profesor Demo",
         correo: "profesor.demo@ubiobio.cl",
-        rol: "profesor",
+        rol: ROLES.PROFESOR,
         tipo: "Profesor"
       };
-    } 
+    }
     // GUARDAR usuario en localStorage para persistencia entre páginas
     // Convertimos el objeto a string JSON para almacenarlo
     localStorage.setItem("user", JSON.stringify(user));
@@ -188,13 +212,13 @@ export default function AuthForm() {
             name="email"
             placeholder={isRegister ? "nombre.apellido2201@alumnos.ubiobio.cl" : "usuario@ubiobio.cl"}
             value={formData.email}
-            disabled={isRegister && emailBloqueado}
+            disabled={emailDisabled}
             onChange={handleChange}
-            className={`w-full border rounded-xl p-2 ${emailBloqueado && "bg-gray-100 cursor-not-allowed"
+            className={`w-full border rounded-xl p-2 ${emailDisabled ? "bg-gray-100 cursor-not-allowed" : ""
               }`}
           />
 
-          {isRegister && emailBloqueado && (
+          {emailDisabled && (
             <p className="text-xs text-red-500">
               Ingresa primero todos tus nombres y apellidos correctamente antes de poder ingresar tu correo institucional.
             </p>

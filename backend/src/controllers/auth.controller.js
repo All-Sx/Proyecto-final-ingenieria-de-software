@@ -6,16 +6,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/configenv.js";
 
+import { registerValidation } from "../validators/register.validation.js";
+import { loginValidation } from "../validators/login.validation.js";
+
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    // Validacion externa JOI
+    const { error } = loginValidation.validate(req.body);
 
-    // Validación básica
-    if (!email || !password) {
-      return res.status(400).json({ 
-        message: "Email y contraseña son requeridos" 
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message
       });
     }
+
+    const { email, password } = req.body;
 
     const userRepository = AppDataSource.getRepository(Usuario);
 
@@ -36,18 +41,18 @@ export const login = async (req, res) => {
 
     // Verificar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
     // Generar JWT
     const token = jwt.sign(
-      { 
-        id: user.id, 
+      {
+        id: user.id,
         email: user.email,
         nombre_completo: user.nombre_completo,  // Agregamos el nombre al token
-        rol: user.rol.nombre 
+        rol: user.rol.nombre
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -73,15 +78,16 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
+    // Validacion externa con JOI
+    const { error } = registerValidation.validate(req.body);
 
-    const { rut, nombre_completo, email, password, rol } = req.body;
-
-    
-    if (!rut || !nombre_completo || !email || !password) {
-      return res.status(400).json({ 
-        message: "Faltan datos requeridos (rut, nombre, email, password)" 
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message
       });
     }
+
+    const { rut, nombre_completo, email, password, rol } = req.body;
 
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
@@ -89,8 +95,8 @@ export const register = async (req, res) => {
     // Verificar si el usuario ya existe
     const userExist = await userRepository.findOne({
       where: [
-        { email:  email },
-        { rut:  rut }
+        { email: email },
+        { rut: rut }
       ]
     });
 
@@ -98,7 +104,7 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // Buscar el rol (si se proporciona rol, úsalo; si no, usa "Alumno" por defecto)
+    // Buscar el rol (si se proporciona rol, se usa, si no, se usa "Alumno" por defecto)
     let rolEntity;
     if (rol) {
       rolEntity = await rolRepository.findOneBy({ nombre: rol });
@@ -141,7 +147,7 @@ export const register = async (req, res) => {
     return res.status(201).json({
       message: `Usuario registrado exitosamente como ${rolEntity.nombre}`,
       user: {
-        rut:  usuarioGuardado.rut,
+        rut: usuarioGuardado.rut,
         nombre: usuarioGuardado.nombre_completo,
         email: usuarioGuardado.email,
         rol: rolEntity.nombre  
