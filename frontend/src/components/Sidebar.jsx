@@ -1,9 +1,36 @@
 import React from "react";
 import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut } from "lucide-react";
-import { isAlumno, isProfesor, isJefe } from "../../helpers/roles";
+import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 import { motion } from "framer-motion"
 
 export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, handleLogout }) {
+    const getHoverUsuario = (rol, darkMode) => {
+        if (isJefe(rol)) {
+            return darkMode
+                ? "hover:bg-purple-700"
+                : "hover:bg-purple-200";
+        }
+
+        if (isProfesor(rol)) {
+            return darkMode
+                ? "hover:bg-green-700"
+                : "hover:bg-green-200";
+        }
+
+        if (isAlumno(rol)) {
+            return darkMode
+                ? "hover:bg-blue-700"
+                : "hover:bg-blue-200";
+        }
+
+        // fallback por seguridad
+        return darkMode
+            ? "hover:bg-gray-700"
+            : "hover:bg-gray-200";
+    };
+
+    const hoverUsuario = getHoverUsuario(user.rol, darkMode);
+
     return (
         <motion.aside
             // Animación de entrada desde la izquierda
@@ -35,16 +62,16 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                 {/* Navegación principal */}
                 <nav className="space-y-2">
-                    <button onClick={() => setVistaActual("perfil")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                    <button onClick={() => setVistaActual("perfil")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                         <User size={18} /> Perfil
                     </button>
 
                     {isJefe(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("electivos")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("electivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <Bookmark size={18} /> Electivos
                             </button>
-                            <button onClick={() => setVistaActual("inscripciones")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("inscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <GraduationCap size={18} /> Inscripciones
                             </button>
                         </>
@@ -52,25 +79,24 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                     {isProfesor(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("inicio")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("inicio")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <FileText size={18} /> Mis Electivos
                             </button>
                             <button
                                 onClick={() => setVistaActual("registrarElectivo")}
-                                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition"
-                            >
+                                className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <BookOpen size={18} /> Registrar Electivo
                             </button>
                         </>
                     )}
 
                     {isAlumno(user.rol) && (
-                        <button onClick={() => setVistaActual("electivos")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                        <button onClick={() => setVistaActual("electivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                             <Bookmark size={18} /> Electivos
                         </button>
                     )}
 
-                    <button onClick={() => setVistaActual("configuracion")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                    <button onClick={() => setVistaActual("configuracion")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                         <Settings size={18} /> Configuración
                     </button>
 
@@ -78,13 +104,13 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                     {isJefe(user.rol) && (
                         <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
                             <h4 className="text-xs font-semibold text-gray-500 mb-2">Gestión de Usuarios</h4>
-                            <button onClick={() => setVistaActual("alumnos")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("alumnos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <User size={16} /> Alumnos
                             </button>
-                            <button onClick={() => setVistaActual("profesores")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("profesores")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <User size={16} /> Profesores
                             </button>
-                            <button onClick={() => setVistaActual("carreras")} className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-100 transition">
+                            <button onClick={() => setVistaActual("carreras")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <GraduationCap size={16} /> Carreras
                             </button>
                         </div>

@@ -32,6 +32,7 @@ export async function createPeriodo(req, res) {
         handleSuccess(res, 201, "Periodo académico creado exitosamente", nuevoPeriodo);
 
     } catch (error) {
+        console.error("ERROR CREATE PERIODO:", error); 
         if (error.message.includes("ya existe") || error.message.includes("fecha") || error.message.includes("Formato") || error.message.includes("inválido")) {
             handleErrorClient(res, 409, error.message);
         } else {
@@ -107,16 +108,25 @@ export async function getPeriodoById(req, res) {
 
 export async function getPeriodoActual(req, res) {
     try {
-        const periodoActual = await getPeriodoActualService();
+        const esJefe = req.user?.rol === "Jefe de Carrera";
+
+        const periodoActual = await getPeriodoActualService({
+            incluirPlanificacion: esJefe
+        });
 
         if (!periodoActual) {
-            return handleSuccess(res, 200, "No hay periodo de inscripción activo", null);
+            return handleSuccess(res, 200, "No hay período disponible", null);
         }
 
         handleSuccess(res, 200, "Periodo actual", periodoActual);
 
     } catch (error) {
-        handleErrorServer(res, 500, "Error al obtener el periodo actual", error.message);
+        handleErrorServer(
+            res,
+            500,
+            "Error al obtener el periodo actual",
+            error.message
+        );
     }
 }
 
