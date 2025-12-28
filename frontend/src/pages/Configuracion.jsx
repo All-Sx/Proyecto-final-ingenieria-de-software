@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function VistaConfiguracion({ setVistaActual, handleLogout, darkMode }) {
+export default function Configuracion({ setVistaActual, handleLogout, darkMode }) {
   return (
     <div className={`p-6 rounded-2xl shadow-md space-y-4 transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"}`}>
       <h2 className="text-2xl font-bold mb-4">Configuración</h2>
