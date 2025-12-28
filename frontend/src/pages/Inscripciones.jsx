@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import SinPeriodo from "../components/Inscripciones/SinPeriodo";
-import PeriodoVigente from "../components/Inscripciones/PeriodoVigente";
-import ModalCrearPeriodo from "../components/Inscripciones/ModalCrearPeriodo";
+import SinPeriodo from "../components/SinPeriodo";
+import PeriodoVigente from "../components/PeriodoVigente";
+import ModalCrearPeriodo from "../components/ModalCrearPeriodo";
 import { isJefe } from "../helpers/roles";
 import {
     obtenerPeriodoActual,

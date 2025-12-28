@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { diasPorMes, formatearFecha } from "../../helpers/fechas";
+import { diasPorMes, formatearFecha } from "../helpers/fechas";
 
 const meses = [
     { value: 1, label: "Enero" },

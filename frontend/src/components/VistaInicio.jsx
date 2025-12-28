@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { isProfesor, isJefe } from "../../helpers/roles";
+import { isProfesor, isJefe } from "../helpers/roles";
 
 export default function VistaInicio({ user, darkMode }) {
   // Datos de ejemplo

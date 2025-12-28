@@ -1,6 +1,6 @@
 import React from "react";
 import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut } from "lucide-react";
-import { isAlumno, isProfesor, isJefe } from "../../helpers/roles";
+import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 import { motion } from "framer-motion"
 
 export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, handleLogout }) {
