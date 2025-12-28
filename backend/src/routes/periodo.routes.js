@@ -6,7 +6,9 @@ import {
     getPeriodoById,
     getPeriodoActual,
     updateEstadoPeriodo,
-    deletePeriodo
+    deletePeriodo,
+    getPeriodosHistorial,
+    archivarPeriodo
 } from "../controllers/periodo.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { isAdmin } from "../middleware/authorization.middleware.js";
@@ -38,6 +40,12 @@ router.get("/actual",
     getPeriodoActual
 );
 
+// Nueva ruta para obtener historial de periodos cerrados
+router.get("/historial",
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]),
+    getPeriodosHistorial
+);
 
 router.get("/:id",
     authMiddleware,
@@ -49,6 +57,13 @@ router.patch("/:id/estado",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
     updateEstadoPeriodo
+);
+
+// Nueva ruta para archivar un periodo manualmente
+router.patch("/:id/archivar",
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]),
+    archivarPeriodo
 );
 
 router.delete("/:id",
