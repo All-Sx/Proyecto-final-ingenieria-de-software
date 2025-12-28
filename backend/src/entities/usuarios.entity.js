@@ -43,6 +43,10 @@ export const Usuario = new EntitySchema({
       type: "timestamp",
       updateDate: true
     },
+    carrera_id: {
+      type: "int",
+      nullable: true,
+    },
   },
   relations: {
     rol: {
@@ -51,6 +55,18 @@ export const Usuario = new EntitySchema({
       joinColumn: { name: "rol_id" },
       nullable: false,
       onDelete: "CASCADE",
+    },
+    alumno: {
+      target: "Alumno",
+      type: "one-to-one",
+      inverseSide: "usuario",
+    },
+    carrera: {
+      target: "Carrera",
+      type: "many-to-one",
+      joinColumn: { name: "carrera_id" },
+      nullable: true,
+      onDelete: "SET NULL",
     },
   },
 });

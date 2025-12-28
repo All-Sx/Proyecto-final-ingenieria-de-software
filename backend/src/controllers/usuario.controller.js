@@ -1,24 +1,23 @@
-import { createUserWithRoleService, getAlumnosService, getProfesoresService } from "../services/usuario.service.js";
+import { createUserWithRoleService, getAlumnosService, getProfesoresService, getUserByIdService, updateUserService } from "../services/usuario.service.js";
 import { handleErrorClient, handleSuccess } from "../handlers/response.handlers.js";
 
 export const createUserAdmin = async (req, res) => {
   try {
     const { rut, nombre_completo, email, password, rol } = req.body;
 
-    // 1. Validaciones básicas
+    
     if (!rut || !nombre_completo || !email || !password || !rol) {
       return handleErrorClient(res, 400, "Faltan datos obligatorios.");
     }
 
-    // 2. SEGURIDAD: Validar que solo cree roles permitidos
-    // El Jefe de Carrera no debería poder crear un "SuperAdmin" o roles inventados
-    const rolesPermitidos = ["Jefe de Carrera", "Profesor"];
+    
+    const rolesPermitidos = ["Alumno", "Profesor"];
     
     if (!rolesPermitidos.includes(rol)) {
-      return handleErrorClient(res, 400, "Rol no válido. Solo puedes crear: 'Jefe de Carrera' o 'Profesor'.");
+      return handleErrorClient(res, 400, "Rol no válido. Solo puedes crear: 'Alumno' o 'Profesor'. Para crear Jefes de Carrera usa el endpoint /api/jefe-carrera");
     }
 
-    // 3. Llamar al servicio
+   
     const result = await createUserWithRoleService({
       rut,
       nombre_completo,
@@ -41,7 +40,7 @@ export const createUserAdmin = async (req, res) => {
   }
 };
 
-// Obtener todos los alumnos
+
 export const getAlumnos = async (req, res) => {
   try {
     const result = await getAlumnosService();
@@ -57,7 +56,7 @@ export const getAlumnos = async (req, res) => {
   }
 };
 
-// Obtener todos los profesores
+
 export const getProfesores = async (req, res) => {
   try {
     const result = await getProfesoresService();
@@ -70,5 +69,46 @@ export const getProfesores = async (req, res) => {
 
   } catch (error) {
     return handleErrorClient(res, 500, "Error interno del servidor.", error.message);
+  }
+};
+
+export const getMyProfile = async (req, res) => {
+  try {
+    const { id } = req.user; 
+
+    const result = await getUserByIdService(id);
+
+    if (result.error) {
+      return handleErrorClient(res, 404, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Perfil de usuario",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
+  }
+};
+
+export const updateMyProfile = async (req, res) => {
+  try {
+    const { id } = req.user; 
+    const { nombre_completo, email } = req.body;
+
+    const result = await updateUserService(id, { nombre_completo, email });
+
+    if (result.error) {
+      return handleErrorClient(res, 500, result.error);
+    }
+
+    return res.status(200).json({
+      message: "Datos actualizados correctamente",
+      data: result.data
+    });
+
+  } catch (error) {
+    return handleErrorClient(res, 500, "Error en el servidor", error.message);
   }
 };

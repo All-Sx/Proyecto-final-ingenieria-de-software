@@ -4,7 +4,7 @@ import { handleErrorClient } from "../handlers/response.handlers.js";
 export const asignarCarrera = async (req, res) => {
   try {
     const { id } = req.params; // ID del Usuario (Alumno)
-    const { carrera_codigo } = req.body; // Ej: "ICI"
+    const { carrera_codigo } = req.body; 
 
     if (!carrera_codigo) {
         return handleErrorClient(res, 400, "El código de la carrera es obligatorio.");

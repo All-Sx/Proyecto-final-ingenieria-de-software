@@ -1,5 +1,6 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js";
+import { Alumno } from "../entities/alumno.entity.js";
 import { Rol } from "../entities/rol.entity.js";
 import bcrypt from "bcryptjs";
 
@@ -8,7 +9,6 @@ export async function createUserWithRoleService(data) {
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // 1. Validar que el usuario no exista (RUT o Email)
     const userExist = await userRepository.findOne({
       where: [{ email: data.email }, { rut: data.rut }]
     });
@@ -17,17 +17,14 @@ export async function createUserWithRoleService(data) {
       return { error: "El usuario ya existe (rut o email duplicado)." };
     }
 
-    // 2. Buscar el Rol especificado
     const rolEntity = await rolRepository.findOneBy({ nombre: data.rolNombre });
 
     if (!rolEntity) {
       return { error: `El rol '${data.rolNombre}' no existe.` };
     }
 
-    // 3. Encriptar contraseña
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    // 4. Crear usuario
     const newUser = userRepository.create({
       rut: data.rut,
       nombre_completo: data.nombre_completo,
@@ -39,10 +36,20 @@ export async function createUserWithRoleService(data) {
 
     const userSaved = await userRepository.save(newUser);
 
-    // Eliminamos la password del objeto retornado por seguridad
-    const { password_hash, ...userSinPass } = userSaved;
+    // Limpiar respuesta eliminando campos de auditoría
+    const respuestaLimpia = {
+      id: userSaved.id,
+      rut: userSaved.rut,
+      nombre_completo: userSaved.nombre_completo,
+      email: userSaved.email,
+      activo: userSaved.activo,
+      rol: userSaved.rol ? {
+        id: userSaved.rol.id,
+        nombre: userSaved.rol.nombre
+      } : null
+    };
     
-    return { data: userSinPass };
+    return { data: respuestaLimpia };
 
   } catch (error) {
     console.error("Error en createUserWithRoleService:", error);
@@ -50,24 +57,21 @@ export async function createUserWithRoleService(data) {
   }
 }
 
-// Obtener todos los alumnos
 export async function getAlumnosService() {
   try {
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // Buscar el rol "Alumno"
     const rolAlumno = await rolRepository.findOneBy({ nombre: "Alumno" });
 
     if (!rolAlumno) {
       return { error: "No se encontró el rol 'Alumno'." };
     }
 
-    // Obtener todos los usuarios con rol de Alumno
     const alumnos = await userRepository.find({
       where: { rol: { id: rolAlumno.id } },
-      relations: ["rol"],
-      select: ["id", "rut", "nombre_completo", "email", "activo", "created_at"]
+      relations: ["rol", "alumno", "alumno.carrera"],
+      select: ["id", "rut", "nombre_completo", "email", "activo"]
     });
 
     return { data: alumnos };
@@ -78,24 +82,21 @@ export async function getAlumnosService() {
   }
 }
 
-// Obtener todos los profesores
 export async function getProfesoresService() {
   try {
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // Buscar el rol "Profesor"
     const rolProfesor = await rolRepository.findOneBy({ nombre: "Profesor" });
 
     if (!rolProfesor) {
       return { error: "No se encontró el rol 'Profesor'." };
     }
 
-    // Obtener todos los usuarios con rol de Profesor
     const profesores = await userRepository.find({
       where: { rol: { id: rolProfesor.id } },
       relations: ["rol"],
-      select: ["id", "rut", "nombre_completo", "email", "activo", "created_at"]
+      select: ["id", "rut", "nombre_completo", "email", "activo"]
     });
 
     return { data: profesores };
@@ -103,5 +104,88 @@ export async function getProfesoresService() {
   } catch (error) {
     console.error("Error en getProfesoresService:", error);
     return { error: "Error interno al obtener profesores." };
+  }
+}
+
+export async function getUserByIdService(id) {
+  try {
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+    const alumnoRepository = AppDataSource.getRepository(Alumno);
+
+    
+    const usuario = await usuarioRepository.findOne({
+      where: { id: id },
+      relations: ["rol"] 
+    });
+
+    if (!usuario) {
+      return { error: "Usuario no encontrado" };
+    }
+
+    // Crear respuesta limpia base
+    const usuarioLimpio = {
+      id: usuario.id,
+      rut: usuario.rut,
+      nombre_completo: usuario.nombre_completo,
+      email: usuario.email,
+      activo: usuario.activo,
+      rol: usuario.rol ? {
+        id: usuario.rol.id,
+        nombre: usuario.rol.nombre
+      } : null
+    };
+
+    if (usuario.rol.nombre === "Alumno") {
+        const datosAlumno = await alumnoRepository.findOne({
+            where: { usuario_id: id },
+            relations: ["carrera"] 
+        });
+
+        if (datosAlumno) {
+            const datosAcademicosLimpios = {
+              usuario_id: datosAlumno.usuario_id,
+              anio_ingreso: datosAlumno.anio_ingreso,
+              creditos_acumulados: datosAlumno.creditos_acumulados,
+              carrera: datosAlumno.carrera ? {
+                id: datosAlumno.carrera.id,
+                codigo: datosAlumno.carrera.codigo,
+                nombre: datosAlumno.carrera.nombre
+              } : null
+            };
+            return { data: { ...usuarioLimpio, datos_academicos: datosAcademicosLimpios } };
+        }
+    }
+
+    // 3. Si es Jefe de Carrera o Profesor, devolvemos solo el usuario
+    return { data: usuarioLimpio };
+
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    return { error: "Error interno." };
+  }
+}
+
+export async function updateUserService(id, data) {
+  try {
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
+
+    const usuario = await usuarioRepository.findOneBy({ id: id });
+
+    if (!usuario) {
+      return { error: "Usuario no encontrado" };
+    }
+
+    if (data.nombre_completo) usuario.nombre_completo = data.nombre_completo;
+    if (data.email) usuario.email = data.email;
+
+    await usuarioRepository.save(usuario);
+
+    const usuarioActualizadoCompleto = await getUserByIdService(id);
+
+    return usuarioActualizadoCompleto;
+
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    return { error: "Error interno al actualizar datos." };
   }
 }
