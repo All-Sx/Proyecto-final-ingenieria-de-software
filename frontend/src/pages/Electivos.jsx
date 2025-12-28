@@ -61,7 +61,7 @@ const electivosEjemplo = [
 ];
 
 
-export default function VistaElectivos({ user, darkMode }) {
+export default function Electivos({ user, darkMode }) {
   // Filtrar electivos según rol
   let electivos = electivosEjemplo;
 
