@@ -40,15 +40,33 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     const carreraAlumno = alumnoInfo.carrera;
 
+    console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
+
     // 4. Obtener el cupo asignado para la carrera del alumno en este electivo
-    const cupoCarrera = await cupoPorCarreraRepository.findOne({
-        where: {
-            electivo: { id: electivoId },
-            carrera: { id: carreraAlumno.id }
-        }
-    });
+    const cupoCarrera = await cupoPorCarreraRepository
+        .createQueryBuilder("cupo")
+        .leftJoinAndSelect("cupo.electivo", "electivo")
+        .leftJoinAndSelect("cupo.carrera", "carrera")
+        .where("cupo.electivo_id = :electivoId", { electivoId })
+        .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
+        .getOne();
+
+    console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
 
     if (!cupoCarrera) {
+        // Verificar si hay cupos para este electivo sin filtrar por carrera
+        const todosCupos = await cupoPorCarreraRepository
+            .createQueryBuilder("cupo")
+            .leftJoinAndSelect("cupo.carrera", "carrera")
+            .where("cupo.electivo_id = :electivoId", { electivoId })
+            .getMany();
+        
+        console.log(`[DEBUG] Todos los cupos para este electivo:`, todosCupos.map(c => ({ 
+            carrera_id: c.carrera?.id, 
+            carrera_nombre: c.carrera?.nombre,
+            cantidad: c.cantidad_reservada 
+        })));
+        
         return { error: `No hay cupos asignados para tu carrera (${carreraAlumno.nombre}) en este electivo.` };
     }
 
