@@ -41,9 +41,12 @@ function formatPeriodoResponse(periodo) {
     if (!periodo) return null;
     
     return {
-        ...periodo,
+        id: periodo.id,
+        nombre: periodo.nombre,
         fecha_inicio: formatDateToDDMMYYYY(periodo.fecha_inicio),
-        fecha_fin: formatDateToDDMMYYYY(periodo.fecha_fin)
+        fecha_fin: formatDateToDDMMYYYY(periodo.fecha_fin),
+        estado: periodo.estado,
+        activo: periodo.activo
     };
 }
 
@@ -56,11 +59,16 @@ export async function createPeriodoService(data) {
         throw new Error("Ya existe un periodo académico activo con ese nombre.");
     }
 
-    if (estado === "INSCRIPCION") {
-        const periodoInscripcionActivo = await periodoRepository.findOneBy({ estado: "INSCRIPCION", activo: true });
-        if (periodoInscripcionActivo) {
-            throw new Error("Ya existe un periodo en estado de inscripción activo. Solo puede haber un periodo de inscripción a la vez.");
-        }
+    // Verificar si existe un periodo en PLANIFICACION o INSCRIPCION activo
+    const periodoActivoPlanificacionOInscripcion = await periodoRepository.findOne({
+        where: [
+            { estado: "PLANIFICACION", activo: true },
+            { estado: "INSCRIPCION", activo: true }
+        ]
+    });
+
+    if (periodoActivoPlanificacionOInscripcion) {
+        throw new Error(`Ya existe un periodo en estado ${periodoActivoPlanificacionOInscripcion.estado} activo. Solo puede haber un periodo en PLANIFICACION o INSCRIPCION a la vez.`);
     }
 
     const parsedFechaInicio = parseDateFromDDMMYYYY(fecha_inicio);
