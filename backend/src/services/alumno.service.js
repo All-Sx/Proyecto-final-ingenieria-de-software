@@ -42,7 +42,6 @@ export async function asignarCarreraService(usuarioId, carreraCodigo) {
 
     const alumnoGuardado = await alumnoRepository.save(alumnoData);
 
-    // Limpiar respuesta eliminando campos de auditoría
     const respuestaLimpia = {
       usuario_id: alumnoGuardado.usuario_id,
       anio_ingreso: alumnoGuardado.anio_ingreso,

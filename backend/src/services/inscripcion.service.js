@@ -237,11 +237,13 @@ export async function getCuposPorCarreraService(electivoId) {
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
 
+    //verificar que el electivo exista
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
       return { error: "El electivo no existe." };
     }
 
+    //obtener todos los cupos asignados por carrera para este electivo
     const cuposPorCarrera = await cupoPorCarreraRepository.find({
       where: { electivo: { id: electivoId } },
       relations: ["carrera"]
@@ -251,11 +253,13 @@ export async function getCuposPorCarreraService(electivoId) {
       return { error: "Este electivo no tiene cupos asignados por carrera. Debe ser aprobado primero." };
     }
 
+    //para cada carrera, calcular cupos ocupados y disponibles
     const resultados = [];
 
     for (const cupoCarrera of cuposPorCarrera) {
       const carrera = cupoCarrera.carrera;
 
+      //contar inscripciones ACEPTADAS de esta carrera en este electivo
       const cuposOcupados = await solicitudRepository
         .createQueryBuilder("solicitud")
         .innerJoin("solicitud.alumno", "usuario")

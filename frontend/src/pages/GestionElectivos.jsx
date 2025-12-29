@@ -258,7 +258,7 @@ export default function GestionElectivos() {
         ))}
       </div>
 
-      {/* Panel con filtros múltiples para refinar la búsqueda de electivos */}
+      {/* Panel con filtros multiples para refinar la busqueda de electivos */}
       <div
         className={`p-6 rounded-2xl shadow-md mb-6 ${
           darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
@@ -313,7 +313,6 @@ export default function GestionElectivos() {
         {electivosFiltrados.map((e) => (
           <motion.div
             key={e.id}
-            // Animación de fade-in
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className={`rounded-2xl shadow-md p-6 hover:shadow-lg transition ${
