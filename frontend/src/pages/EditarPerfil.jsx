@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 
 export default function EditarPerfil({ datosEdicion, handleChangeEdicion, handleGuardarPerfil, mensajeEdicion, handleSavePassword, mensajeClave, setVistaActual, darkMode }) {
   const onSubmit = (e) => {
@@ -12,12 +13,19 @@ export default function EditarPerfil({ datosEdicion, handleChangeEdicion, handle
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`p-8 rounded-2xl shadow-md max-w-2xl transition-colors ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"}`}>
-      <div className="flex gap-4">
-        <h2 className="text-2xl font-bold mb-6">Editar Perfil y Seguridad</h2>
-        <button type="button" onClick={() => setVistaActual("configuracion")} className="flex-1 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-black dark:text-white py-3 rounded-xl font-medium transition">Cancelar</button>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`p-8 rounded-2xl shadow-md max-w-2xl transition-colors relative ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"}`}>
+      {/* Botón X en la esquina superior derecha */}
+      <button 
+        type="button" 
+        onClick={() => setVistaActual("configuracion")} 
+        className={`absolute top-4 right-4 p-2 rounded-lg transition hover:bg-gray-200 dark:hover:bg-gray-700`}
+        aria-label="Cerrar"
+      >
+        <X size={24} className="text-gray-600 dark:text-gray-300" />
+      </button>
 
-      </div>
+      <h2 className="text-2xl font-bold mb-6">Editar Perfil y Seguridad</h2>
+      
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="space-y-4">
           <div>
