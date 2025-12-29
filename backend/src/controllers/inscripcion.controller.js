@@ -1,6 +1,8 @@
 import { createSolicitudService, getSolicitudesPorAlumnoService, getCuposPorCarreraService } from "../services/inscripcion.service.js";
 import { handleErrorClient } from "../handlers/response.handlers.js";
 
+
+
 export const createSolicitud = async (req, res) => {
   try {
     const { id: alumnoId } = req.user;
@@ -79,3 +81,4 @@ export const getCuposPorCarrera = async (req, res) => {
     return handleErrorClient(res, 500, "Error en el servidor", error.message);
   }
 };
+

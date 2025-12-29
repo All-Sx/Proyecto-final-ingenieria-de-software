@@ -42,3 +42,5 @@ export const getCuposPorCarrera = async (electivo_id) => {
     throw error;
   }
 };
+
+

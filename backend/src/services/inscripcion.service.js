@@ -237,13 +237,11 @@ export async function getCuposPorCarreraService(electivoId) {
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
 
-    //verificar que el electivo exista
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
       return { error: "El electivo no existe." };
     }
 
-    //obtener todos los cupos asignados por carrera para este electivo
     const cuposPorCarrera = await cupoPorCarreraRepository.find({
       where: { electivo: { id: electivoId } },
       relations: ["carrera"]
@@ -253,13 +251,11 @@ export async function getCuposPorCarreraService(electivoId) {
       return { error: "Este electivo no tiene cupos asignados por carrera. Debe ser aprobado primero." };
     }
 
-    //para cada carrera, calcular cupos ocupados y disponibles
     const resultados = [];
 
     for (const cupoCarrera of cuposPorCarrera) {
       const carrera = cupoCarrera.carrera;
 
-      //contar inscripciones ACEPTADAS de esta carrera en este electivo
       const cuposOcupados = await solicitudRepository
         .createQueryBuilder("solicitud")
         .innerJoin("solicitud.alumno", "usuario")
@@ -289,5 +285,45 @@ export async function getCuposPorCarreraService(electivoId) {
   } catch (error) {
     console.error("Error al obtener cupos por carrera:", error);
     return { error: "Error interno al consultar cupos por carrera." };
+  }
+}
+
+export async function getSolicitudesPendientes() {
+  try {
+    const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+
+    const solicitudes = await solicitudRepository.find({
+      where: {
+        estado: "PENDIENTE"
+      },
+      relations: ["alumno", "electivo"], 
+      order: {
+        fecha_solicitud: "ASC"
+      }
+    });
+
+    
+    const data = solicitudes.map(sol => ({
+      id: sol.id,
+      prioridad: sol.prioridad,
+      estado: sol.estado,
+      fecha_solicitud: sol.fecha_solicitud,
+     
+      usuario: sol.alumno ? {
+        nombre: sol.alumno.nombre_completo, 
+        email: sol.alumno.email,
+        rut: sol.alumno.rut
+      } : null,
+      electivo: sol.electivo ? {
+        id: sol.electivo.id,
+        nombre: sol.electivo.nombre
+      } : null
+    }));
+
+    return data;
+
+  } catch (error) {
+    console.error("Error al obtener solicitudes pendientes:", error);
+    return [];
   }
 }

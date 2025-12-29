@@ -17,6 +17,7 @@ import GestionElectivos from "./GestionElectivos";
 import GestionAlumnos from "./GestionAlumnos";
 import GestionProfesores from "./GestionProfesores";
 import MisElectivos from "./MisElectivos";
+import PeticionesInscripcion from "./PeticionesInscripcion";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -146,6 +147,7 @@ export default function Dashboard() {
             darkMode={darkMode}
           />
         )}
+        {vistaActual === "peticionesInscripcion" && <PeticionesInscripcion />}
       </main>
 
       <ModoOscuro />

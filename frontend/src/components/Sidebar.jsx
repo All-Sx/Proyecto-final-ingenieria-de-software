@@ -32,7 +32,6 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
     return (
         <motion.aside
-            //animacion de entrada desde la izquierda
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.4 }}
@@ -87,6 +86,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                             <button onClick={() => setVistaActual("inscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <GraduationCap size={18} /> Períodos
                             </button>
+                            
                         </>
                     )}
 
