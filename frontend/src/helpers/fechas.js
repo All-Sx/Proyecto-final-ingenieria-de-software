@@ -16,9 +16,9 @@ export const diasPorMes = (mes, año) => {
 
 export function formatearFecha(date) {
     const d = new Date(date);
-    const dia = String(d.getDate()).padStart(2, "0");
-    const mes = String(d.getMonth() + 1).padStart(2, "0");
-    const año = d.getFullYear();
+    const dia = String(d.getUTCDate()).padStart(2, "0");
+    const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const año = d.getUTCFullYear();
 
     return `${dia}-${mes}-${año}`;
 }
@@ -26,13 +26,13 @@ export function formatearFecha(date) {
 export const normalizarPeriodo = (periodo) => {
     if (!periodo) return null;
 
+    // Parsear la fecha en formato dd-mm-yyyy
+    const [diaInicio, mesInicio, añoInicio] = periodo.fecha_inicio.split("-");
+    const [diaFin, mesFin, añoFin] = periodo.fecha_fin.split("-");
+
     return {
         ...periodo,
-        fechaInicio: new Date(
-            periodo.fecha_inicio.split("-").reverse().join("-")
-        ),
-        fechaFin: new Date(
-            periodo.fecha_fin.split("-").reverse().join("-")
-        ),
+        fechaInicio: new Date(Date.UTC(añoInicio, mesInicio - 1, diaInicio, 12, 0, 0)),
+        fechaFin: new Date(Date.UTC(añoFin, mesFin - 1, diaFin, 12, 0, 0)),
     };
 };
