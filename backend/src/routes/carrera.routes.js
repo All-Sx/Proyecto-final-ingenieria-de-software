@@ -6,15 +6,11 @@ import { isProfesor } from "../../../frontend/src/helpers/roles.js";
 
 const router = Router();
 
-// GET /api/carreras
-// Obtener todas las carreras
 router.get("/", 
     authMiddleware, 
     getCarreras
 );
 
-// POST /api/carreras
-// Crear una nueva carrera
 router.post("/", 
     authMiddleware, 
     isAdmin(["Jefe de Carrera"]), 

@@ -83,7 +83,6 @@ export default function AuthForm() {
         return;
       }
 
-      // LOGIN REAL
       if (!formData.email || !formData.password) {
         return setError("Ingresa tus credenciales.");
       }
@@ -110,9 +109,7 @@ export default function AuthForm() {
     } catch (err) {
       console.error(err);
 
-      // Mostrar mensaje al usuario
       if (err.response) {
-        // Axios error con respuesta del backend
         if (err.response.status === 401) {
           setError("Email o contraseña incorrectos.");
         } else if (err.response.data?.message) {
@@ -121,7 +118,6 @@ export default function AuthForm() {
           setError("Ocurrió un error. Intenta nuevamente.");
         }
       } else {
-        // Error de red u otro
         setError("No se pudo conectar con el servidor.");
       }
     }
@@ -136,7 +132,6 @@ export default function AuthForm() {
   const handleDemoLogin = (role) => {
     let user;
 
-    // Verificar el rol y crear el objeto de usuario correspondiente
     if (role === "profesor") {
       user = {
         nombre: "Profesor Demo",
@@ -145,11 +140,8 @@ export default function AuthForm() {
         tipo: "Profesor"
       };
     }
-    // GUARDAR usuario en localStorage para persistencia entre páginas
-    // Convertimos el objeto a string JSON para almacenarlo
     localStorage.setItem("user", JSON.stringify(user));
 
-    // Navegar al dashboard y pasar el usuario también por state (método alternativo)
     navigate("/dashboard", { state: { user } });
   };
 
@@ -259,7 +251,7 @@ export default function AuthForm() {
               className="text-blue-600"
               onClick={() => {
                 setIsRegister(!isRegister);
-                setFormData(initialFormData); // 👈 RESET
+                setFormData(initialFormData); 
                 setError("");
               }}
             >

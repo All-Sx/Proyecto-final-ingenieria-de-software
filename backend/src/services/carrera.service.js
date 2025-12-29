@@ -23,7 +23,6 @@ export async function createCarreraService(data) {
 
     const carreraGuardada = await carreraRepository.save(nuevaCarrera);
     
-    // Limpiar respuesta eliminando campos de auditoría
     const respuestaLimpia = {
       id: carreraGuardada.id,
       codigo: carreraGuardada.codigo,
@@ -43,7 +42,6 @@ export async function getAllCarrerasService() {
     const carreraRepository = AppDataSource.getRepository(Carrera);
     const carreras = await carreraRepository.find();
     
-    // Limpiar respuesta eliminando campos de auditoría
     const carrerasLimpias = carreras.map(c => ({
       id: c.id,
       codigo: c.codigo,

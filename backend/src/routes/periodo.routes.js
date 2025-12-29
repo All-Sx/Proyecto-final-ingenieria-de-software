@@ -40,7 +40,6 @@ router.get("/actual",
     getPeriodoActual
 );
 
-// Nueva ruta para obtener historial de periodos cerrados
 router.get("/historial",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
@@ -59,7 +58,6 @@ router.patch("/:id/estado",
     updateEstadoPeriodo
 );
 
-// Nueva ruta para archivar un periodo manualmente
 router.patch("/:id/archivar",
     authMiddleware,
     isAdmin(["Jefe de Carrera"]),
