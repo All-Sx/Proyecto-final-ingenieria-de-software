@@ -2,6 +2,7 @@ import { login, register } from "../services/auth.service";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
+import backgroundImage from "../assets/ubiobio-background.jpg";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
 import {
@@ -146,12 +147,23 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div 
+      className="flex min-h-screen items-center justify-center bg-gray-100 relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Overlay oscuro para mejorar legibilidad */}
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8"
+        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative z-10"
       >
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
           {isRegister ? "Registro de Estudiantes" : "Iniciar Sesión"}
