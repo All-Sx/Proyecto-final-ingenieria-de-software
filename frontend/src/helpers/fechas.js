@@ -1,7 +1,6 @@
 export const diasPorMes = (mes, año) => {
     if (!mes || !año) return [];
 
-    // Febrero con año real
     if (mes === 2) {
         const esBisiesto =
             (año % 4 === 0 && año % 100 !== 0) || año % 400 === 0;

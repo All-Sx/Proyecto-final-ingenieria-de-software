@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { isAlumno } from "../helpers/roles";
 
-export default function CardElectivo({ electivo, darkMode, onClick, rolUsuario }) {
+export default function CardElectivo({ electivo, darkMode, onClick, onInscribir, rolUsuario, inscrito }) {
   
   return (
     <motion.div
@@ -34,12 +34,30 @@ export default function CardElectivo({ electivo, darkMode, onClick, rolUsuario }
         )}
       </div>
 
-      <button
-        onClick={onClick}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition"
-      >
-        Ver detalles
-      </button>
+      {isAlumno(rolUsuario) && electivo.estado === "APROBADO" ? (
+        inscrito ? (
+          <button
+            disabled
+            className="w-full bg-gray-400 text-white py-2 rounded-xl font-medium cursor-not-allowed"
+          >
+            Ya inscrito
+          </button>
+        ) : (
+          <button
+            onClick={onInscribir}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition"
+          >
+            Inscribir Electivo
+          </button>
+        )
+      ) : (
+        <button
+          onClick={onClick}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition"
+        >
+          Ver detalles
+        </button>
+      )}
     </motion.div>
   );
 }

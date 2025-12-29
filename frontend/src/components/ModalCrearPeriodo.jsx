@@ -3,7 +3,7 @@ import { diasPorMes, formatearFecha } from "../helpers/fechas";
 import { MESES, getAniosDisponibles } from "../helpers/periodos";
 import FechaSelector from "./FechaSelector";
 
-export default function ModalCrearPeriodo({ onClose, onCrear, darkMode }) {
+export default function ModalCrearPeriodo({ onClose, onCrear, darkMode, errorServidor }) {
     const añosDisponibles = getAniosDisponibles();
 
     const [nombre, setNombre] = useState("");
@@ -58,7 +58,7 @@ export default function ModalCrearPeriodo({ onClose, onCrear, darkMode }) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className={`p-8 rounded-2xl w-full max-w-lg ${darkMode ? "bg-gray-900" : "bg-white"}`}>
                 <h2 className="text-xl font-bold mb-6">Crear período</h2>
-
+                    {/*NO BORRAR*/}
                 {/* NOMBRE */}
                 <div className="mb-4">
                     <label className="block text-sm font-medium mb-1">Nombre del período</label>
@@ -69,16 +69,22 @@ export default function ModalCrearPeriodo({ onClose, onCrear, darkMode }) {
                         placeholder="Ej: 2025-2 → 2026-1"
                     />
                 </div>
-
+                {/*NO BORRAR*/}
                 {/* FECHA INICIO */}
                 <h3 className="font-semibold mb-2">Fecha inicio</h3>
                 <FechaSelector data={inicio} setData={setInicio} selectClasses={selectClasses} />
-
+                {/*NO BORRAR*/}
                 {/* FECHA FIN */}
                 <h3 className="font-semibold mt-4 mb-2">Fecha término</h3>
                 <FechaSelector data={fin} setData={setFin} selectClasses={selectClasses} />
 
-                {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
+                {(error || errorServidor) && (
+                    <div className="mt-4 p-3 rounded-lg bg-red-100 border border-red-400">
+                        <p className="text-red-800 text-sm font-medium">
+                            {errorServidor || error}
+                        </p>
+                    </div>
+                )}
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button onClick={onClose}>Cancelar</button>
