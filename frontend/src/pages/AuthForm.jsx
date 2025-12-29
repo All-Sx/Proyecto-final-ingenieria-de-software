@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
 import backgroundImage from "../assets/ubiobio-background.jpg";
+import logoUbb from "../assets/logo-ubb.png";
 import ModoOscuro from "../components/ModoOscuro";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
@@ -159,6 +160,14 @@ export default function AuthForm() {
     >
       {/* Overlay oscuro para mejorar legibilidad */}
       <div className="absolute inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
+      
+      {/* Logo UBB en esquina superior izquierda */}
+      <img 
+        src={logoUbb} 
+        alt="Universidad del Bío-Bío" 
+        className="fixed top-6 left-6 w-32 h-auto z-20"
+        style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))' }}
+      />
       
       <motion.div
         initial={{ opacity: 0, y: 30 }}
