@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import ModoOscuro from "../components/ModoOscuro";
 import { createElectivo } from "../services/electivo.service";
 import { getCarreras } from "../services/carreras.service";
+import { obtenerPeriodoActual } from "../services/periodos.service";
 
 export default function CrearElectivo() {
   const { darkMode } = useTheme();
@@ -19,9 +20,28 @@ export default function CrearElectivo() {
   });
 
   const [electivos, setElectivos] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [carreras, setCarreras] = useState([]);
+  const [periodoActual, setPeriodoActual] = useState(null);
+  const [loadingPeriodo, setLoadingPeriodo] = useState(true);
+
+  useEffect(() => {
+    const fetchPeriodoActual = async () => {
+      try {
+        const res = await obtenerPeriodoActual();
+        setPeriodoActual(res.data.data); // null si no hay período
+      } catch (error) {
+        showModal(
+          "error",
+          error.response?.data?.message ||
+          "Error al verificar el período de inscripción"
+        );
+      } finally {
+        setLoadingPeriodo(false);
+      }
+    };
+
+    fetchPeriodoActual();
+  }, []);
 
   useEffect(() => {
     const fetchCarreras = async () => {
@@ -37,7 +57,11 @@ export default function CrearElectivo() {
 
         setCarreras(carrerasFormateadas);
       } catch (error) {
-        setError("Error al cargar las carreras.");
+        const backendMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Error al cargar las carreras.";
+        showModal("error", backendMessage);
       }
     };
 
@@ -83,11 +107,9 @@ export default function CrearElectivo() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
 
     if (!formData.nombre || !formData.descripcion || !formData.cuposTotales || !formData.creditos) {
-      showModal("error","Por favor completa todos los campos obligatorios.");
+      showModal("error", "Por favor completa todos los campos obligatorios.");
       return;
     }
 
@@ -103,12 +125,12 @@ export default function CrearElectivo() {
     );
 
     if (carrerasSeleccionadas.length > 1 && carrerasConCuposInvalidos) {
-      showModal("error","Si seleccionas más de una carrera, todas deben tener cupos asignados.");
+      showModal("error", "Si seleccionas más de una carrera, todas deben tener cupos asignados.");
       return;
     }
 
     if (carrerasSeleccionadas.length === 0) {
-      showModal("error","Debes seleccionar al menos una carrera.");
+      showModal("error", "Debes seleccionar al menos una carrera.");
       return;
     }
 
@@ -133,7 +155,7 @@ export default function CrearElectivo() {
         distribucion_cupos: carrerasSeleccionadas
       });
 
-      showModal("success","Electivo registrado correctamente.");
+      showModal("success", "Electivo registrado correctamente.");
 
       setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
 
@@ -144,14 +166,25 @@ export default function CrearElectivo() {
       })));
 
     } catch (err) {
-      const msg =
+      showModal(
+        "error",
         err.response?.data?.message ||
         err.response?.data?.error ||
-        "Error al registrar el electivo";
-      setError(msg);
+        "Error al registrar el electivo"
+      );
     }
   };
 
+  if (loadingPeriodo) {
+    return (
+      <div
+        className={`py-20 text-center ${darkMode ? "text-gray-300" : "text-gray-700"
+          }`}
+      >
+        Verificando período de inscripción...
+      </div>
+    );
+  }
 
   return (
     <div className={`py-10 transition-colors duration-500 ${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
@@ -160,137 +193,133 @@ export default function CrearElectivo() {
           <BookOpen className="text-green-500" /> Registro de Electivos
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-              Nombre del electivo
-            </label>
-            <input
-              type="text"
-              name="nombre"
-              value={formData.nombre}
-              onChange={handleChange}
-              className={`w-full border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
-              placeholder="Ej: Inteligencia Artificial"
-            />
+        {!periodoActual ? (
+          <div
+            className={`p-10 rounded-2xl text-center ${darkMode ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-700"
+              }`}
+          >
+            <h3 className="text-xl font-semibold mb-3">
+              No hay período de inscripción activo
+            </h3>
+            <p className="text-sm opacity-80">
+              No es posible registrar electivos mientras no exista un período de
+              inscripción vigente.
+            </p>
           </div>
+        ) : (
+          <>
+            <p className="text-sm mb-4 opacity-70 text-center">
+              Período activo: <strong>{periodoActual.nombre}</strong>
+            </p>
 
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-              Descripción
-            </label>
-            <textarea
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handleChange}
-              rows={3}
-              className={`w-full border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
-              placeholder="Describe brevemente el contenido del curso..."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-                Cupos Totales
-              </label>
-              <div className="relative">
-                <Users
-                  className={`absolute left-3 top-3 ${darkMode ? "text-gray-400" : "text-gray-400"}`}
-                  size={18}
-                />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                  Nombre del electivo
+                </label>
                 <input
-                  type="number"
-                  name="cuposTotales"
-                  value={formData.cuposTotales}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cuposTotales: e.target.value })
-                  }
-                  className={`w-full border rounded-xl py-2 pl-10 pr-3 focus:ring-2 focus:ring-blue-500 ${darkMode
-                    ? "bg-gray-700 border-gray-600 text-gray-100"
-                    : "bg-white border-gray-300 text-gray-900"
-                    }`}
-                  placeholder="Ej: 50"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>Créditos</label>
-              <div className="relative">
-                <GraduationCap className={`absolute left-3 top-3 ${darkMode ? "text-gray-400" : "text-gray-400"}`} size={18} />
-                <input
-                  type="number"
-                  name="creditos"
-                  value={formData.creditos}
+                  type="text"
+                  name="nombre"
+                  value={formData.nombre}
                   onChange={handleChange}
-                  className={`w-full pl-10 border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
-                  placeholder="Ej: 5"
+                  className={`w-full border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
+                  placeholder="Ej: Inteligencia Artificial"
                 />
               </div>
-            </div>
-          </div>
 
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
-              Selecciona las carreras donde se impartirá el electivo
-            </label>
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                  Descripción
+                </label>
+                <textarea
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleChange}
+                  rows={3}
+                  className={`w-full border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
+                  placeholder="Describe brevemente el contenido del curso..."
+                />
+              </div>
 
-            <div className="space-y-2">
-              {carreras.map((c) => (
-                <div key={c.id} className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={c.seleccionada}
-                    onChange={() => toggleCarrera(c.id)}
-                    className="w-4 h-4"
-                  />
-                  <span className={`${darkMode ? "text-gray-200" : "text-gray-800"}`}>{c.nombre}</span>
-                  <input
-                    type="number"
-                    value={c.cupos}
-                    onChange={(e) => handleCuposCarrera(c.id, e.target.value)}
-                    placeholder="Cupos"
-                    disabled={!c.seleccionada}
-                    className={`ml-auto w-20 border rounded-xl py-1 px-2 focus:ring-2 focus:ring-blue-500 ${darkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
-                      : "bg-white border-gray-300 text-gray-900"}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                    Cupos Totales
+                  </label>
+                  <div className="relative">
+                    <Users
+                      className={`absolute left-3 top-3 ${darkMode ? "text-gray-400" : "text-gray-400"}`}
+                      size={18}
+                    />
+                    <input
+                      type="number"
+                      name="cuposTotales"
+                      value={formData.cuposTotales}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cuposTotales: e.target.value })
+                      }
+                      className={`w-full border rounded-xl py-2 pl-10 pr-3 focus:ring-2 focus:ring-blue-500 ${darkMode
+                        ? "bg-gray-700 border-gray-600 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                        }`}
+                      placeholder="Ej: 50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>Créditos</label>
+                  <div className="relative">
+                    <GraduationCap className={`absolute left-3 top-3 ${darkMode ? "text-gray-400" : "text-gray-400"}`} size={18} />
+                    <input
+                      type="number"
+                      name="creditos"
+                      value={formData.creditos}
+                      onChange={handleChange}
+                      className={`w-full pl-10 border rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900"}`}
+                      placeholder="Ej: 5"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>
+                  Selecciona las carreras donde se impartirá el electivo
+                </label>
+
+                <div className="space-y-2">
+                  {carreras.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={c.seleccionada}
+                        onChange={() => toggleCarrera(c.id)}
+                        className="w-4 h-4"
+                      />
+                      <span className={`${darkMode ? "text-gray-200" : "text-gray-800"}`}>{c.nombre}</span>
+                      <input
+                        type="number"
+                        value={c.cupos}
+                        onChange={(e) => handleCuposCarrera(c.id, e.target.value)}
+                        placeholder="Cupos"
+                        disabled={!c.seleccionada}
+                        className={`ml-auto w-20 border rounded-xl py-1 px-2 focus:ring-2 focus:ring-blue-500 ${darkMode
+                          ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900"}
                       ${c.seleccionada} "cursor-not-allowed"`}
 
-                  />
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          {success && <p className="text-green-500 text-sm text-center">{success}</p>}
-
-          <button type="submit" className="w-full bg-green-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors">
-            Registrar Electivo
-          </button>
-        </form>
-
-        {electivos.length > 0 && (
-          <div className="mt-8">
-            <h3 className={`text-lg font-semibold mb-3 ${darkMode ? "text-gray-100" : "text-gray-800"}`}>Electivos registrados</h3>
-            <div className="space-y-3">
-              {electivos.map((el) => (
-                <motion.div
-                  key={el.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`border rounded-xl p-4 shadow-sm transition-colors ${darkMode ? "bg-gray-700 border-gray-600 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"}`}
-                >
-                  <h4 className="font-medium">{el.nombre}</h4>
-                  <p className="text-sm">{el.descripcion}</p>
-                  <p className="text-sm mt-1">
-                    <strong>Cupos:</strong> {el.cupos} | <strong>Créditos:</strong> {el.creditos}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+              <button type="submit" className="w-full bg-green-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors">
+                Registrar Electivo
+              </button>
+            </form>
+          </>
         )}
       </div>
 

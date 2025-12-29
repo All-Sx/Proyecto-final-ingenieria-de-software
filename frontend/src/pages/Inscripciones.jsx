@@ -12,8 +12,10 @@ import {
     obtenerHistorialPeriodos
 } from "../services/periodos.service"
 import { normalizarPeriodo, formatearFecha } from "../helpers/fechas";
+import { useModal } from "../context/ModalContext";
 
 export default function InscripcionesPage({ user, darkMode }) {
+    const { showModal } = useModal();
     if (!isJefe(user.rol)) {
         return <p className="text-center mt-10">Acceso restringido</p>;
     }
@@ -23,7 +25,6 @@ export default function InscripcionesPage({ user, darkMode }) {
     const [mostrarModal, setMostrarModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [mostrarGestion, setMostrarGestion] = useState(false);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         cargarPeriodo();
@@ -36,7 +37,11 @@ export default function InscripcionesPage({ user, darkMode }) {
 
             setPeriodo(normalizarPeriodo(res.data.data));
         } catch (error) {
-            console.error("Error al obtener periodo actual:", error);
+            const backendMessage =
+                err.response?.data?.message ||
+                err.response?.data?.error ||
+                "Error al obtener periodo actual";
+            showModal("error", backendMessage);
             setPeriodo(null);
         } finally {
             setLoading(false);
@@ -48,24 +53,20 @@ export default function InscripcionesPage({ user, darkMode }) {
             const res = await obtenerHistorialPeriodos();
             setHistorial(res.data.data || []);
         } catch (error) {
-            console.error("Error al obtener historial:", error);
+            const backendMessage =
+                err.response?.data?.message ||
+                err.response?.data?.error ||
+                "Error al obtener historial";
+            showModal("error", backendMessage);
             setHistorial([]);
         }
     };
 
     const handleCrearPeriodo = async (periodoData) => {
-        try {
-            setError(null);
-            const response = await crearPeriodo(periodoData);
-            setPeriodo(normalizarPeriodo(response.data.data));
-            setMostrarModal(false);
-            await cargarHistorial(); 
-        } catch (error) {
-            const mensaje = error.response?.data?.message || "Error al crear período";
-            setError(mensaje);
-            // Mantener el modal abierto para que el usuario vea el error
-            console.error("Error al crear periodo:", error);
-        }
+        const response = await crearPeriodo(periodoData);
+
+        setPeriodo(normalizarPeriodo(response.data.data));
+        await cargarHistorial();
     };
 
     const handleGuardarGestion = async ({
@@ -74,14 +75,6 @@ export default function InscripcionesPage({ user, darkMode }) {
         fechaFin,
         estado
     }) => {
-
-        console.log(" FRONT envia:", {
-            nombre,
-            fecha_inicio: formatearFecha(fechaInicio),
-            fecha_fin: formatearFecha(fechaFin),
-            estado
-        });
-
         try {
             await actualizarPeriodo(periodo.id, {
                 nombre,
@@ -92,14 +85,18 @@ export default function InscripcionesPage({ user, darkMode }) {
 
             // Cerrar el modal primero
             setMostrarGestion(false);
-            
+
             // Recargar los datos
             await cargarPeriodo();
             await cargarHistorial();
 
         } catch (error) {
             console.error(" Error FRONT:", error);
-            alert(error.response?.data?.message || "Error al actualizar período");
+            const backendMessage =
+                err.response?.data?.message ||
+                err.response?.data?.error ||
+                "Error al actualizar período";
+            showModal("error", backendMessage);
         }
     };
 
@@ -112,7 +109,7 @@ export default function InscripcionesPage({ user, darkMode }) {
         <div className="p-8">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-6">Períodos de Inscripción</h1>
-                
+
                 {/* Botón de acción */}
                 <button
                     onClick={() => setMostrarModal(true)}
@@ -150,13 +147,9 @@ export default function InscripcionesPage({ user, darkMode }) {
 
             {mostrarModal && (
                 <ModalCrearPeriodo
-                    onClose={() => {
-                        setMostrarModal(false);
-                        setError(null);
-                    }}
+                    onClose={() => setMostrarModal(false)}
                     onCrear={handleCrearPeriodo}
                     darkMode={darkMode}
-                    errorServidor={error}
                 />
             )}
 

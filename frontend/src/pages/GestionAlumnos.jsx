@@ -3,15 +3,15 @@ import { motion } from "framer-motion";
 import ModalAsignarCarrera from "../components/ModalAsignarCarrera";
 import { getAlumnos } from "../services/usuarios.service";
 import { isJefe } from "../helpers/roles";
+import { useModal } from "../context/ModalContext";
 
 export default function GestionAlumnos({ user, darkMode }) {
   const [alumnos, setAlumnos] = useState([]);
   const [filteredAlumnos, setFilteredAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalAsignar, setModalAsignar] = useState(null);
-  const [mensaje, setMensaje] = useState(null);
+  const { showModal } = useModal();
 
   useEffect(() => {
     if (isJefe(user.rol)) {
@@ -37,13 +37,12 @@ export default function GestionAlumnos({ user, darkMode }) {
   const cargarAlumnos = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await getAlumnos();
       setAlumnos(data);
       setFilteredAlumnos(data);
     } catch (err) {
-      console.error("Error al cargar alumnos:", err);
-      setError("Error al cargar la lista de alumnos");
+      console.error(err);
+      showModal("error", "Error al cargar la lista de alumnos.");
     } finally {
       setLoading(false);
     }
@@ -54,14 +53,11 @@ export default function GestionAlumnos({ user, darkMode }) {
   };
 
   const handleAsignacionExitosa = async (resultado) => {
-    setMensaje({
-      tipo: "success",
-      texto: resultado.message || "Carrera asignada exitosamente"
-    });
-    
+    showModal(
+      "success",
+      resultado?.message || "Carrera asignada exitosamente."
+    );
     await cargarAlumnos();
-    
-    setTimeout(() => setMensaje(null), 5000);
   };
 
   if (!isJefe(user.rol)) {
@@ -78,10 +74,6 @@ export default function GestionAlumnos({ user, darkMode }) {
     return <div className="p-8 text-center">Cargando alumnos...</div>;
   }
 
-  if (error) {
-    return <div className="p-8 text-center text-red-500">{error}</div>;
-  }
-
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -96,16 +88,7 @@ export default function GestionAlumnos({ user, darkMode }) {
       <div>
         {/* Lista de alumnos */}
         <div>
-          {mensaje && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              mensaje.tipo === "success" 
-                ? "bg-green-100 border border-green-400 text-green-800" 
-                : "bg-red-100 border border-red-400 text-red-800"
-            }`}>
-              {mensaje.texto}
-            </div>
-          )}
-             {/* NO BORRAR */}
+          {/* NO BORRAR */}
           {/* Barra de búsqueda */}
           <div className="mb-6">
             <input
@@ -113,14 +96,13 @@ export default function GestionAlumnos({ user, darkMode }) {
               placeholder="Buscar por nombre, RUT, email o carrera..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full p-3 rounded-lg border ${
-                darkMode
+              className={`w-full p-3 rounded-lg border ${darkMode
                   ? "bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-500"
                   : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-              }`}
+                }`}
             />
           </div>
-            {/* NO BORRAR */}
+          {/* NO BORRAR */}
           {/* Estadísticas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className={`p-4 rounded-lg ${darkMode ? "bg-gray-800" : "bg-blue-50"}`}>
@@ -148,7 +130,7 @@ export default function GestionAlumnos({ user, darkMode }) {
               </p>
             </div>
           </div>
-            {/* NO BORRAR */}
+          {/* NO BORRAR */}
           {/* Tabla de alumnos */}
           {filteredAlumnos.length === 0 ? (
             <div className={`text-center py-10 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
@@ -203,13 +185,12 @@ export default function GestionAlumnos({ user, darkMode }) {
                       <td className="p-3 text-center">
                         <button
                           onClick={() => handleAsignarCarreraClick(alumno)}
-                          className={`px-4 py-2 rounded-lg font-medium transition ${
-                            alumno.alumno?.carrera
+                          className={`px-4 py-2 rounded-lg font-medium transition ${alumno.alumno?.carrera
                               ? darkMode
                                 ? "bg-blue-700 hover:bg-blue-600 text-blue-100"
                                 : "bg-blue-100 hover:bg-blue-200 text-blue-800"
                               : "bg-blue-600 hover:bg-blue-700 text-white"
-                          }`}
+                            }`}
                         >
                           {alumno.alumno?.carrera ? "Cambiar" : "Asignar"}
                         </button>
