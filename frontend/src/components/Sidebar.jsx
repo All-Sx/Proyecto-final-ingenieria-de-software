@@ -1,5 +1,5 @@
 import React from "react";
-import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut } from "lucide-react";
+import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut, Users } from "lucide-react";
 import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
 import { motion } from "framer-motion"
 
@@ -104,7 +104,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                     {isJefe(user.rol) && (
                         <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
                             <h4 className="text-xs font-semibold text-gray-500 mb-2">Gestión de Usuarios</h4>
-                            <button onClick={() => setVistaActual("alumnos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                            <button onClick={() => setVistaActual("gestionAlumnos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <User size={16} /> Alumnos
                             </button>
                             <button onClick={() => setVistaActual("profesores")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
