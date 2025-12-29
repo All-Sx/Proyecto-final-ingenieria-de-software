@@ -3,14 +3,6 @@ import { motion } from "framer-motion";
 import { isProfesor, isJefe } from "../helpers/roles";
 
 export default function VistaInicio({ user, darkMode, setVistaActual }) {
-  
-  // Tarjetas administrativas solo para Jefe de Carrera (no se cargan de la API)
-  const tarjetasAdmin = [
-    { id: "admin-001", nombre: "Gestión de Electivos", descripcion: "Panel administrativo", progreso: 0.8, estado: "Revisar", pendiente: false },
-    { id: "admin-002", nombre: "Estadísticas y Reportes", descripcion: "Análisis de inscripciones", progreso: 1.0, estado: "Completado", pendiente: false },
-    { id: "admin-003", nombre: "Planificación Académica", descripcion: "Planificación de electivos", progreso: 0.3, estado: "En progreso", pendiente: true },
-  ];
-
   return (
     <>
       <motion.h1
