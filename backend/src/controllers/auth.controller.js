@@ -11,7 +11,6 @@ import { loginValidation } from "../validators/login.validator.js";
 
 export const login = async (req, res) => {
   try {
-    // Validacion externa JOI
     const { error } = loginValidation.validate(req.body);
 
     if (error) {
@@ -24,7 +23,6 @@ export const login = async (req, res) => {
 
     const userRepository = AppDataSource.getRepository(Usuario);
 
-    // Buscar usuario con su rol
     const user = await userRepository.findOne({
       where: { email },
       relations: ["rol"]
@@ -34,24 +32,21 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // Verificar si el usuario está activo
     if (!user.activo) {
       return res.status(403).json({ message: "Usuario inactivo" });
     }
 
-    // Verificar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // Generar JWT
     const token = jwt.sign(
       {
         id: user.id,
         email: user.email,
-        nombre_completo: user.nombre_completo,  // Agregamos el nombre al token
+        nombre_completo: user.nombre_completo,  
         rol: user.rol.nombre
       },
       JWT_SECRET,
@@ -78,7 +73,6 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    // Validacion externa con JOI
     const { error } = registerValidation.validate(req.body);
 
     if (error) {
@@ -92,7 +86,6 @@ export const register = async (req, res) => {
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // Verificar si el usuario ya existe
     const userExist = await userRepository.findOne({
       where: [
         { email: email },
@@ -104,7 +97,6 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // Buscar el rol (si se proporciona rol, se usa, si no, se usa "Alumno" por defecto)
     let rolEntity;
     if (rol) {
       rolEntity = await rolRepository.findOneBy({ nombre: rol });
@@ -118,16 +110,14 @@ export const register = async (req, res) => {
       }
     }
 
-    // Encriptar contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Crear usuario con el rol correspondiente
     const newUser = userRepository.create({
       rut,
       nombre_completo,
       email,
       password_hash: passwordHash,
-      rol: rolEntity,  // Ahora usa el rol que encontramos
+      rol: rolEntity,  
       activo: true
     });
 

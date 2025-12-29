@@ -111,29 +111,23 @@ export async function getSolicitudesPendientes(req, res) {
     }
 }
 
-/**
- * Controlador para cambiar el estado de una solicitud PENDIENTE
- * Permite aprobar (ACEPTADO) o rechazar (RECHAZADO) solicitudes
- */
+
 export async function cambiarEstadoSolicitud(req, res) {
     try {
         const { id: solicitudId } = req.params;
         const { estado } = req.body;
         const { id: jefeId } = req.user;
 
-        // Validar que se proporcione el estado
         if (!estado) {
             return handleErrorClient(res, 400, "El campo 'estado' es obligatorio");
         }
 
-        // Validar que el estado sea válido
         const estadosPermitidos = ["ACEPTADO", "RECHAZADO"];
         if (!estadosPermitidos.includes(estado)) {
             return handleErrorClient(res, 400, 
                 "Estado inválido. Debe ser: ACEPTADO o RECHAZADO");
         }
 
-        // Llamar al servicio
         const result = await cambiarEstadoSolicitudService(
             Number(solicitudId), 
             estado, 
@@ -153,16 +147,12 @@ export async function cambiarEstadoSolicitud(req, res) {
     }
 }
 
-/**
- * Controlador para mover una solicitud de LISTA_ESPERA a PENDIENTE
- * El jefe decide manualmente cuándo revisar solicitudes en lista de espera
- */
+
 export async function moverListaEsperaAPendiente(req, res) {
     try {
         const { id: solicitudId } = req.params;
         const { id: jefeId } = req.user;
 
-        // Llamar al servicio
         const result = await moverListaEsperaAPendienteService(
             Number(solicitudId),
             jefeId
