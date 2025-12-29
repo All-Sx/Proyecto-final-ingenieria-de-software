@@ -63,7 +63,6 @@ export default function InscripcionesPage({ user, darkMode }) {
         } catch (error) {
             const mensaje = error.response?.data?.message || "Error al crear período";
             setError(mensaje);
-            // Mantener el modal abierto para que el usuario vea el error
             console.error("Error al crear periodo:", error);
         }
     };
@@ -90,10 +89,8 @@ export default function InscripcionesPage({ user, darkMode }) {
                 estado
             });
 
-            // Cerrar el modal primero
             setMostrarGestion(false);
             
-            // Recargar los datos
             await cargarPeriodo();
             await cargarHistorial();
 
@@ -112,7 +109,7 @@ export default function InscripcionesPage({ user, darkMode }) {
         <div className="p-8">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-6">Períodos de Inscripción</h1>
-                
+                {/*  NO BORRAR */}
                 {/* Botón de acción */}
                 <button
                     onClick={() => setMostrarModal(true)}
@@ -121,7 +118,7 @@ export default function InscripcionesPage({ user, darkMode }) {
                     Crear período
                 </button>
             </div>
-
+            {/*  NO BORRAR */}
             {/* Período Activo */}
             {periodo ? (
                 <div className="mb-8">
@@ -139,7 +136,7 @@ export default function InscripcionesPage({ user, darkMode }) {
                     <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
                 </div>
             )}
-
+                {/*  NO BORRAR */}
             {/* Historial de Períodos */}
             <div>
                 <h2 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>

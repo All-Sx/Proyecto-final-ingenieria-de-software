@@ -78,7 +78,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                     {isProfesor(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("inicio")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                            <button onClick={() => setVistaActual("misElectivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <FileText size={18} /> Mis Electivos
                             </button>
                             <button
