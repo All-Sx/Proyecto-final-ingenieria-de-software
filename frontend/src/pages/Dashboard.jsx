@@ -15,6 +15,8 @@ import InscripcionesPage from "../pages/Inscripciones";
 import { updateClave, updateMyProfile } from "../services/perfil.service";
 import GestionElectivos from "./GestionElectivos";
 import GestionAlumnos from "./GestionAlumnos";
+import VistaMisInscripciones from "./MisIncripciones";
+
 import GestionProfesores from "./GestionProfesores";
 import MisElectivos from "./MisElectivos";
 
@@ -123,6 +125,7 @@ export default function Dashboard() {
         {vistaActual === "misElectivos" && <MisElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
+        {vistaActual === "misInscripciones" && <VistaMisInscripciones user={user} darkMode={darkMode} />}
         {vistaActual === "gestionAlumnos" && <GestionAlumnos user={user} darkMode={darkMode} />}
         {vistaActual === "profesores" && <GestionProfesores user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}

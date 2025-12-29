@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { isAlumno } from "../helpers/roles";
 
 export default function CardElectivo({ electivo, darkMode, onClick, onInscribir, rolUsuario, inscrito }) {
-  
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -23,7 +23,7 @@ export default function CardElectivo({ electivo, darkMode, onClick, onInscribir,
         <p> <strong>Semestre:</strong> {electivo.semestre || "2025-1"}</p>
         <p> <strong>Créditos:</strong> {electivo.creditos}</p>
         <p> <strong>Cupos totales:</strong> {electivo.cupos}</p>
-        
+
         {!isAlumno(rolUsuario) && (
           <p>
             Estado:{" "}
