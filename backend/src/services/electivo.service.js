@@ -220,8 +220,8 @@ export async function updateElectivoService(id, data) {
       
       // Verificar que todas las carreras existan
       for (const item of data.distribucion_cupos) {
-        if (!item.carrera_id || item.cantidad <= 0) {
-          return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
+        if (!item.carrera_id || item.cantidad < 0) {
+          return { error: "Cada carrera debe tener un ID válido y cantidad mayor o igual a 0." };
         }
         
         const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });

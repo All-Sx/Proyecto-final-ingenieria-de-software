@@ -18,7 +18,7 @@ export default function VistaInicio({ user, darkMode, setVistaActual }) {
         animate={{ opacity: 1, y: 0 }}
         className={`text-3xl font-bold mb-6 ${darkMode ? "text-gray-100" : "text-gray-800"}`}
       >
-        Bienvenido, {user?.nombre} 👋
+        Bienvenido, {user?.nombre}
       </motion.h1>
 
       {isJefe(user.rol) || isProfesor(user.rol) ? (
