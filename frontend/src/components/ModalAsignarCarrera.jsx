@@ -10,6 +10,7 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
   const [carreraSeleccionada, setCarreraSeleccionada] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const { showModal } = useModal();
 
   useEffect(() => {
