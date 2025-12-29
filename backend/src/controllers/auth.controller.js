@@ -1,74 +1,91 @@
 import { AppDataSource } from "../config/configdb.js";
 import { Usuario } from "../entities/usuarios.entity.js";
-import bcrypt from "bcryptjs"; //npm install bcryptjs
-import jwt from "jsonwebtoken"; //npm install jsonwebtoken
-import { JWT_SECRET } from "../config/configenv.js";
 import { Rol } from "../entities/rol.entity.js";
+import { Alumno } from "../entities/alumno.entity.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/configenv.js";
+
+import { registerValidation } from "../validators/register.validator.js";
+import { loginValidation } from "../validators/login.validator.js";
 
 export const login = async (req, res) => {
   try {
+    const { error } = loginValidation.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message
+      });
+    }
+
     const { email, password } = req.body;
 
     const userRepository = AppDataSource.getRepository(Usuario);
 
-    // 1. Buscamos el usuario por email
-    const user = await userRepository.findOne({ 
-        where: { email },
-        relations: ["rol"] // Traemos también el rol para saber quién es
+    const user = await userRepository.findOne({
+      where: { email },
+      relations: ["rol"]
     });
 
     if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    // 2. Comparamos la contraseña enviada con la encriptada
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
+    if (!user.activo) {
+      return res.status(403).json({ message: "Usuario inactivo" });
     }
 
-    // 3. (Opcional) Generar Token JWT
-    // Si no tienes configurado JWT aún, puedes omitir esta parte del token
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Credenciales inválidas" });
+    }
+
     const token = jwt.sign(
-        { id: user.id, email: user.email, rol: user.rol.nombre }, 
-        JWT_SECRET, // Debería ir en tu .env
-        { expiresIn: "1h" }
+      {
+        id: user.id,
+        email: user.email,
+        nombre_completo: user.nombre_completo,  
+        rol: user.rol.nombre
+      },
+      JWT_SECRET,
+      { expiresIn: "24h" }
     );
 
-    // 4. Responder éxito
-    return res.json({
+    return res.status(200).json({
       message: "Login exitoso",
-      token: token,
+      token,
       user: {
-        nombre: user.nombreCompleto,
+        id: user.id,
+        rut: user.rut,
+        nombre: user.nombre_completo,
         email: user.email,
         rol: user.rol.nombre
       }
     });
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error en el servidor" });
+    console.error("Error en login:", error);
+    return res.status(500).json({ message: "Error en el servidor al hacer login" });
   }
 };
 
 export const register = async (req, res) => {
   try {
-    // 1. Recibir datos del cliente
-    const { rut, nombre_completo, email, password } = req.body;
+    const { error } = registerValidation.validate(req.body);
 
-    // Validación básica
-    if (!rut || !nombre_completo || !email || !password) {
-      return res.status(400).json({ 
-        message: "Faltan datos requeridos (rut, nombre, email, password)" 
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message
       });
     }
+
+    const { rut, nombre_completo, email, password, rol } = req.body;
 
     const userRepository = AppDataSource.getRepository(Usuario);
     const rolRepository = AppDataSource.getRepository(Rol);
 
-    // 2. Verificar si el usuario ya existe (por email o rut)
     const userExist = await userRepository.findOne({
       where: [
         { email: email },
@@ -80,36 +97,50 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "El usuario (rut o email) ya existe." });
     }
 
-    // 3. Buscar el rol de "Alumno" para asignarlo automáticamente
-    const rolAlumno = await rolRepository.findOneBy({ nombre: "Alumno" });
-
-    if (!rolAlumno) {
-      return res.status(500).json({ message: "Error interno: El rol 'Alumno' no existe en la BD." });
+    let rolEntity;
+    if (rol) {
+      rolEntity = await rolRepository.findOneBy({ nombre: rol });
+      if (!rolEntity) {
+        return res.status(400).json({ message: `El rol '${rol}' no existe.` });
+      }
+    } else {
+      rolEntity = await rolRepository.findOneBy({ nombre: "Alumno" });
+      if (!rolEntity) {
+        return res.status(500).json({ message: "Error interno: El rol 'Alumno' no existe en la BD." });
+      }
     }
 
-    // 4. Encriptar contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 5. Crear y guardar el usuario
     const newUser = userRepository.create({
       rut,
       nombre_completo,
       email,
-      password_hash: passwordHash, // Usamos el nombre exacto de tu columna en la BD
-      rol: rolAlumno,
+      password_hash: passwordHash,
+      rol: rolEntity,  
       activo: true
     });
 
-    await userRepository.save(newUser);
+    const usuarioGuardado = await userRepository.save(newUser);
 
-    // 6. Responder con éxito
+    if (rolEntity.nombre === "Alumno") {
+      const alumnoRepository = AppDataSource.getRepository(Alumno);
+      const nuevoAlumno = alumnoRepository.create({
+        usuario_id: usuarioGuardado.id,
+        carrera: null,  
+        anio_ingreso: new Date().getFullYear(),
+        creditos_acumulados: 0
+      });
+      await alumnoRepository.save(nuevoAlumno);
+    }
+
     return res.status(201).json({
-      message: "Alumno registrado exitosamente",
+      message: `Usuario registrado exitosamente como ${rolEntity.nombre}`,
       user: {
-        rut: newUser.rut,
-        nombre: newUser.nombre_completo,
-        email: newUser.email,
-        rol: newUser.rol.nombre
+        rut: usuarioGuardado.rut,
+        nombre: usuarioGuardado.nombre_completo,
+        email: usuarioGuardado.email,
+        rol: rolEntity.nombre  
       }
     });
 

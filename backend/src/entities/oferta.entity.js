@@ -12,7 +12,7 @@ export const Electivo = new EntitySchema({
     nombre: { 
         type: "varchar", 
         length: 100,
-        unique: true, // Recomendado: evitar dos electivos con el mismo nombre
+        unique: true, 
         nullable: false
     },
     descripcion: { 
@@ -23,7 +23,7 @@ export const Electivo = new EntitySchema({
         type: "int", 
         default: 5 
     },
-    // Aquí agregamos los cupos directamente
+   
     cupos: { 
         type: "int", 
         nullable: false 
@@ -32,6 +32,11 @@ export const Electivo = new EntitySchema({
         type: "enum",
         enum: ["PENDIENTE", "APROBADO", "RECHAZADO"],
         default: "PENDIENTE",
+    },
+    nombre_profesor: {
+        type: "varchar",      
+        length: 150,         
+        nullable: false       
     },
     created_at: { 
         type: "timestamp", 

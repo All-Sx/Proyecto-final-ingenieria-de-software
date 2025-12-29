@@ -4,52 +4,69 @@ export const Usuario = new EntitySchema({
   name: "Usuario",
   tableName: "usuarios",
   columns: {
-    id: { 
-        primary: true, 
-        type: "int", 
-        generated: "increment" 
+    id: {
+      primary: true,
+      type: "int",
+      generated: "increment"
     },
-    rut: { 
-        type: "varchar", 
-        length: 12, 
-        unique: true,
-        format: "XXXXXXXX-X",
-        nullable: false,
+    rut: {
+      type: "varchar",
+      length: 12,
+      unique: true,
+      format: "XXXXXXXX-X",
+      nullable: false,
     },
-    email: { 
-        type: "varchar", 
-        length: 100, 
-        unique: true, 
-        nullable: false,
+    email: {
+      type: "varchar",
+      length: 100,
+      unique: true,
+      nullable: false,
     },
-    password_hash: { 
-        type: "varchar", 
-        length: 255,
-        nullable: false,
+    password_hash: {
+      type: "varchar",
+      length: 255,
+      nullable: false,
     },
-    nombre_completo: { 
-        type: "varchar", 
-        length: 150 
+    nombre_completo: {
+      type: "varchar",
+      length: 150
     },
-    activo: { 
-        type: "boolean", 
-        default: true 
+    activo: {
+      type: "boolean",
+      default: true
     },
-    created_at: { 
-        type: "timestamp"
-        , createDate: true 
+    created_at: {
+      type: "timestamp",
+      createDate: true
     },
-    updated_at: { 
-        type: "timestamp", 
-        updateDate: true 
+    updated_at: {
+      type: "timestamp",
+      updateDate: true
+    },
+    carrera_id: {
+      type: "int",
+      nullable: true,
     },
   },
   relations: {
     rol: {
       target: "Rol",
       type: "many-to-one",
-      joinColumn: { name: "rol_id" }, // Nombre de la columna en BD
+      joinColumn: { name: "rol_id" },
       nullable: false,
+      onDelete: "CASCADE",
+    },
+    alumno: {
+      target: "Alumno",
+      type: "one-to-one",
+      inverseSide: "usuario",
+    },
+    carrera: {
+      target: "Carrera",
+      type: "many-to-one",
+      joinColumn: { name: "carrera_id" },
+      nullable: true,
+      onDelete: "SET NULL",
     },
   },
 });

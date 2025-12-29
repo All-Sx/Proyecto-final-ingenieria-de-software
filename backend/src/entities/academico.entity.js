@@ -1,5 +1,4 @@
 import { EntitySchema } from "typeorm";
-//crea las tablas Carrera y periodo academico en la base de datos
 
 export const Carrera = new EntitySchema({
   name: "Carrera",
@@ -34,7 +33,7 @@ export const PeriodoAcademico = new EntitySchema({
     nombre: { 
         type: "varchar", 
         length: 20 
-    }, // Ej: "2025-2"
+    }, 
     fecha_inicio: { 
         type: "timestamp" 
     },
@@ -43,8 +42,12 @@ export const PeriodoAcademico = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["PLANIFICACION", "INSCRIPCION", "SELECCION", "CERRADO"],
+      enum: ["PLANIFICACION", "INSCRIPCION", "CERRADO"],
       default: "PLANIFICACION",
+    },
+    activo: {
+      type: "boolean",
+      default: true,
     },
   },
 });

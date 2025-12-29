@@ -1,26 +1,105 @@
 import { AppDataSource } from "../config/configdb.js";
-import { Electivo } from "../entities/oferta.entity.js"; // <--- Importamos desde oferta.entity.js
+import { Electivo } from "../entities/oferta.entity.js";
+import { PeriodoAcademico, Carrera } from "../entities/academico.entity.js";
+import { CupoPorCarrera } from "../entities/inscripcion.entity.js";
+import { LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 
-export async function createElectivoService(data) {
+export async function createElectivoService(data, nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
+    const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
+    const carreraRepository = AppDataSource.getRepository(Carrera);
+    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
 
-    //validar si el nombre ya existe
+    const periodoActivo = await periodoRepository.findOne({
+      where: { estado: "PLANIFICACION" }
+    });
+
+    if (!periodoActivo) {
+      return { error: "No hay un periodo de planificación activo. Debe crear o activar un periodo primero." };
+    }
+
+    const ahora = new Date();
+    const fechaInicio = new Date(periodoActivo.fecha_inicio);
+    const fechaFin = new Date(periodoActivo.fecha_fin);
+
+    if (ahora < fechaInicio) {
+      return { error: `El periodo de planificación aún no ha iniciado. Comienza el ${fechaInicio.toLocaleDateString()}.` };
+    }
+
+    if (ahora > fechaFin) {
+      return { error: `El periodo de planificación ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
+    }
+
     const electivoExist = await electivoRepository.findOneBy({ nombre: data.nombre });
     if (electivoExist) {
         return { error: "Ya existe un electivo con ese nombre." };
     }
+    
+    if (!data.distribucion_cupos || !Array.isArray(data.distribucion_cupos) || data.distribucion_cupos.length === 0) {
+      return { error: "Debe especificar la distribución de cupos por carrera." };
+    }
 
-    //crear el electivo
+    const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+
+    if (sumaDistribucion !== data.cupos) {
+      return { error: `La suma de la distribución (${sumaDistribucion}) no coincide con los cupos totales (${data.cupos}).` };
+    }
+
+    for (const item of data.distribucion_cupos) {
+      if (!item.carrera_id || item.cantidad <= 0) {
+        return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
+      }
+      
+      const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });
+      if (!carreraExiste) {
+        return { error: `La carrera con ID ${item.carrera_id} no existe.` };
+      }
+    }
+
     const nuevoElectivo = electivoRepository.create({
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        creditos: data.creditos || 5, //usar 5 por defecto si no envia nada
-        cupos: data.cupos
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      creditos: data.creditos || 5, 
+      cupos: data.cupos,
+      estado: "PENDIENTE", 
+      nombre_profesor: nombreProfesor
     });
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
-    return { data: electivoGuardado };
+
+    const cuposCreados = [];
+    for (const item of data.distribucion_cupos) {
+      const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
+      
+      const nuevoCupo = cupoPorCarreraRepository.create({
+        electivo: electivoGuardado,
+        carrera: carrera,
+        cantidad_reservada: item.cantidad 
+      });
+      
+      const cupoGuardado = await cupoPorCarreraRepository.save(nuevoCupo);
+      cuposCreados.push({
+        carrera_id: carrera.id,
+        carrera_nombre: carrera.nombre,
+        cantidad: cupoGuardado.cantidad_reservada
+      });
+      
+      console.log(`[CUPOS] Asignados ${item.cantidad} cupos a ${carrera.nombre} para el electivo "${electivoGuardado.nombre}"`);
+    }
+
+    return { 
+      data: {
+        id: electivoGuardado.id,
+        nombre: electivoGuardado.nombre,
+        descripcion: electivoGuardado.descripcion,
+        creditos: electivoGuardado.creditos,
+        cupos: electivoGuardado.cupos,
+        estado: electivoGuardado.estado,
+        nombre_profesor: electivoGuardado.nombre_profesor,
+        distribucion_cupos: cuposCreados
+      }
+    };
 
   } catch (error) {
     console.error("Error en createElectivoService:", error);
@@ -28,41 +107,198 @@ export async function createElectivoService(data) {
   }
 }
 
-export async function getElectivosService() {
+export async function getElectivosService(estado) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
+    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     
-    const electivos = await electivoRepository.find();
+    const filtro = estado ? { estado: estado } : {};
 
-    return { data: electivos };
+    const electivos = await electivoRepository.find({
+      where: filtro
+    });
+
+    // Para cada electivo, obtener su distribución de cupos
+    const electivosConCupos = await Promise.all(electivos.map(async (e) => {
+      const cuposPorCarrera = await cupoPorCarreraRepository.find({
+        where: { electivo: { id: e.id } },
+        relations: ['carrera']
+      });
+
+      const distribucion_cupos = cuposPorCarrera.map(c => ({
+        carrera_id: c.carrera.id,
+        carrera_nombre: c.carrera.nombre,
+        cantidad: c.cantidad_reservada
+      }));
+
+      return {
+        id: e.id,
+        nombre: e.nombre,
+        descripcion: e.descripcion,
+        creditos: e.creditos,
+        cupos: e.cupos,
+        estado: e.estado,
+        nombre_profesor: e.nombre_profesor,
+        distribucion_cupos: distribucion_cupos
+      };
+    }));
+
+    return { data: electivosConCupos };
   } catch (error) {
     console.error("Error al obtener electivos:", error);
     return { error: "Error interno al listar los electivos." };
   }
 }
 
-export async function updateElectivoService(id, data) {
+export async function getElectivosByProfesorService(nombreProfesor) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
 
-    // 1. Buscar si el electivo existe
+    const electivos = await electivoRepository.find({
+      where: { nombre_profesor: nombreProfesor }
+    });
+
+    const electivosLimpios = electivos.map(e => ({
+      id: e.id,
+      nombre: e.nombre,
+      descripcion: e.descripcion,
+      creditos: e.creditos,
+      cupos: e.cupos,
+      estado: e.estado,
+      nombre_profesor: e.nombre_profesor
+    }));
+
+    return { data: electivosLimpios };
+  } catch (error) {
+    console.error("Error al obtener electivos del profesor:", error);
+    return { error: "Error interno al listar los electivos del profesor." };
+  }
+}
+
+export async function updateElectivoService(id, data) {
+  try {
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+    const carreraRepository = AppDataSource.getRepository(Carrera);
+    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
+
     const electivo = await electivoRepository.findOneBy({ id: id });
 
     if (!electivo) {
       return { error: "Electivo no encontrado" };
     }
 
-    // 2. Actualizar los campos que vengan en 'data'
-    // Esto mezcla los datos antiguos con los nuevos
-    electivoRepository.merge(electivo, data);
+    const estadoAnterior = electivo.estado;
 
-    // 3. Guardar cambios
+    if (data.distribucion_cupos && Array.isArray(data.distribucion_cupos)) {
+      
+      const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+      
+      if (data.cupos && sumaDistribucion !== data.cupos) {
+        return { error: `La suma de la distribución (${sumaDistribucion}) no coincide con los cupos totales (${data.cupos}).` };
+      }
+      
+      if (!data.cupos) {
+        data.cupos = sumaDistribucion;
+      }
+      
+      for (const item of data.distribucion_cupos) {
+        if (!item.carrera_id || item.cantidad < 0) {
+          return { error: "Cada carrera debe tener un ID válido y cantidad mayor o igual a 0." };
+        }
+        
+        const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });
+        if (!carreraExiste) {
+          return { error: `La carrera con ID ${item.carrera_id} no existe.` };
+        }
+      }
+      
+      await cupoPorCarreraRepository.delete({ electivo: { id: electivo.id } });
+
+      for (const item of data.distribucion_cupos) {
+        const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
+        
+        const nuevoCupo = cupoPorCarreraRepository.create({
+          electivo: electivo,
+          carrera: carrera,
+          cantidad_reservada: item.cantidad
+        });
+        
+        await cupoPorCarreraRepository.save(nuevoCupo);
+        console.log(`[ACTUALIZACIÓN] ${item.cantidad} cupos asignados a ${carrera.nombre}`);
+      }
+    }
+
+    electivoRepository.merge(electivo, data);
     const electivoActualizado = await electivoRepository.save(electivo);
 
-    return { data: electivoActualizado };
+    if (estadoAnterior !== "APROBADO" && electivoActualizado.estado === "APROBADO") {
+      console.log(`[APROBACIÓN] Verificando cupos para el electivo "${electivoActualizado.nombre}"...`);
+      
+      const cuposExistentes = await cupoPorCarreraRepository.find({
+        where: { electivo: { id: electivoActualizado.id } }
+      });
+      
+      if (cuposExistentes.length === 0) {
+        return { error: "No se puede aprobar el electivo porque no tiene cupos asignados por carrera." };
+      }
+      
+      console.log(`[ÉXITO] Electivo aprobado con distribución de cupos existente.`);
+    }
+
+    return { 
+      data: {
+        id: electivoActualizado.id,
+        nombre: electivoActualizado.nombre,
+        descripcion: electivoActualizado.descripcion,
+        creditos: electivoActualizado.creditos,
+        cupos: electivoActualizado.cupos,
+        estado: electivoActualizado.estado,
+        nombre_profesor: electivoActualizado.nombre_profesor
+      } 
+    };
 
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
     return { error: "Error interno al actualizar el electivo." };
+  }
+}
+
+
+export async function getElectivosAprobadosService() {
+  try {
+    const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
+    const electivoRepository = AppDataSource.getRepository(Electivo);
+
+    //verificar si hay un periodo activo de inscripcion
+    const periodoActivo = await periodoRepository.findOne({
+      where: { estado: "INSCRIPCION" }
+    });
+
+    //si no hay periodo activo o el periodo = CERRADO, no permitir ver electivos
+    if (!periodoActivo) {
+      return { 
+        error: "No hay un periodo de inscripción activo. No se pueden ver los electivos en este momento." 
+      };
+    }
+
+    //obtener solo los electivos que están en estado APROBADO
+    const electivosAprobados = await electivoRepository.find({
+      where: { estado: "APROBADO" },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+        creditos: true,
+        cupos: true,
+        estado: true,
+        nombre_profesor: true
+      }
+    });
+
+    return { data: electivosAprobados };
+
+  } catch (error) {
+    console.error("Error al obtener electivos aprobados:", error);
+    return { error: "Error interno al obtener electivos aprobados." };
   }
 }
