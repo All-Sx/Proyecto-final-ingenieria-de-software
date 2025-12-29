@@ -29,6 +29,27 @@ export default function Dashboard() {
   const user = storedUser;
   const [vistaActual, setVistaActual] = useState("inicio");
 
+  // Manejar el botón "atrás" del navegador
+  useEffect(() => {
+    const handlePopState = (event) => {
+      // Si no estamos en inicio, volver a inicio en lugar de salir
+      if (vistaActual !== "inicio") {
+        event.preventDefault();
+        setVistaActual("inicio");
+        window.history.pushState(null, "", window.location.pathname);
+      }
+    };
+
+    // Agregar una entrada al historial cuando se monta el componente
+    window.history.pushState(null, "", window.location.pathname);
+    
+    window.addEventListener("popstate", handlePopState);
+    
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [vistaActual]);
+
   const [datosEdicion, setDatosEdicion] = useState({
     nombre: user.nombre,
     correo: user.correo,
