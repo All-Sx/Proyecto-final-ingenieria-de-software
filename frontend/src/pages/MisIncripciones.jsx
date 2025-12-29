@@ -64,17 +64,6 @@ export default function MisSolicitudes({ user, darkMode }) {
         }
     }
 
-    if (isAlumno(user.rol) && (!periodo || periodo.estado === "CERRADO")) {
-        return (
-            <div className="p-6">
-                <h2 className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}>
-                    Catálogo de Electivos
-                </h2>
-                <PeriodoCerrado darkMode={darkMode} />
-            </div>
-        );
-    }
-
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">

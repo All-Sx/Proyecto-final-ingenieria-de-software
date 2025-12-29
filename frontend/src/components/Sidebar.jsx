@@ -1,7 +1,7 @@
 import React from "react";
 import { User, FileText, BookOpen, GraduationCap, Bookmark, Settings, LogOut, Users } from "lucide-react";
 import { isAlumno, isProfesor, isJefe } from "../helpers/roles";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 
 export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, handleLogout }) {
     const getHoverUsuario = (rol, darkMode) => {
@@ -128,8 +128,8 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                             <button onClick={() => setVistaActual("profesores")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <User size={16} /> Profesores
                             </button>
-                            <button onClick={() => setVistaActual("carreras")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
-                                <GraduationCap size={16} /> Carreras
+                            <button onClick={() => setVistaActual("solicitudes")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                                <FileText size={16} /> Solicitudes
                             </button>
                         </div>
                     )}
