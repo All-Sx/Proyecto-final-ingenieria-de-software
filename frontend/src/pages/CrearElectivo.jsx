@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useModal } from "../context/ModalContext";
 import { BookOpen, Users, GraduationCap } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import ModoOscuro from "../components/ModoOscuro";
@@ -8,6 +9,7 @@ import { getCarreras } from "../services/carreras.service";
 
 export default function CrearElectivo() {
   const { darkMode } = useTheme();
+  const { showModal } = useModal();
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -44,11 +46,17 @@ export default function CrearElectivo() {
 
   const toggleCarrera = (id) => {
     setCarreras((prevCarreras) => {
-      const nuevasCarreras = prevCarreras.map(c =>
-        c.id === id
-          ? { ...c, seleccionada: !c.seleccionada }
-          : c
-      );
+      const nuevasCarreras = prevCarreras.map(c => {
+        if (c.id !== id) return c;
+
+        const nuevaSeleccion = !c.seleccionada;
+
+        return {
+          ...c,
+          seleccionada: nuevaSeleccion,
+          cupos: nuevaSeleccion ? c.cupos : ""
+        };
+      });
 
       const seleccionadas = nuevasCarreras.filter(c => c.seleccionada);
 
@@ -64,6 +72,7 @@ export default function CrearElectivo() {
     });
   };
 
+
   const handleCuposCarrera = (id, value) => {
     setCarreras(carreras.map(c => c.id === id ? { ...c, cupos: value } : c));
   };
@@ -78,7 +87,7 @@ export default function CrearElectivo() {
     setSuccess("");
 
     if (!formData.nombre || !formData.descripcion || !formData.cuposTotales || !formData.creditos) {
-      setError("Por favor completa todos los campos obligatorios.");
+      showModal("error","Por favor completa todos los campos obligatorios.");
       return;
     }
 
@@ -94,12 +103,12 @@ export default function CrearElectivo() {
     );
 
     if (carrerasSeleccionadas.length > 1 && carrerasConCuposInvalidos) {
-      setError("Si seleccionas más de una carrera, todas deben tener cupos asignados.");
+      showModal("error","Si seleccionas más de una carrera, todas deben tener cupos asignados.");
       return;
     }
 
     if (carrerasSeleccionadas.length === 0) {
-      setError("Debes seleccionar al menos una carrera.");
+      showModal("error","Debes seleccionar al menos una carrera.");
       return;
     }
 
@@ -109,7 +118,7 @@ export default function CrearElectivo() {
     );
 
     if (sumaCupos !== Number(formData.cuposTotales)) {
-      setError(
+      showModal("error",
         `La suma de los cupos por carrera (${sumaCupos}) debe coincidir con los cupos totales (${formData.cuposTotales}).`
       );
       return;
@@ -124,7 +133,7 @@ export default function CrearElectivo() {
         distribucion_cupos: carrerasSeleccionadas
       });
 
-      setSuccess("Electivo registrado correctamente.");
+      showModal("success","Electivo registrado correctamente.");
 
       setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
 
@@ -145,10 +154,10 @@ export default function CrearElectivo() {
 
 
   return (
-    <div className={`min-h-screen py-10 transition-colors duration-500 ${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
+    <div className={`py-10 transition-colors duration-500 ${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
       <div className={`max-w-3xl mx-auto p-8 rounded-2xl shadow-lg transition-colors ${darkMode ? "bg-gray-800" : "bg-white"}`}>
         <h2 className={`text-2xl font-semibold mb-6 text-center flex items-center justify-center gap-2 ${darkMode ? "text-gray-100" : "text-gray-800"}`}>
-          <BookOpen className="text-blue-500" /> Registro de Electivos
+          <BookOpen className="text-green-500" /> Registro de Electivos
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -257,7 +266,7 @@ export default function CrearElectivo() {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           {success && <p className="text-green-500 text-sm text-center">{success}</p>}
 
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors">
+          <button type="submit" className="w-full bg-green-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors">
             Registrar Electivo
           </button>
         </form>
