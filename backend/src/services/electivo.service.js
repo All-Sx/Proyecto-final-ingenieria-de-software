@@ -36,22 +36,16 @@ export async function createElectivoService(data, nombreProfesor) {
         return { error: "Ya existe un electivo con ese nombre." };
     }
     
-    // El frontend DEBE enviar distribucion_cupos con los cupos por carrera
-    // Ejemplo: [{ carrera_id: 1, cantidad: 50 }, { carrera_id: 2, cantidad: 10 }]
     if (!data.distribucion_cupos || !Array.isArray(data.distribucion_cupos) || data.distribucion_cupos.length === 0) {
       return { error: "Debe especificar la distribución de cupos por carrera." };
     }
 
-    // Sumar todos los cupos de la distribución (50 + 10 = 60)
     const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
 
-    // Verificar que la suma sea igual al total de cupos
-    // Si el total es 60, la suma debe ser 60 (50+10 o 30+30 o lo que sea)
     if (sumaDistribucion !== data.cupos) {
       return { error: `La suma de la distribución (${sumaDistribucion}) no coincide con los cupos totales (${data.cupos}).` };
     }
 
-    // Verificar que cada carrera exista en la BD y tenga cantidad válida
     for (const item of data.distribucion_cupos) {
       if (!item.carrera_id || item.cantidad <= 0) {
         return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
@@ -74,18 +68,14 @@ export async function createElectivoService(data, nombreProfesor) {
 
     const electivoGuardado = await electivoRepository.save(nuevoElectivo);
 
-  
-    // guardamos los cupos en la tabla CupoPorCarrera
-    // Se hace al crear el electivo (manual según lo que envió el profesor)
     const cuposCreados = [];
     for (const item of data.distribucion_cupos) {
       const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
       
-      // Crear registro en la tabla cupos_por_carrera
       const nuevoCupo = cupoPorCarreraRepository.create({
         electivo: electivoGuardado,
         carrera: carrera,
-        cantidad_reservada: item.cantidad // La cantidad que definió el profesor
+        cantidad_reservada: item.cantidad 
       });
       
       const cupoGuardado = await cupoPorCarreraRepository.save(nuevoCupo);
@@ -199,7 +189,6 @@ export async function updateElectivoService(id, data) {
 
     const estadoAnterior = electivo.estado;
 
-  
     if (data.distribucion_cupos && Array.isArray(data.distribucion_cupos)) {
       
       const sumaDistribucion = data.distribucion_cupos.reduce((sum, item) => sum + (item.cantidad || 0), 0);
@@ -224,7 +213,7 @@ export async function updateElectivoService(id, data) {
       }
       
       await cupoPorCarreraRepository.delete({ electivo: { id: electivo.id } });
-      
+
       for (const item of data.distribucion_cupos) {
         const carrera = await carreraRepository.findOneBy({ id: item.carrera_id });
         
@@ -280,16 +269,19 @@ export async function getElectivosAprobadosService() {
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
     const electivoRepository = AppDataSource.getRepository(Electivo);
 
+    //verificar si hay un periodo activo de inscripcion
     const periodoActivo = await periodoRepository.findOne({
       where: { estado: "INSCRIPCION" }
     });
 
+    //si no hay periodo activo o el periodo = CERRADO, no permitir ver electivos
     if (!periodoActivo) {
       return { 
         error: "No hay un periodo de inscripción activo. No se pueden ver los electivos en este momento." 
       };
     }
 
+    //obtener solo los electivos que están en estado APROBADO
     const electivosAprobados = await electivoRepository.find({
       where: { estado: "APROBADO" },
       select: {

@@ -27,21 +27,21 @@ export const validarRut = (rut) => {
     return "Debes ingresar tu RUT.";
   }
 
-  // Formato general con puntos y guión
+  //formato con puntos y guion
   const formatoGeneral = /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/;
   if (!formatoGeneral.test(rut)) {
 
-    // Contiene letras o símbolos indebidos
+    //contiene letras o simbolos = invalido
     if (!/^[0-9.kK-]+$/.test(rut.replace(/\./g, ""))) {
       return "El RUT solo puede contener números, puntos, guión y la letra K.";
     }
 
-    // Falta el guión
+    //falta el guion
     if (!rut.includes("-")) {
       return "El RUT debe incluir un guión antes del dígito verificador.";
     }
 
-    // Dígito verificador inválido
+    //digito verificador invalido
     const dv = rut.split("-")[1];
     if (!/^[0-9kK]$/.test(dv)) {
       return "El dígito verificador debe ser un número o la letra K.";
@@ -50,7 +50,7 @@ export const validarRut = (rut) => {
     return "El RUT debe tener el formato XX.XXX.XXX-X.";
   }
 
-  return null; // válido
+  return null; 
 };
 
 export const validarPassword = (password) => {
