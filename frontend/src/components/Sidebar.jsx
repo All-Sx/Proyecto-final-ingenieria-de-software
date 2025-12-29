@@ -61,6 +61,13 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                 {/* Navegación principal */}
                 <nav className="space-y-2">
+                    {/* Botón de inicio/volver siempre visible para Jefe de Carrera */}
+                    {isJefe(user.rol) && (
+                        <button onClick={() => setVistaActual("inicio")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${vistaActual === "inicio" ? "bg-purple-600 text-white" : hoverUsuario}`}>
+                            <FileText size={18} /> Inicio
+                        </button>
+                    )}
+                    
                     <button onClick={() => setVistaActual("perfil")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                         <User size={18} /> Perfil
                     </button>
