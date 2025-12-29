@@ -78,7 +78,7 @@ Proyecto final de Ingeniería de Software. Aplicación web full-stack para inscr
 Un agradecimiento a los miembros del equipo.
 
 * **Manuel Cofré Yepes** - *Desarrollo Backend & Frontend* - [@manolococo](https://github.com/manolococo)
-* **Alan Fica Contreras** - *DDesarrollo Backend & Frontend* - [@All-Sx](https://github.com/All-Sx)
+* **Alan Fica Contreras** - *Desarrollo Backend & Frontend* - [@All-Sx](https://github.com/All-Sx)
 * **Gabriel Jerez Salas** - *Desarrollo Backend & Frontend* - [@Gabo288](https://github.com/Gabo288)
 * **David Parraguez Miranda** - *Desarrollo Backend & Frontend* - [@davidparraguez1809](https://github.com/davidparraguez1809)
 * **Pablo Saavedra Araneda** - *Desarrollo Backend & Frontend* - [@Pablo-Saave](https://github.com/Pablo-Saave)
