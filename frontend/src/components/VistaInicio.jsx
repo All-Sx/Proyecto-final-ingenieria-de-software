@@ -7,7 +7,6 @@ export default function VistaInicio({ user, darkMode, setVistaActual }) {
   // Tarjetas administrativas solo para Jefe de Carrera (no se cargan de la API)
   const tarjetasAdmin = [
     { id: "admin-001", nombre: "Gestión de Electivos", descripcion: "Panel administrativo", progreso: 0.8, estado: "Revisar", pendiente: false },
-    { id: "admin-002", nombre: "Estadísticas y Reportes", descripcion: "Análisis de inscripciones", progreso: 1.0, estado: "Completado", pendiente: false },
     { id: "admin-003", nombre: "Planificación Académica", descripcion: "Planificación de electivos", progreso: 0.3, estado: "En progreso", pendiente: true },
   ];
 
@@ -26,7 +25,7 @@ export default function VistaInicio({ user, darkMode, setVistaActual }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           {/* Solo mostramos tarjetas si es Jefe de Carrera */}
           {isJefe(user.rol) && tarjetasAdmin.map((e) => (
@@ -38,27 +37,23 @@ export default function VistaInicio({ user, darkMode, setVistaActual }) {
               <h3 className={`text-lg font-semibold mb-2 ${darkMode ? "text-purple-400" : "text-purple-600"}`}>
                 {e.nombre}
               </h3>
-              <p className={`text-sm mb-3 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+              <p className={`text-sm mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                 {e.descripcion}
               </p>
-              <p className="text-sm mb-1">
-                Estado: <span className={`font-semibold ${e.estado === "Completado" ? "text-green-500" : e.estado === "Revisar" ? "text-yellow-500" : "text-blue-500"}`}>
-                  {e.estado}
-                </span>
-              </p>
-              <div className={`w-full rounded-full h-2 mb-3 ${darkMode ? "bg-gray-700" : "bg-gray-200"}`}>
-                <div className="bg-purple-600 h-2 rounded-full" style={{ width: `${e.progreso ? e.progreso * 100 : 0}%` }} />
-              </div>
               <button 
                 onClick={() => {
                   // Si es la tarjeta de Gestión de Electivos, cambiar la vista
                   if (e.id === "admin-001") {
                     setVistaActual("gestionElectivos");
                   }
+                  // Si es la tarjeta de Planificación Académica, ir a inscripciones
+                  if (e.id === "admin-003") {
+                    setVistaActual("inscripciones");
+                  }
                 }}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl font-medium transition"
               >
-                {e.id === "admin-001" ? "Abrir panel" : e.pendiente ? "Revisar" : "Ver detalles"}
+                Abrir panel
               </button>
             </motion.div>
           ))}
