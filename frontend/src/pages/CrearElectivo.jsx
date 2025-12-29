@@ -43,7 +43,25 @@ export default function CrearElectivo() {
   }, [])
 
   const toggleCarrera = (id) => {
-    setCarreras(carreras.map(c => c.id === id ? { ...c, seleccionada: !c.seleccionada } : c));
+    setCarreras((prevCarreras) => {
+      const nuevasCarreras = prevCarreras.map(c =>
+        c.id === id
+          ? { ...c, seleccionada: !c.seleccionada }
+          : c
+      );
+
+      const seleccionadas = nuevasCarreras.filter(c => c.seleccionada);
+
+      if (seleccionadas.length === 1) {
+        return nuevasCarreras.map(c =>
+          c.seleccionada
+            ? { ...c, cupos: formData.cuposTotales }
+            : c
+        );
+      }
+
+      return nuevasCarreras;
+    });
   };
 
   const handleCuposCarrera = (id, value) => {
@@ -63,13 +81,22 @@ export default function CrearElectivo() {
       setError("Por favor completa todos los campos obligatorios.");
       return;
     }
-    
+
     const carrerasSeleccionadas = carreras
       .filter(c => c.seleccionada)
       .map(c => ({
         carrera_id: c.id,
         cantidad: Number(c.cupos)
       }));
+
+    const carrerasConCuposInvalidos = carrerasSeleccionadas.some(
+      c => !c.cantidad || c.cantidad <= 0
+    );
+
+    if (carrerasSeleccionadas.length > 1 && carrerasConCuposInvalidos) {
+      setError("Si seleccionas más de una carrera, todas deben tener cupos asignados.");
+      return;
+    }
 
     if (carrerasSeleccionadas.length === 0) {
       setError("Debes seleccionar al menos una carrera.");
