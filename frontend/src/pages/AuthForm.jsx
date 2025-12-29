@@ -282,22 +282,6 @@ export default function AuthForm() {
             </button>
           </p>
         </form>
-
-        {/* Botones temporales para acceso sin registro */}
-        <div className="mt-6 border-t dark:border-gray-600 pt-4 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Modo demostración:</p>
-
-          <div className="flex flex-col gap-3">
-            {/* Botón para login demo como PROFESOR */}
-            <button
-              type="button"
-              onClick={() => handleDemoLogin("profesor")}
-              className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white py-2 rounded-xl font-medium transition-colors"
-            >
-              Entrar como Profesor (Demo)
-            </button>
-          </div>
-        </div>
       </motion.div>
       
       <ModoOscuro />

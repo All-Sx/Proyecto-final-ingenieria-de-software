@@ -64,17 +64,6 @@ export default function MisSolicitudes({ user, darkMode }) {
         }
     }
 
-    if (isAlumno(user.rol) && (!periodo || periodo.estado === "CERRADO")) {
-        return (
-            <div className="p-6">
-                <h2 className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}>
-                    Catálogo de Electivos
-                </h2>
-                <PeriodoCerrado darkMode={darkMode} />
-            </div>
-        );
-    }
-
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
@@ -115,6 +104,7 @@ export default function MisSolicitudes({ user, darkMode }) {
                             estado={solicitud.estado}
                             onClick={() => setElectroSeleccionado(solicitud)} // Al hacer click abrimos el modal detalle
                             onEliminar={() => handleEliminacion(solicitud.id)}
+                            periodoActivo={periodo && periodo.estado === "INSCRIPCION"}
                         />
                     ))}
                 </div>
@@ -175,17 +165,19 @@ export default function MisSolicitudes({ user, darkMode }) {
 
                             <button
                                 onClick={() => setElectroSeleccionado(null)}
-                                className="flex-1 bg-gray-300 dark:bg-gray-700 text-black dark:text-white py-3 rounded-xl font-medium"
+                                className={`${periodo && periodo.estado === "INSCRIPCION" ? "flex-1" : "w-full"} bg-gray-300 dark:bg-gray-700 text-black dark:text-white py-3 rounded-xl font-medium`}
                             >
                                 Cerrar
                             </button>
-                            <button
-                                onClick={() => handleEliminacion(electroSeleccionado.id)}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
-                            >
-                                <XCircle size={20} />
-                                Eliminar inscripcion
-                            </button>
+                            {periodo && periodo.estado === "INSCRIPCION" && (
+                                <button
+                                    onClick={() => handleEliminacion(electroSeleccionado.id)}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
+                                >
+                                    <XCircle size={20} />
+                                    Eliminar inscripcion
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 </div>

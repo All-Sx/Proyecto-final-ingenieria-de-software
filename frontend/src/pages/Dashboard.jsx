@@ -19,6 +19,7 @@ import VistaMisInscripciones from "./MisIncripciones";
 
 import GestionProfesores from "./GestionProfesores";
 import MisElectivos from "./MisElectivos";
+import GestionSolicitudes from "./GestionSolicitudes";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -128,6 +129,7 @@ export default function Dashboard() {
         {vistaActual === "misInscripciones" && <VistaMisInscripciones user={user} darkMode={darkMode} />}
         {vistaActual === "gestionAlumnos" && <GestionAlumnos user={user} darkMode={darkMode} />}
         {vistaActual === "profesores" && <GestionProfesores user={user} darkMode={darkMode} />}
+        {vistaActual === "solicitudes" && <GestionSolicitudes user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "gestionElectivos" && <GestionElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (

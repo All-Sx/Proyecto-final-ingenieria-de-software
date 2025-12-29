@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { isAlumno } from "../helpers/roles";
 import { XCircle } from "lucide-react";
 
-export default function CardInscripcion({ electivo, estado, darkMode, onClick, rolUsuario, onEliminar }) {
+export default function CardInscripcion({ electivo, estado, darkMode, onClick, rolUsuario, onEliminar, periodoActivo = true }) {
 
     return (
         <motion.div
@@ -59,17 +59,19 @@ export default function CardInscripcion({ electivo, estado, darkMode, onClick, r
 
                 <button
                     onClick={onClick}
-                    className="flex-1 bg-blue-600 dark:bg-blue-700 text-white dark:text-white py-3 rounded-xl font-medium"
+                    className={`${periodoActivo ? "flex-1" : "w-full"} bg-blue-600 dark:bg-blue-700 text-white dark:text-white py-3 rounded-xl font-medium`}
                 >
                     Ver detalles
                 </button>
-                <button
-                    onClick={onEliminar}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
-                >
-                    <XCircle size={20} />
-                    Eliminar inscripcion
-                </button>
+                {periodoActivo && (
+                    <button
+                        onClick={onEliminar}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-medium transition flex items-center justify-center gap-2"
+                    >
+                        <XCircle size={20} />
+                        Eliminar inscripcion
+                    </button>
+                )}
             </div>
         </motion.div>
     );
