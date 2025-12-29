@@ -36,7 +36,6 @@ export async function createUserWithRoleService(data) {
 
     const userSaved = await userRepository.save(newUser);
 
-    // Limpiar respuesta eliminando campos de auditoría
     const respuestaLimpia = {
       id: userSaved.id,
       rut: userSaved.rut,
@@ -122,7 +121,6 @@ export async function getUserByIdService(id) {
       return { error: "Usuario no encontrado" };
     }
 
-    // Crear respuesta limpia base
     const usuarioLimpio = {
       id: usuario.id,
       rut: usuario.rut,
@@ -156,7 +154,6 @@ export async function getUserByIdService(id) {
       }
     }
 
-    // 3. Si es Jefe de Carrera o Profesor, devolvemos solo el usuario
     return { data: usuarioLimpio };
 
   } catch (error) {

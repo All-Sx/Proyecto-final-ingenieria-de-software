@@ -1,5 +1,9 @@
 import api from "../config/axios";
 
+export const createElectivo = (electivoData) => {
+  return api.post("/electivos", electivoData);
+};
+
 export const getElectivos = async () => {
   try {
     const response = await api.get("/electivos");
@@ -16,16 +20,6 @@ export const updateElectivo = async (id, data) => {
     return response.data.data || response.data;
   } catch (error) {
     console.error("Error al actualizar electivo:", error);
-    throw error;
-  }
-};
-
-export const getCarreras = async () => {
-  try {
-    const response = await api.get("/carreras");
-    return response.data.data || response.data;
-  } catch (error) {
-    console.error("Error al obtener carreras:", error);
     throw error;
   }
 };
