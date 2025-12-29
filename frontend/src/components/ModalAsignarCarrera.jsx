@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCarreras } from "../services/carreras.service";
 import { asignarCarrera } from "../services/usuarios.service";
+import { useModal } from "../context/ModalContext";
+
 
 export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSuccess }) {
   const [carreras, setCarreras] = useState([]);
   const [carreraSeleccionada, setCarreraSeleccionada] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const { showModal } = useModal();
 
   useEffect(() => {
     cargarCarreras();
@@ -20,13 +22,18 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
       setError(null);
       const data = await getCarreras();
       setCarreras(data);
-      
+
       if (alumno.alumno?.carrera) {
         setCarreraSeleccionada(alumno.alumno.carrera.codigo);
       }
     } catch (err) {
       console.error("Error al cargar carreras:", err);
-      setError("Error al cargar las carreras disponibles");
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al cargar carreras.";
+
+      showModal("error", backendMessage);
     } finally {
       setLoading(false);
     }
@@ -34,26 +41,30 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!carreraSeleccionada) {
-      setError("Debes seleccionar una carrera");
+      showModal("error", "Debes seleccionar una carrera");
       return;
     }
 
     try {
       setSubmitting(true);
       setError(null);
-      
+
       const resultado = await asignarCarrera(alumno.id, carreraSeleccionada);
-      
+
       if (onSuccess) {
         onSuccess(resultado);
       }
-      
+
       onClose();
     } catch (err) {
-      const mensajeError = err.response?.data?.message || "Error al asignar carrera";
-      setError(mensajeError);
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al asignar carrera.";
+
+      showModal("error", backendMessage);
     } finally {
       setSubmitting(false);
     }
@@ -66,9 +77,8 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${
-            darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
-          }`}
+          className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+            }`}
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Asignar Carrera</h2>
@@ -105,15 +115,14 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
                 <label className="block font-semibold mb-2">
                   Selecciona una carrera
                 </label>
-                
+
                 <select
                   value={carreraSeleccionada}
                   onChange={(e) => setCarreraSeleccionada(e.target.value)}
-                  className={`w-full p-3 rounded-lg border ${
-                    darkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300 text-gray-900"
-                  }`}
+                  className={`w-full p-3 rounded-lg border ${darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "bg-white border-gray-300 text-gray-900"
+                    }`}
                   required
                 >
                   <option value="">-- Selecciona una carrera --</option>
@@ -125,16 +134,10 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
                 </select>
               </div>
 
-              {error && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                  {error}
-                </div>
-              )}
-
               <div className={`mb-4 p-3 rounded-lg ${darkMode ? "bg-blue-900/30 border border-blue-700" : "bg-blue-50 border border-blue-300"}`}>
                 <p className={`text-sm ${darkMode ? "text-blue-300" : "text-blue-800"}`}>
-                   {alumno.alumno?.carrera ? 
-                    "Cambiar la carrera actualizará la información del alumno." : 
+                  {alumno.alumno?.carrera ?
+                    "Cambiar la carrera actualizará la información del alumno." :
                     "Esta será la primera asignación de carrera para este alumno."}
                 </p>
               </div>
@@ -143,11 +146,10 @@ export default function ModalAsignarCarrera({ alumno, darkMode, onClose, onSucce
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 py-3 rounded-lg font-medium transition ${
-                    darkMode
-                      ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                  }`}
+                  className={`flex-1 py-3 rounded-lg font-medium transition ${darkMode
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                    }`}
                   disabled={submitting}
                 >
                   Cancelar

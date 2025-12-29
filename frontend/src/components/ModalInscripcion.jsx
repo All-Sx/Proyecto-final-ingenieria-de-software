@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { crearSolicitudInscripcion, getMisSolicitudes } from "../services/inscripcion.service";
 import { getElectivos } from "../services/electivo.service";
+import { useModal } from "../context/ModalContext";
 
 export default function ModalInscripcion({ electivo, darkMode, onClose, onSuccess }) {
+  const { showModal } = useModal();
   const [prioridad, setPrioridad] = useState(1);
   const [prioridadesUsadas, setPrioridadesUsadas] = useState([]);
   const [maxPrioridad, setMaxPrioridad] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     cargarDatos();
@@ -21,7 +22,7 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
       setError(null);
 
       const solicitudes = await getMisSolicitudes();
-      
+
       const prioridadesEnUso = solicitudes.map(s => s.prioridad);
       setPrioridadesUsadas(prioridadesEnUso);
 
@@ -36,8 +37,11 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
       setPrioridad(prioridadInicial);
 
     } catch (err) {
-      console.error("Error al cargar datos:", err);
-      setError("Error al cargar información de prioridades");
+      console.error(err);
+      showModal(
+        "error",
+        "Error al cargar información de prioridades."
+      );
     } finally {
       setLoading(false);
     }
@@ -45,31 +49,45 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (prioridadesUsadas.includes(prioridad)) {
-      setError(`Ya tienes un electivo inscrito con prioridad ${prioridad}. Elige otra prioridad.`);
+      showModal(
+        "error",
+        `Ya tienes un electivo inscrito con prioridad ${prioridad}.`
+      );
       return;
     }
 
     if (prioridad > maxPrioridad) {
-      setError(`La prioridad no puede ser mayor a ${maxPrioridad} (número de electivos disponibles).`);
+      showModal(
+        "error",
+        `La prioridad no puede ser mayor a ${maxPrioridad}.`
+      );
       return;
     }
 
     try {
       setSubmitting(true);
-      setError(null);
-      
+
       const resultado = await crearSolicitudInscripcion(electivo.id, prioridad);
-      
+
+      showModal(
+        "success",
+        resultado?.message || "Solicitud creada correctamente."
+      );
+
       if (onSuccess) {
         onSuccess(resultado);
       }
-      
+
       onClose();
     } catch (err) {
-      const mensajeError = err.response?.data?.message || "Error al crear solicitud de inscripción";
-      setError(mensajeError);
+      const mensajeError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al crear solicitud de inscripción.";
+
+      showModal("error", mensajeError);
     } finally {
       setSubmitting(false);
     }
@@ -94,9 +112,8 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${
-            darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
-          }`}
+          className={`w-full max-w-md rounded-2xl shadow-xl p-6 ${darkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-900"
+            }`}
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Inscribir Electivo</h2>
@@ -104,7 +121,7 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
               onClick={onClose}
               className={`text-2xl ${darkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-600 hover:text-gray-900"}`}
             >
-              
+
             </button>
           </div>
 
@@ -130,15 +147,14 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
                 <label className="block font-semibold mb-2">
                   Selecciona la prioridad
                 </label>
-                
+
                 <select
                   value={prioridad}
                   onChange={(e) => setPrioridad(parseInt(e.target.value))}
-                  className={`w-full p-3 rounded-lg border ${
-                    darkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300 text-gray-900"
-                  }`}
+                  className={`w-full p-3 rounded-lg border ${darkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "bg-white border-gray-300 text-gray-900"
+                    }`}
                   required
                 >
                   {getPrioridadesDisponibles().map((p) => (
@@ -165,11 +181,10 @@ export default function ModalInscripcion({ electivo, darkMode, onClose, onSucces
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 py-3 rounded-lg font-medium transition ${
-                    darkMode
-                      ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                  }`}
+                  className={`flex-1 py-3 rounded-lg font-medium transition ${darkMode
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-100"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                    }`}
                   disabled={submitting}
                 >
                   Cancelar

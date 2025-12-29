@@ -110,9 +110,10 @@ export async function getPeriodoById(req, res) {
 export async function getPeriodoActual(req, res) {
     try {
         const esJefe = req.user?.rol === "Jefe de Carrera";
+        const esProfe = req.user?.rol === "Profesor";
 
         const periodoActual = await getPeriodoActualService({
-            incluirPlanificacion: esJefe
+            incluirPlanificacion: esJefe || esProfe
         });
 
         if (!periodoActual) {

@@ -7,6 +7,7 @@ export default function VistaPerfil({ user, darkMode }) {
       <h2 className="text-2xl font-bold mb-4">Perfil del Usuario</h2>
       <p><strong>Nombre:</strong> {user.nombre}</p>
       <p><strong>Correo:</strong> {user.correo}</p>
+      
     </motion.div>
   );
 }

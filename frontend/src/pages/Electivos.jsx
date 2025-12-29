@@ -6,12 +6,14 @@ import { normalizarPeriodo } from "../helpers/fechas";
 import { isAlumno } from "../helpers/roles";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle } from "lucide-react";
+import { useModal } from "../context/ModalContext";
 
 import CardElectivo from "../components/CardElectivo";
 import ModalInscripcion from "../components/ModalInscripcion";
 import PeriodoCerrado from "../components/PeriodoCerrado";
 
 export default function Electivos({ user, darkMode }) {
+  const { showModal } = useModal();
   const [electivos, setElectivos] = useState([]);
   const [solicitudes, setSolicitudes] = useState([]);
   const [periodo, setPeriodo] = useState(null);
@@ -19,7 +21,6 @@ export default function Electivos({ user, darkMode }) {
   const [error, setError] = useState(null);
   const [electroSeleccionado, setElectroSeleccionado] = useState(null);
 
-  const [mensaje, setMensaje] = useState(null);
   const [modalInscripcion, setModalInscripcion] = useState(null);
 
   useEffect(() => {
@@ -36,7 +37,12 @@ export default function Electivos({ user, darkMode }) {
           const resPeriodo = await obtenerPeriodoActual();
           setPeriodo(normalizarPeriodo(resPeriodo.data.data));
         } catch (err) {
-          console.log("No hay periodo vigente o error:", err);
+          const backendMessage =
+            err.response?.data?.message ||
+            err.response?.data?.error ||
+            "No hay periodo vigente.";
+
+          showModal("error", backendMessage);
           setPeriodo(null);
         }
       }
@@ -51,13 +57,23 @@ export default function Electivos({ user, darkMode }) {
           const misSolicitudes = await getMisSolicitudes();
           setSolicitudes(misSolicitudes);
         } catch (err) {
-          console.log("No se pudieron cargar solicitudes:", err);
+          const backendMessage =
+            err.response?.data?.message ||
+            err.response?.data?.error ||
+            "No se pudieron cargar solicitudes.";
+
+          showModal("error", backendMessage);
           setSolicitudes([]);
         }
       }
     } catch (err) {
       console.error("Error general:", err);
-      setError("Hubo un problema al cargar el catálogo.");
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Hubo un problema al cargar el catálogo.";
+
+      showModal("error", backendMessage);
     } finally {
       setLoading(false);
     }
@@ -66,11 +82,16 @@ export default function Electivos({ user, darkMode }) {
   const handleCrearSolicitud = async (electivo) => {
     try {
       await createSolicitud({ electivo_id: electivo.id });
-      setMensaje({ tipo: "success", texto: "Solicitud creada correctamente" });
+      showModal("success", "Solicitud creada correctamente");
       setElectroSeleccionado(null);
       await cargarDatos();
     } catch (error) {
-      setMensaje({ tipo: "error", texto: "Error al inscribir" });
+      const backendMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error al inscribir";
+
+      showModal("error", backendMessage);
     }
   };
 
@@ -79,13 +100,12 @@ export default function Electivos({ user, darkMode }) {
   };
 
   const handleInscripcionExitosa = async (resultado) => {
-    setMensaje({
-      tipo: "success",
-      texto: resultado.message || "Inscripción realizada exitosamente"
-    });
+    showModal(
+      "success",
+      resultado.message || "Inscripción realizada exitosamente"
+    );
     setModalInscripcion(null);
     await cargarDatos();
-    setTimeout(() => setMensaje(null), 5000);
   };
 
   const estaInscrito = (electivoId) => {
@@ -121,16 +141,6 @@ export default function Electivos({ user, darkMode }) {
           </div>
         )}
       </div>
-
-      {/* MENSAJES DE ALERTA */}
-      {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === "success"
-            ? "bg-green-100 border border-green-400 text-green-800"
-            : "bg-red-100 border border-red-400 text-red-800"
-          }`}>
-          {mensaje.texto}
-        </div>
-      )}
 
       {/* GRID DE TARJETAS */}
       {electivos.length === 0 ? (
