@@ -61,6 +61,20 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                 {/* Navegación principal */}
                 <nav className="space-y-2">
+                    {/* Botón de inicio/volver siempre visible para todos los roles */}
+                    <button 
+                        onClick={() => setVistaActual("inicio")} 
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${
+                            vistaActual === "inicio" 
+                                ? (isJefe(user.rol) ? "bg-purple-600 text-white" : 
+                                   isProfesor(user.rol) ? "bg-green-600 text-white" : 
+                                   "bg-blue-600 text-white")
+                                : hoverUsuario
+                        }`}
+                    >
+                        <FileText size={18} /> Inicio
+                    </button>
+                    
                     <button onClick={() => setVistaActual("perfil")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                         <User size={18} /> Perfil
                     </button>
@@ -71,14 +85,14 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                                 <Bookmark size={18} /> Electivos
                             </button>
                             <button onClick={() => setVistaActual("inscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
-                                <GraduationCap size={18} /> Inscripciones
+                                <GraduationCap size={18} /> Períodos
                             </button>
                         </>
                     )}
 
                     {isProfesor(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("inicio")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                            <button onClick={() => setVistaActual("misElectivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <FileText size={18} /> Mis Electivos
                             </button>
                             <button

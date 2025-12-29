@@ -61,22 +61,13 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
 
-    const cupoCarrera = await cupoPorCarreraRepository
-      .createQueryBuilder("cupo")
-      .leftJoinAndSelect("cupo.electivo", "electivo")
-      .leftJoinAndSelect("cupo.carrera", "carrera")
-      .where("cupo.electivo_id = :electivoId", { electivoId })
-      .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
-      .getOne();
-
-    console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
-
-    if (!cupoCarrera) {
-      const todosCupos = await cupoPorCarreraRepository
-        .createQueryBuilder("cupo")
-        .leftJoinAndSelect("cupo.carrera", "carrera")
-        .where("cupo.electivo_id = :electivoId", { electivoId })
-        .getMany();
+    const cupoCarrera = await cupoPorCarreraRepository.findOne({
+        where: {
+            electivo: { id: electivoId },
+            carrera: { id: carreraAlumno.id }
+        },
+        relations: ["electivo", "carrera"]
+    });
 
       console.log(`[DEBUG] Todos los cupos para este electivo:`, todosCupos.map(c => ({
         carrera_id: c.carrera?.id,

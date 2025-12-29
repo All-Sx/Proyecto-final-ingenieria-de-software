@@ -40,8 +40,8 @@ export default function ModalCrearPeriodo({ onClose, onCrear, darkMode, errorSer
             return setError("Debe completar todas las fechas");
         }
 
-        const fechaInicio = new Date(inicio.año, inicio.mes - 1, inicio.dia);
-        const fechaFin = new Date(fin.año, fin.mes - 1, fin.dia);
+        const fechaInicio = new Date(Date.UTC(inicio.año, inicio.mes - 1, inicio.dia, 12, 0, 0));
+        const fechaFin = new Date(Date.UTC(fin.año, fin.mes - 1, fin.dia, 12, 0, 0));
 
         if (fechaFin <= fechaInicio) {
             return setError("La fecha de término debe ser posterior a la de inicio");
