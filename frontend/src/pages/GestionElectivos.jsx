@@ -16,12 +16,12 @@ import {
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import ModoOscuro from "../components/ModoOscuro";
+import { getCarreras } from "../services/carreras.service";
 import { 
   getElectivos, 
   updateElectivo,
   aprobarElectivo as aprobarElectivoAPI, 
-  rechazarElectivo as rechazarElectivoAPI,
-  getCarreras 
+  rechazarElectivo as rechazarElectivoAPI
 } from "../services/electivo.service";
 
 // Panel de gestión de electivos para Jefe de Carrera
