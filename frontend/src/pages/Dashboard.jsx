@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { ModalProvider } from "../context/ModalContext";
+import ModalMensaje from "../components/ModalMensaje";
 import Sidebar from "../components/Sidebar";
 import VistaInicio from "../components/VistaInicio";
 import VistaElectivos from "./Electivos";
@@ -82,6 +84,7 @@ export default function Dashboard() {
   };
 
   return (
+    <ModalProvider>
     <div className={`${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"} min-h-screen flex`}>
       <Sidebar
         user={user}
@@ -121,6 +124,8 @@ export default function Dashboard() {
       </main>
 
       <ModoOscuro />
+      <ModalMensaje />
     </div>
+    </ModalProvider>
   );
 }
