@@ -1,13 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Users, GraduationCap } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import ModoOscuro from "../components/ModoOscuro";
-
-const carrerasDisponibles = [
-  { id: 1, nombre: "Ingeniería Civil Informática" },
-  { id: 2, nombre: "Ingeniería Ejecución en Computación e Informática" },
-];
+import { createElectivo } from "../services/electivo.service";
+import { getCarreras } from "../services/carreras.service";
 
 export default function CrearElectivo() {
   const { darkMode } = useTheme();
@@ -22,17 +19,49 @@ export default function CrearElectivo() {
   const [electivos, setElectivos] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [carreras, setCarreras] = useState([]);
 
-  const [carreras, setCarreras] = useState(
-    carrerasDisponibles.map((c) => ({
-      ...c,
-      seleccionada: false,
-      cupos: "",
-    }))
-  );
+  useEffect(() => {
+    const fetchCarreras = async () => {
+      try {
+        const data = await getCarreras();
+
+        const carrerasFormateadas = data.map((c) => ({
+          id: c.id,
+          nombre: c.nombre,
+          seleccionada: false,
+          cupos: "",
+        }));
+
+        setCarreras(carrerasFormateadas);
+      } catch (error) {
+        setError("Error al cargar las carreras.");
+      }
+    };
+
+    fetchCarreras();
+  }, [])
 
   const toggleCarrera = (id) => {
-    setCarreras(carreras.map(c => c.id === id ? { ...c, seleccionada: !c.seleccionada } : c));
+    setCarreras((prevCarreras) => {
+      const nuevasCarreras = prevCarreras.map(c =>
+        c.id === id
+          ? { ...c, seleccionada: !c.seleccionada }
+          : c
+      );
+
+      const seleccionadas = nuevasCarreras.filter(c => c.seleccionada);
+
+      if (seleccionadas.length === 1) {
+        return nuevasCarreras.map(c =>
+          c.seleccionada
+            ? { ...c, cupos: formData.cuposTotales }
+            : c
+        );
+      }
+
+      return nuevasCarreras;
+    });
   };
 
   const handleCuposCarrera = (id, value) => {
@@ -43,49 +72,71 @@ export default function CrearElectivo() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (!formData.nombre || !formData.descripcion || !formData.cuposTotales || !formData.creditos) {
       setError("Por favor completa todos los campos obligatorios.");
-      setSuccess("");
       return;
     }
 
     const carrerasSeleccionadas = carreras
       .filter(c => c.seleccionada)
-      .map(c => ({ id: c.id, nombre: c.nombre, cupos: Number(c.cupos) }));
+      .map(c => ({
+        carrera_id: c.id,
+        cantidad: Number(c.cupos)
+      }));
+
+    const carrerasConCuposInvalidos = carrerasSeleccionadas.some(
+      c => !c.cantidad || c.cantidad <= 0
+    );
+
+    if (carrerasSeleccionadas.length > 1 && carrerasConCuposInvalidos) {
+      setError("Si seleccionas más de una carrera, todas deben tener cupos asignados.");
+      return;
+    }
 
     if (carrerasSeleccionadas.length === 0) {
       setError("Debes seleccionar al menos una carrera.");
-      setSuccess("");
       return;
     }
 
     //suma cupos distribuidos en cada carrera
     const sumaCupos = carrerasSeleccionadas.reduce((acc, c) => acc + (c.cupos || 0), 0);
 
-    if (sumaCupos > Number(formData.cuposTotales)) {
-      setError(`La suma de los cupos por carrera (${sumaCupos}) supera los cupos totales (${formData.cuposTotales}).`);
-      setSuccess("");
+    if (sumaCupos !== Number(formData.cuposTotales)) {
+      setError(
+        `La suma de los cupos por carrera (${sumaCupos}) debe coincidir con los cupos totales (${formData.cuposTotales}).`
+      );
       return;
     }
 
-    const nuevoElectivo = {
-      ...formData,
-      id: Date.now(),
-      carreras: carrerasSeleccionadas,
-    };
+    try {
+      await createElectivo({
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        creditos: Number(formData.creditos),
+        cupos: Number(formData.cuposTotales),
+        distribucion_cupos: carrerasSeleccionadas
+      });
 
-    setElectivos([...electivos, nuevoElectivo]);
+      setSuccess("Electivo registrado correctamente.");
 
     //reiniciar formulario
     setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
     setCarreras(carrerasDisponibles.map(c => ({ ...c, seleccionada: false, cupos: "" })));
 
-    setError("");
-    setSuccess("Electivo registrado correctamente.");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error al registrar el electivo";
+      setError(msg);
+    }
   };
+
 
   return (
     <div className={`min-h-screen py-10 transition-colors duration-500 ${darkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"}`}>
@@ -141,8 +192,8 @@ export default function CrearElectivo() {
                     setFormData({ ...formData, cuposTotales: e.target.value })
                   }
                   className={`w-full border rounded-xl py-2 pl-10 pr-3 focus:ring-2 focus:ring-blue-500 ${darkMode
-                      ? "bg-gray-700 border-gray-600 text-gray-100"
-                      : "bg-white border-gray-300 text-gray-900"
+                    ? "bg-gray-700 border-gray-600 text-gray-100"
+                    : "bg-white border-gray-300 text-gray-900"
                     }`}
                   placeholder="Ej: 50"
                 />
@@ -187,10 +238,10 @@ export default function CrearElectivo() {
                     placeholder="Cupos"
                     disabled={!c.seleccionada}
                     className={`ml-auto w-20 border rounded-xl py-1 px-2 focus:ring-2 focus:ring-blue-500 ${darkMode
-                        ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900"}
+                      ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                      : "bg-white border-gray-300 text-gray-900"}
                       ${c.seleccionada} "cursor-not-allowed"`}
-                      
+
                   />
                 </div>
               ))}

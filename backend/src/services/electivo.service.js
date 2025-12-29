@@ -110,6 +110,7 @@ export async function createElectivoService(data, nombreProfesor) {
 export async function getElectivosService(estado) {
   try {
     const electivoRepository = AppDataSource.getRepository(Electivo);
+    const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     
     const filtro = estado ? { estado: estado } : {};
 
@@ -117,17 +118,32 @@ export async function getElectivosService(estado) {
       where: filtro
     });
 
-    const electivosLimpios = electivos.map(e => ({
-      id: e.id,
-      nombre: e.nombre,
-      descripcion: e.descripcion,
-      creditos: e.creditos,
-      cupos: e.cupos,
-      estado: e.estado,
-      nombre_profesor: e.nombre_profesor
+    // Para cada electivo, obtener su distribución de cupos
+    const electivosConCupos = await Promise.all(electivos.map(async (e) => {
+      const cuposPorCarrera = await cupoPorCarreraRepository.find({
+        where: { electivo: { id: e.id } },
+        relations: ['carrera']
+      });
+
+      const distribucion_cupos = cuposPorCarrera.map(c => ({
+        carrera_id: c.carrera.id,
+        carrera_nombre: c.carrera.nombre,
+        cantidad: c.cantidad_reservada
+      }));
+
+      return {
+        id: e.id,
+        nombre: e.nombre,
+        descripcion: e.descripcion,
+        creditos: e.creditos,
+        cupos: e.cupos,
+        estado: e.estado,
+        nombre_profesor: e.nombre_profesor,
+        distribucion_cupos: distribucion_cupos
+      };
     }));
 
-    return { data: electivosLimpios };
+    return { data: electivosConCupos };
   } catch (error) {
     console.error("Error al obtener electivos:", error);
     return { error: "Error interno al listar los electivos." };
@@ -186,8 +202,8 @@ export async function updateElectivoService(id, data) {
       }
       
       for (const item of data.distribucion_cupos) {
-        if (!item.carrera_id || item.cantidad <= 0) {
-          return { error: "Cada carrera debe tener un ID válido y cantidad mayor a 0." };
+        if (!item.carrera_id || item.cantidad < 0) {
+          return { error: "Cada carrera debe tener un ID válido y cantidad mayor o igual a 0." };
         }
         
         const carreraExiste = await carreraRepository.findOneBy({ id: item.carrera_id });

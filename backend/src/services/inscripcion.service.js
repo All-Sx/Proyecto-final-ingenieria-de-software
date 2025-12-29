@@ -14,7 +14,6 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     const cupoPorCarreraRepository = AppDataSource.getRepository(CupoPorCarrera);
     const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
 
-    // 1. Verificar que haya un periodo de inscripción activo
     const periodoActivo = await periodoRepository.findOne({
       where: { estado: "INSCRIPCION" }
     });
@@ -35,7 +34,6 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
       return { error: `El periodo de inscripción ha finalizado. Terminó el ${fechaFin.toLocaleDateString()}.` };
     }
 
-    // 2. Verificar que el electivo exista y esté aprobado
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
         return { error: "El electivo no existe." };
@@ -45,13 +43,11 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: "El electivo no está disponible para inscripción. Debe estar aprobado." };
     }
 
-    // 3. Verificar que el alumno exista (por seguridad)
     const alumno = await usuarioRepository.findOneBy({ id: alumnoId });
     if (!alumno) {
         return { error: "Alumno no encontrado." };
     }
 
-    // 4. Obtener información del alumno incluyendo su carrera
     const alumnoInfo = await alumnoRepository.findOne({
         where: { usuario_id: alumnoId },
         relations: ["carrera"]
@@ -65,7 +61,6 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
 
-    // 5. Obtener el cupo asignado para la carrera del alumno en este electivo
     const cupoCarrera = await cupoPorCarreraRepository
         .createQueryBuilder("cupo")
         .leftJoinAndSelect("cupo.electivo", "electivo")
@@ -77,7 +72,6 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
 
     if (!cupoCarrera) {
-        // Verificar si hay cupos para este electivo sin filtrar por carrera
         const todosCupos = await cupoPorCarreraRepository
             .createQueryBuilder("cupo")
             .leftJoinAndSelect("cupo.carrera", "carrera")
@@ -93,9 +87,7 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: `No hay cupos asignados para tu carrera (${carreraAlumno.nombre}) en este electivo.` };
     }
 
-    // 6. Contar inscripciones ACEPTADAS y PENDIENTES de alumnos de esta carrera en este electivo
-    // IMPORTANTE: Contamos PENDIENTES también porque están ocupando un cupo mientras se procesan
-    // NO contamos LISTA_ESPERA ni RECHAZADAS porque no ocupan cupos
+   
     const inscripcionesOcupadas = await solicitudRepository
         .createQueryBuilder("solicitud")
         .innerJoin("solicitud.alumno", "usuario")
@@ -106,7 +98,6 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         .andWhere("solicitud.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
         .getCount();
 
-    // 7. Verificar si ya existe una solicitud de este alumno para este electivo
     const solicitudExistente = await solicitudRepository.findOne({
         where: {
             alumno: { id: alumnoId },
@@ -118,33 +109,55 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
         return { error: "Ya tienes una solicitud para este electivo." };
     }
 
-    // 8. Determinar el estado inicial de la solicitud según disponibilidad de cupos
+    if (!prioridad || prioridad < 1) {
+        return { error: "Debes especificar una prioridad válida (número entero mayor o igual a 1)." };
+    }
+
+    const electivosAprobados = await electivoRepository.count({
+        where: { estado: "APROBADO" }
+    });
+
+    if (electivosAprobados === 0) {
+        return { error: "No hay electivos aprobados disponibles para inscripción." };
+    }
+
+    if (prioridad > electivosAprobados) {
+        return { error: `La prioridad no puede ser mayor a ${electivosAprobados} (número de electivos disponibles).` };
+    }
+
+    const solicitudConMismaPrioridad = await solicitudRepository.findOne({
+        where: {
+            alumno: { id: alumnoId },
+            prioridad: prioridad
+        }
+    });
+
+    if (solicitudConMismaPrioridad) {
+        return { error: `Ya tienes una solicitud con prioridad ${prioridad}. Cada electivo debe tener una prioridad diferente.` };
+    }
+
     let estadoInicial = "PENDIENTE";
     let mensajeResultado = "";
 
     if (inscripcionesOcupadas >= cupoCarrera.cantidad_reservada) {
-        // NO hay cupos disponibles → Crear solicitud en LISTA_ESPERA
         estadoInicial = "LISTA_ESPERA";
         mensajeResultado = `No hay cupos disponibles. Tu solicitud quedó en LISTA DE ESPERA. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${inscripcionesOcupadas}`;
         console.log(`[INSCRIPCIÓN - LISTA ESPERA] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) en lista de espera para "${electivo.nombre}". Cupos: ${inscripcionesOcupadas}/${cupoCarrera.cantidad_reservada}`);
     } else {
-        // SÍ hay cupos disponibles → Crear solicitud en PENDIENTE
         mensajeResultado = `Solicitud enviada exitosamente. Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`;
         console.log(`[INSCRIPCIÓN - PENDIENTE] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
     }
 
-    // 9. Crear la solicitud con el estado correspondiente
     const nuevaSolicitud = solicitudRepository.create({
         alumno: alumno,
         electivo: electivo,
-        prioridad: prioridad || 1, 
-        estado: estadoInicial,  // PENDIENTE o LISTA_ESPERA
+        prioridad: prioridad, 
+        estado: estadoInicial,  
         fecha_solicitud: new Date()
     });
 
     const solicitudGuardada = await solicitudRepository.save(nuevaSolicitud);
     
-    // Crear respuesta limpia sin campos de auditoría
     const respuestaLimpia = {
         id: solicitudGuardada.id,
         prioridad: solicitudGuardada.prioridad,
@@ -193,7 +206,6 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
       }
     });
 
-    // Limpiar respuesta eliminando campos de auditoría
     const solicitudesLimpias = solicitudes.map(solicitud => ({
       id: solicitud.id,
       prioridad: solicitud.prioridad,

@@ -1,10 +1,18 @@
-export const diasPorMes = (mes) => {
+export const diasPorMes = (mes, año) => {
+    if (!mes || !año) return [];
+
+    if (mes === 2) {
+        const esBisiesto =
+            (año % 4 === 0 && año % 100 !== 0) || año % 400 === 0;
+        return Array.from({ length: esBisiesto ? 29 : 28 }, (_, i) => i + 1);
+    }
+
     const meses31 = [1, 3, 5, 7, 8, 10, 12];
-    if (!mes) return [];
-    if (mes === 2) return Array.from({ length: 28 }, (_, i) => i + 1);
-    if (meses31.includes(mes)) return Array.from({ length: 31 }, (_, i) => i + 1);
-    return Array.from({ length: 30 }, (_, i) => i + 1);
+    const dias = meses31.includes(mes) ? 31 : 30;
+
+    return Array.from({ length: dias }, (_, i) => i + 1);
 };
+
 
 export function formatearFecha(date) {
     const d = new Date(date);

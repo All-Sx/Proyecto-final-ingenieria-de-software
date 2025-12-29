@@ -11,6 +11,10 @@ export const createSolicitud = async (req, res) => {
         return handleErrorClient(res, 400, "Debes especificar el electivo_id.");
     }
 
+    if (!prioridad) {
+        return handleErrorClient(res, 400, "Debes especificar la prioridad (número entero mayor o igual a 1).");
+    }
+
     const result = await createSolicitudService(alumnoId, electivo_id, prioridad);
 
     if (result.error) {

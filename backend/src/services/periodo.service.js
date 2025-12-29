@@ -1,6 +1,6 @@
 import { AppDataSource } from "../config/configdb.js";
 import { PeriodoAcademico } from "../entities/academico.entity.js";
-import { validarPeriodoCreacion , validarUpdatePeriodo } from "../validators/periodo.validator.js";
+import { validarPeriodoCreacion , validarUpdatePeriodo, validarCambioEstadoPeriodo } from "../validators/periodo.validator.js";
 import { formatPeriodoResponse } from "../mappers/periodo.mapper.js";
 
 const periodoRepository = AppDataSource.getRepository(PeriodoAcademico);
@@ -52,14 +52,33 @@ export async function updatePeriodoFechasService(id, data) {
         throw new Error("Periodo académico no encontrado.");
     }
 
-    const { fecha_inicio, fecha_fin, estado } = data;
+    const { fecha_inicio, fecha_fin, estado, nombre } = data;
 
     const { parsedFechaInicio, parsedFechaFin } =
     validarUpdatePeriodo({ fecha_inicio, fecha_fin })
 
     if (parsedFechaInicio) periodo.fecha_inicio = parsedFechaInicio;
     if (parsedFechaFin) periodo.fecha_fin = parsedFechaFin;
-    if (estado) periodo.estado = estado;
+    if (nombre) periodo.nombre = nombre;
+    
+    if (estado && estado !== periodo.estado) {
+        validarCambioEstadoPeriodo(estado);
+        
+        if (estado === "INSCRIPCION") {
+            const periodoInscripcionActivo = await periodoRepository.findOne({
+                where: { estado: "INSCRIPCION", activo: true }
+            });
+            if (periodoInscripcionActivo && periodoInscripcionActivo.id !== periodo.id) {
+                throw new Error("Ya existe un periodo en estado de inscripción activo. Debe cerrar o cambiar el estado del periodo actual antes de activar otro.");
+            }
+        }
+        
+        if (estado === "CERRADO" && periodo.activo) {
+            periodo.activo = false;
+        }
+        
+        periodo.estado = estado;
+    }
 
     const savedPeriodo = await periodoRepository.save(periodo);
     return formatPeriodoResponse(savedPeriodo);

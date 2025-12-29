@@ -45,13 +45,14 @@ export async function createPeriodo(req, res) {
 export async function updatePeriodoFechas(req, res) {
     try {
         const { id } = req.params;
-        const { fecha_inicio, fecha_fin, estado } = req.body;
+        const { fecha_inicio, fecha_fin, estado, nombre } = req.body;
 
         if (!fecha_inicio && !fecha_fin && !estado) {
             return handleErrorClient(res, 400, "Debe proporcionar al menos fecha_inicio, fecha_fin o estado. Las fechas deben estar en formato dd-mm-aaaa");
         }
 
         const periodoActualizado = await updatePeriodoFechasService(id, {
+            nombre,
             fecha_inicio,
             fecha_fin,
             estado
