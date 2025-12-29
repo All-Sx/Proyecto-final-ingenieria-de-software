@@ -14,14 +14,32 @@ export const getElectivos = async () => {
   }
 };
 
-export const getMisElectivos = () => {
-  return api.get("/electivos/mis-electivos");
+export const updateElectivo = async (id, data) => {
+  try {
+    const response = await api.put(`/electivos/${id}`, data);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error("Error al actualizar electivo:", error);
+    throw error;
+  }
 };
 
-export const updateElectivo = (id, data) => {
-  return api.put(`/electivos/${id}`, data);
+export const aprobarElectivo = async (id) => {
+  try {
+    const response = await api.put(`/electivos/${id}`, { estado: "APROBADO" });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error("Error al aprobar electivo:", error);
+    throw error;
+  }
 };
 
-export const getElectivosAprobados = () => {
-  return api.get("/electivos/aprobados");
+export const rechazarElectivo = async (id) => {
+  try {
+    const response = await api.put(`/electivos/${id}`, { estado: "RECHAZADO" });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error("Error al rechazar electivo:", error);
+    throw error;
+  }
 };
