@@ -40,4 +40,16 @@ router.put("/:id",
     updateElectivo
 );
 
+router.get("/", 
+    authMiddleware,
+    isAdmin(["Jefe de Carrera"]), // Restringido solo al Jefe
+    getElectivos
+);
+
+router.put("/:id", 
+    authMiddleware, 
+    isAdmin(["Jefe de Carrera"]), // Solo el Jefe puede editar
+    updateElectivo
+);
+
 export default router;
