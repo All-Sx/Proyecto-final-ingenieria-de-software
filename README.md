@@ -38,7 +38,7 @@ Proyecto final de Ingeniería de Software. Aplicación web full-stack para inscr
 ### Pasos
 1.  **Clonar el repositorio:**
     ```bash
-    git clone [https://github.com/TU_USUARIO/TU_REPO.git](https://github.com/TU_USUARIO/TU_REPO.git)
+    git clone [https://github.com/All-Sx/Proyecto-final-ingenieria-de-software](https://github.com/All-Sx/Proyecto-final-ingenieria-de-software.git)
     cd TU_REPO
     ```
 
@@ -77,5 +77,8 @@ Proyecto final de Ingeniería de Software. Aplicación web full-stack para inscr
 
 Un agradecimiento a los miembros del equipo.
 
-* **[Tu Nombre Completo]** - *Desarrollo principal* - [@tu-usuario-github](https://github.com/tu-usuario-github)
-* **[Nombre del Compañero 1]** - *[Su Rol]* - [@usuario-github-2](https://github.com/usuario-github-2)
+* **Manuel Cofré Yepes** - *Desarrollo Backend & Frontend* - [@manolococo](https://github.com/manolococo)
+* **Alan Fica Contreras** - *DDesarrollo Backend & Frontend* - [@All-Sx](https://github.com/All-Sx)
+* **Gabriel Jerez Salas** - *Desarrollo Backend & Frontend* - [@Gabo288](https://github.com/Gabo288)
+* **David Parraguez Miranda** - *Desarrollo Backend & Frontend* - [@davidparraguez1809](https://github.com/davidparraguez1809)
+* **Pablo Saavedra Araneda** - *Desarrollo Backend & Frontend* - [@Pablo-Saave](https://github.com/Pablo-Saave)
