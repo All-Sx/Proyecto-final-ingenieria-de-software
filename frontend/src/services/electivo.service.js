@@ -43,3 +43,13 @@ export const rechazarElectivo = async (id) => {
     throw error;
   }
 };
+
+export const getMisElectivos = async () => {
+  try {
+    const response = await api.get("/electivos/mis-electivos");
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error("Error al obtener mis electivos:", error);
+    throw error;
+  }
+};

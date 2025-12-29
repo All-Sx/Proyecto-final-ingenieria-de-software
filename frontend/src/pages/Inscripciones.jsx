@@ -83,10 +83,8 @@ export default function InscripcionesPage({ user, darkMode }) {
                 estado
             });
 
-            // Cerrar el modal primero
             setMostrarGestion(false);
-
-            // Recargar los datos
+            
             await cargarPeriodo();
             await cargarHistorial();
 
@@ -118,7 +116,7 @@ export default function InscripcionesPage({ user, darkMode }) {
                     Crear período
                 </button>
             </div>
-
+            {/*  NO BORRAR */}
             {/* Período Activo */}
             {periodo ? (
                 <div className="mb-8">
@@ -136,7 +134,7 @@ export default function InscripcionesPage({ user, darkMode }) {
                     <SinPeriodo onAbrir={() => setMostrarModal(true)} darkMode={darkMode} />
                 </div>
             )}
-
+                {/*  NO BORRAR */}
             {/* Historial de Períodos */}
             <div>
                 <h2 className={`text-xl font-semibold mb-4 ${darkMode ? "text-gray-200" : "text-gray-700"}`}>

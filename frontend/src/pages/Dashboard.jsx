@@ -15,6 +15,10 @@ import InscripcionesPage from "../pages/Inscripciones";
 import { updateClave, updateMyProfile } from "../services/perfil.service";
 import GestionElectivos from "./GestionElectivos";
 import GestionAlumnos from "./GestionAlumnos";
+import VistaMisInscripciones from "./MisIncripciones";
+
+import GestionProfesores from "./GestionProfesores";
+import MisElectivos from "./MisElectivos";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,6 +32,27 @@ export default function Dashboard() {
 
   const user = storedUser;
   const [vistaActual, setVistaActual] = useState("inicio");
+
+  // Manejar el botón "atrás" del navegador
+  useEffect(() => {
+    const handlePopState = (event) => {
+      // Si no estamos en inicio, volver a inicio en lugar de salir
+      if (vistaActual !== "inicio") {
+        event.preventDefault();
+        setVistaActual("inicio");
+        window.history.pushState(null, "", window.location.pathname);
+      }
+    };
+
+    // Agregar una entrada al historial cuando se monta el componente
+    window.history.pushState(null, "", window.location.pathname);
+    
+    window.addEventListener("popstate", handlePopState);
+    
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [vistaActual]);
 
   const [datosEdicion, setDatosEdicion] = useState({
     nombre: user.nombre,
@@ -97,9 +122,12 @@ export default function Dashboard() {
       <main className="flex-1 p-8">
         {vistaActual === "inicio" && <VistaInicio user={user} darkMode={darkMode} setVistaActual={setVistaActual} />}
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
+        {vistaActual === "misElectivos" && <MisElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
+        {vistaActual === "misInscripciones" && <VistaMisInscripciones user={user} darkMode={darkMode} />}
         {vistaActual === "gestionAlumnos" && <GestionAlumnos user={user} darkMode={darkMode} />}
+        {vistaActual === "profesores" && <GestionProfesores user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "gestionElectivos" && <GestionElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "configuracion" && (
