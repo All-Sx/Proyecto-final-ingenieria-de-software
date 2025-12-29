@@ -92,7 +92,7 @@ export default function Dashboard() {
       />
 
       <main className="flex-1 p-8">
-        {vistaActual === "inicio" && <VistaInicio user={user} darkMode={darkMode} />}
+        {vistaActual === "inicio" && <VistaInicio user={user} darkMode={darkMode} setVistaActual={setVistaActual} />}
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
