@@ -36,25 +36,25 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     const electivo = await electivoRepository.findOneBy({ id: electivoId });
     if (!electivo) {
-        return { error: "El electivo no existe." };
+      return { error: "El electivo no existe." };
     }
 
     if (electivo.estado !== "APROBADO") {
-        return { error: "El electivo no está disponible para inscripción. Debe estar aprobado." };
+      return { error: "El electivo no está disponible para inscripción. Debe estar aprobado." };
     }
 
     const alumno = await usuarioRepository.findOneBy({ id: alumnoId });
     if (!alumno) {
-        return { error: "Alumno no encontrado." };
+      return { error: "Alumno no encontrado." };
     }
 
     const alumnoInfo = await alumnoRepository.findOne({
-        where: { usuario_id: alumnoId },
-        relations: ["carrera"]
+      where: { usuario_id: alumnoId },
+      relations: ["carrera"]
     });
 
     if (!alumnoInfo || !alumnoInfo.carrera) {
-        return { error: "El alumno no tiene una carrera asignada. Contacta con administración." };
+      return { error: "El alumno no tiene una carrera asignada. Contacta con administración." };
     }
 
     const carreraAlumno = alumnoInfo.carrera;
@@ -62,128 +62,128 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
     console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
 
     const cupoCarrera = await cupoPorCarreraRepository
-        .createQueryBuilder("cupo")
-        .leftJoinAndSelect("cupo.electivo", "electivo")
-        .leftJoinAndSelect("cupo.carrera", "carrera")
-        .where("cupo.electivo_id = :electivoId", { electivoId })
-        .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
-        .getOne();
+      .createQueryBuilder("cupo")
+      .leftJoinAndSelect("cupo.electivo", "electivo")
+      .leftJoinAndSelect("cupo.carrera", "carrera")
+      .where("cupo.electivo_id = :electivoId", { electivoId })
+      .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
+      .getOne();
 
     console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
 
     if (!cupoCarrera) {
-        const todosCupos = await cupoPorCarreraRepository
-            .createQueryBuilder("cupo")
-            .leftJoinAndSelect("cupo.carrera", "carrera")
-            .where("cupo.electivo_id = :electivoId", { electivoId })
-            .getMany();
-        
-        console.log(`[DEBUG] Todos los cupos para este electivo:`, todosCupos.map(c => ({ 
-            carrera_id: c.carrera?.id, 
-            carrera_nombre: c.carrera?.nombre,
-            cantidad: c.cantidad_reservada 
-        })));
-        
-        return { error: `No hay cupos asignados para tu carrera (${carreraAlumno.nombre}) en este electivo.` };
+      const todosCupos = await cupoPorCarreraRepository
+        .createQueryBuilder("cupo")
+        .leftJoinAndSelect("cupo.carrera", "carrera")
+        .where("cupo.electivo_id = :electivoId", { electivoId })
+        .getMany();
+
+      console.log(`[DEBUG] Todos los cupos para este electivo:`, todosCupos.map(c => ({
+        carrera_id: c.carrera?.id,
+        carrera_nombre: c.carrera?.nombre,
+        cantidad: c.cantidad_reservada
+      })));
+
+      return { error: `No hay cupos asignados para tu carrera (${carreraAlumno.nombre}) en este electivo.` };
     }
 
-   
+
     const inscripcionesOcupadas = await solicitudRepository
-        .createQueryBuilder("solicitud")
-        .innerJoin("solicitud.alumno", "usuario")
-        .innerJoin("alumnos", "alumno", "alumno.usuario_id = usuario.id")
-        .innerJoin("alumno.carrera", "carrera")
-        .where("solicitud.electivo_id = :electivoId", { electivoId })
-        .andWhere("carrera.id = :carreraId", { carreraId: carreraAlumno.id })
-        .andWhere("solicitud.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
-        .getCount();
+      .createQueryBuilder("solicitud")
+      .innerJoin("solicitud.alumno", "usuario")
+      .innerJoin("alumnos", "alumno", "alumno.usuario_id = usuario.id")
+      .innerJoin("alumno.carrera", "carrera")
+      .where("solicitud.electivo_id = :electivoId", { electivoId })
+      .andWhere("carrera.id = :carreraId", { carreraId: carreraAlumno.id })
+      .andWhere("solicitud.estado IN (:...estados)", { estados: ["ACEPTADO", "PENDIENTE"] })
+      .getCount();
 
     const solicitudExistente = await solicitudRepository.findOne({
-        where: {
-            alumno: { id: alumnoId },
-            electivo: { id: electivoId }
-        }
+      where: {
+        alumno: { id: alumnoId },
+        electivo: { id: electivoId }
+      }
     });
 
     if (solicitudExistente) {
-        return { error: "Ya tienes una solicitud para este electivo." };
+      return { error: "Ya tienes una solicitud para este electivo." };
     }
 
     if (!prioridad || prioridad < 1) {
-        return { error: "Debes especificar una prioridad válida (número entero mayor o igual a 1)." };
+      return { error: "Debes especificar una prioridad válida (número entero mayor o igual a 1)." };
     }
 
     const electivosAprobados = await electivoRepository.count({
-        where: { estado: "APROBADO" }
+      where: { estado: "APROBADO" }
     });
 
     if (electivosAprobados === 0) {
-        return { error: "No hay electivos aprobados disponibles para inscripción." };
+      return { error: "No hay electivos aprobados disponibles para inscripción." };
     }
 
     if (prioridad > electivosAprobados) {
-        return { error: `La prioridad no puede ser mayor a ${electivosAprobados} (número de electivos disponibles).` };
+      return { error: `La prioridad no puede ser mayor a ${electivosAprobados} (número de electivos disponibles).` };
     }
 
     const solicitudConMismaPrioridad = await solicitudRepository.findOne({
-        where: {
-            alumno: { id: alumnoId },
-            prioridad: prioridad
-        }
+      where: {
+        alumno: { id: alumnoId },
+        prioridad: prioridad
+      }
     });
 
     if (solicitudConMismaPrioridad) {
-        return { error: `Ya tienes una solicitud con prioridad ${prioridad}. Cada electivo debe tener una prioridad diferente.` };
+      return { error: `Ya tienes una solicitud con prioridad ${prioridad}. Cada electivo debe tener una prioridad diferente.` };
     }
 
     let estadoInicial = "PENDIENTE";
     let mensajeResultado = "";
 
     if (inscripcionesOcupadas >= cupoCarrera.cantidad_reservada) {
-        estadoInicial = "LISTA_ESPERA";
-        mensajeResultado = `No hay cupos disponibles. Tu solicitud quedó en LISTA DE ESPERA. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${inscripcionesOcupadas}`;
-        console.log(`[INSCRIPCIÓN - LISTA ESPERA] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) en lista de espera para "${electivo.nombre}". Cupos: ${inscripcionesOcupadas}/${cupoCarrera.cantidad_reservada}`);
+      estadoInicial = "LISTA_ESPERA";
+      mensajeResultado = `No hay cupos disponibles. Tu solicitud quedó en LISTA DE ESPERA. Cupos: ${cupoCarrera.cantidad_reservada}, Ocupados: ${inscripcionesOcupadas}`;
+      console.log(`[INSCRIPCIÓN - LISTA ESPERA] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) en lista de espera para "${electivo.nombre}". Cupos: ${inscripcionesOcupadas}/${cupoCarrera.cantidad_reservada}`);
     } else {
-        mensajeResultado = `Solicitud enviada exitosamente. Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`;
-        console.log(`[INSCRIPCIÓN - PENDIENTE] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
+      mensajeResultado = `Solicitud enviada exitosamente. Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`;
+      console.log(`[INSCRIPCIÓN - PENDIENTE] Alumno ${alumno.nombre_completo} (${carreraAlumno.nombre}) solicitó inscripción al electivo "${electivo.nombre}". Cupos disponibles: ${cupoCarrera.cantidad_reservada - inscripcionesOcupadas - 1}/${cupoCarrera.cantidad_reservada}`);
     }
 
     const nuevaSolicitud = solicitudRepository.create({
-        alumno: alumno,
-        electivo: electivo,
-        prioridad: prioridad, 
-        estado: estadoInicial,  
-        fecha_solicitud: new Date()
+      alumno: alumno,
+      electivo: electivo,
+      prioridad: prioridad,
+      estado: estadoInicial,
+      fecha_solicitud: new Date()
     });
 
     const solicitudGuardada = await solicitudRepository.save(nuevaSolicitud);
-    
+
     const respuestaLimpia = {
-        id: solicitudGuardada.id,
-        prioridad: solicitudGuardada.prioridad,
-        estado: solicitudGuardada.estado,
-        fecha_solicitud: solicitudGuardada.fecha_solicitud,
-        alumno: solicitudGuardada.alumno ? {
-            id: solicitudGuardada.alumno.id,
-            rut: solicitudGuardada.alumno.rut,
-            email: solicitudGuardada.alumno.email,
-            nombre_completo: solicitudGuardada.alumno.nombre_completo,
-            activo: solicitudGuardada.alumno.activo
-        } : null,
-        electivo: solicitudGuardada.electivo ? {
-            id: solicitudGuardada.electivo.id,
-            nombre: solicitudGuardada.electivo.nombre,
-            descripcion: solicitudGuardada.electivo.descripcion,
-            creditos: solicitudGuardada.electivo.creditos,
-            cupos: solicitudGuardada.electivo.cupos,
-            estado: solicitudGuardada.electivo.estado,
-            nombre_profesor: solicitudGuardada.electivo.nombre_profesor
-        } : null
+      id: solicitudGuardada.id,
+      prioridad: solicitudGuardada.prioridad,
+      estado: solicitudGuardada.estado,
+      fecha_solicitud: solicitudGuardada.fecha_solicitud,
+      alumno: solicitudGuardada.alumno ? {
+        id: solicitudGuardada.alumno.id,
+        rut: solicitudGuardada.alumno.rut,
+        email: solicitudGuardada.alumno.email,
+        nombre_completo: solicitudGuardada.alumno.nombre_completo,
+        activo: solicitudGuardada.alumno.activo
+      } : null,
+      electivo: solicitudGuardada.electivo ? {
+        id: solicitudGuardada.electivo.id,
+        nombre: solicitudGuardada.electivo.nombre,
+        descripcion: solicitudGuardada.electivo.descripcion,
+        creditos: solicitudGuardada.electivo.creditos,
+        cupos: solicitudGuardada.electivo.cupos,
+        estado: solicitudGuardada.electivo.estado,
+        nombre_profesor: solicitudGuardada.electivo.nombre_profesor
+      } : null
     };
-    
-    return { 
-        data: respuestaLimpia,
-        message: mensajeResultado 
+
+    return {
+      data: respuestaLimpia,
+      message: mensajeResultado
     };
 
   } catch (error) {
@@ -198,11 +198,11 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
 
     const solicitudes = await solicitudRepository.find({
       where: {
-        alumno: { id: alumnoId } 
+        alumno: { id: alumnoId }
       },
-      relations: ["electivo"], 
+      relations: ["electivo"],
       order: {
-        fecha_solicitud: "DESC" 
+        fecha_solicitud: "DESC"
       }
     });
 
@@ -285,5 +285,29 @@ export async function getCuposPorCarreraService(electivoId) {
   } catch (error) {
     console.error("Error al obtener cupos por carrera:", error);
     return { error: "Error interno al consultar cupos por carrera." };
+  }
+}
+
+export async function deleteSoliciturService(solicitudId, alumnoId) {
+  try {
+    const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+
+    const solicitud = await solicitudRepository.find({
+      where: {
+        alumno: { id: alumnoId },
+        id: solicitudId
+      },
+      order: {
+        fecha_solicitud: "DESC"
+      }
+    });
+
+    if (!solicitud) {
+      return { error: "No existe solicitud" }
+    }
+    return await solicitudRepository.remove(solicitud);
+  } catch (error) {
+    console.error("Error al eliminar:", error);
+    return { error: "Error interno al eliminar." };
   }
 }
