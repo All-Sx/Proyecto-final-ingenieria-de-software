@@ -29,10 +29,13 @@ export default function AuthForm() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
+    setSuccessMessage("");
   };
 
   const errorNombres = validarNombresOApellidos(
@@ -50,6 +53,14 @@ export default function AuthForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (isRegister && registerSuccess) {
+      setIsRegister(false);
+      setRegisterSuccess(false);
+      setSuccessMessage("");
+      setFormData(initialFormData);
+      return;
+    }
 
     try {
       if (isRegister) {
@@ -80,9 +91,8 @@ export default function AuthForm() {
           password: formData.password,
         });
 
-        alert("Registro exitoso, ahora puedes iniciar sesión.");
-        setIsRegister(false);
-        setFormData(initialFormData);
+        setRegisterSuccess(true);
+        setSuccessMessage("Registro exitoso. Ahora puedes iniciar sesión.");
         return;
       }
 
@@ -126,10 +136,12 @@ export default function AuthForm() {
     }
   };
 
+
   const handleRutChange = (e) => {
     const value = e.target.value.toLowerCase();
     setFormData({ ...formData, rut: value });
     setError("");
+    setSuccessMessage("");
   };
 
   const handleDemoLogin = (role) => {
@@ -149,7 +161,7 @@ export default function AuthForm() {
   };
 
   return (
-    <div 
+    <div
       className="flex min-h-screen items-center justify-center bg-gray-100 relative"
       style={{
         backgroundImage: `url(${backgroundImage})`,
@@ -160,15 +172,15 @@ export default function AuthForm() {
     >
       {/* Overlay oscuro para mejorar legibilidad */}
       <div className="absolute inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
-      
+
       {/* Logo UBB en esquina superior izquierda */}
-      <img 
-        src={logoUbb} 
-        alt="Universidad del Bío-Bío" 
+      <img
+        src={logoUbb}
+        alt="Universidad del Bío-Bío"
         className="fixed top-6 left-6 w-32 h-auto z-20"
         style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))' }}
       />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -197,6 +209,7 @@ export default function AuthForm() {
                   placeholder="Nombres"
                   value={formData.nombres}
                   onChange={handleChange}
+                  disabled={registerSuccess}
                   className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
 
@@ -206,6 +219,7 @@ export default function AuthForm() {
                   placeholder="Apellidos"
                   value={formData.apellidos}
                   onChange={handleChange}
+                  disabled={registerSuccess}
                   className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
 
@@ -215,6 +229,7 @@ export default function AuthForm() {
                   placeholder="12.345.678-9"
                   value={formData.rut}
                   onChange={handleRutChange}
+                  disabled={registerSuccess}
                   className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
               </motion.div>
@@ -226,11 +241,10 @@ export default function AuthForm() {
             name="email"
             placeholder={isRegister ? "nombre.apellido2201@alumnos.ubiobio.cl" : "usuario@ubiobio.cl"}
             value={formData.email}
-            disabled={emailDisabled}
+            disabled={emailDisabled || registerSuccess}
             onChange={handleChange}
-            className={`w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 ${
-              emailDisabled ? "bg-gray-100 dark:bg-gray-600 cursor-not-allowed" : ""
-            }`}
+            className={`w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 ${emailDisabled ? "bg-gray-100 dark:bg-gray-600 cursor-not-allowed" : ""
+              }`}
           />
 
           {emailDisabled && (
@@ -247,6 +261,7 @@ export default function AuthForm() {
               placeholder="Contraseña"
               value={formData.password}
               onChange={handleChange}
+              disabled={registerSuccess}
               className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
             <button
@@ -258,13 +273,25 @@ export default function AuthForm() {
             </button>
           </div>
 
-          {error && <p className="text-sm text-red-500 dark:text-red-400 text-center">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-500 text-center">{error}</p>
+          )}
+
+          {successMessage && (
+            <p className="text-sm text-green-600 text-center font-medium">
+              {successMessage}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-2 rounded-xl font-medium transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
           >
-            {isRegister ? "Registrarme" : "Entrar"}
+            {isRegister
+              ? registerSuccess
+                ? "Continuar"
+                : "Registrarme"
+              : "Entrar"}
           </button>
 
           <p className="text-center text-sm dark:text-gray-300">
@@ -274,7 +301,7 @@ export default function AuthForm() {
               className="text-blue-600 dark:text-blue-400 hover:underline"
               onClick={() => {
                 setIsRegister(!isRegister);
-                setFormData(initialFormData); 
+                setFormData(initialFormData);
                 setError("");
               }}
             >
@@ -283,7 +310,7 @@ export default function AuthForm() {
           </p>
         </form>
       </motion.div>
-      
+
       <ModoOscuro />
     </div>
   );
