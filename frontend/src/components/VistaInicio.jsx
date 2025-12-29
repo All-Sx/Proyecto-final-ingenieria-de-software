@@ -92,7 +92,7 @@ export default function VistaInicio({ user, darkMode, setVistaActual }) {
               <button 
                 onClick={() => {
                   if (tarjeta.id === "profesor-001") {
-                    setVistaActual("inicio");
+                    setVistaActual("misElectivos");
                   }
                   if (tarjeta.id === "profesor-002") {
                     setVistaActual("registrarElectivo");
