@@ -61,13 +61,13 @@ export async function createSolicitudService(alumnoId, electivoId, prioridad) {
 
     console.log(`[DEBUG] Buscando cupos para: electivo_id=${electivoId}, carrera_id=${carreraAlumno.id}, carrera_nombre=${carreraAlumno.nombre}`);
 
-    const cupoCarrera = await cupoPorCarreraRepository
-        .createQueryBuilder("cupo")
-        .leftJoinAndSelect("cupo.electivo", "electivo")
-        .leftJoinAndSelect("cupo.carrera", "carrera")
-        .where("cupo.electivo_id = :electivoId", { electivoId })
-        .andWhere("cupo.carrera_id = :carreraId", { carreraId: carreraAlumno.id })
-        .getOne();
+    const cupoCarrera = await cupoPorCarreraRepository.findOne({
+        where: {
+            electivo: { id: electivoId },
+            carrera: { id: carreraAlumno.id }
+        },
+        relations: ["electivo", "carrera"]
+    });
 
     console.log(`[DEBUG] Cupo encontrado:`, cupoCarrera);
 
@@ -289,5 +289,29 @@ export async function getCuposPorCarreraService(electivoId) {
   } catch (error) {
     console.error("Error al obtener cupos por carrera:", error);
     return { error: "Error interno al consultar cupos por carrera." };
+  }
+}
+
+export async function deleteSolicitudService(solicitudId, alumnoId) {
+  try {
+    const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
+
+    const solicitud = await solicitudRepository.find({
+      where: {
+        alumno: { id: alumnoId },
+        id: solicitudId
+      },
+      order: {
+        fecha_solicitud: "DESC"
+      }
+    });
+
+    if (!solicitud) {
+      return { error: "No existe solicitud" }
+    }
+    return await solicitudRepository.remove(solicitud);
+  } catch (error) {
+    console.error("Error al eliminar:", error);
+    return { error: "Error interno al eliminar." };
   }
 }

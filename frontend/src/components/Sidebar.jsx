@@ -92,7 +92,7 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
 
                     {isProfesor(user.rol) && (
                         <>
-                            <button onClick={() => setVistaActual("inicio")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                            <button onClick={() => setVistaActual("misElectivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
                                 <FileText size={18} /> Mis Electivos
                             </button>
                             <button
@@ -104,9 +104,14 @@ export default function Sidebar({ user, darkMode, vistaActual, setVistaActual, h
                     )}
 
                     {isAlumno(user.rol) && (
-                        <button onClick={() => setVistaActual("electivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
-                            <Bookmark size={18} /> Electivos
-                        </button>
+                        <>
+                            <button onClick={() => setVistaActual("electivos")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                                <Bookmark size={18} /> Electivos
+                            </button>
+                            <button onClick={() => setVistaActual("misInscripciones")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
+                                <BookOpen size={18} /> Mis Inscripciones
+                            </button>
+                        </>
                     )}
 
                     <button onClick={() => setVistaActual("configuracion")} className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition ${hoverUsuario}`}>
