@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, User, IdCard } from "lucide-react";
 import backgroundImage from "../assets/ubiobio-background.jpg";
+import ModoOscuro from "../components/ModoOscuro";
 import { button } from "framer-motion/client";
 import { useNavigate } from "react-router-dom";
 import {
@@ -157,15 +158,15 @@ export default function AuthForm() {
       }}
     >
       {/* Overlay oscuro para mejorar legibilidad */}
-      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div className="absolute inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"></div>
       
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 relative z-10"
+        className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 relative z-10"
       >
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+        <h2 className="text-2xl font-semibold text-center text-gray-800 dark:text-white mb-6">
           {isRegister ? "Registro de Estudiantes" : "Iniciar Sesión"}
         </h2>
 
@@ -187,7 +188,7 @@ export default function AuthForm() {
                   placeholder="Nombres"
                   value={formData.nombres}
                   onChange={handleChange}
-                  className="w-full border rounded-xl p-2"
+                  className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
 
                 {/* Apellidos */}
@@ -196,7 +197,7 @@ export default function AuthForm() {
                   placeholder="Apellidos"
                   value={formData.apellidos}
                   onChange={handleChange}
-                  className="w-full border rounded-xl p-2"
+                  className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
 
                 {/* RUT */}
@@ -205,7 +206,7 @@ export default function AuthForm() {
                   placeholder="12.345.678-9"
                   value={formData.rut}
                   onChange={handleRutChange}
-                  className="w-full border rounded-xl p-2"
+                  className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                 />
               </motion.div>
             )}
@@ -218,12 +219,13 @@ export default function AuthForm() {
             value={formData.email}
             disabled={emailDisabled}
             onChange={handleChange}
-            className={`w-full border rounded-xl p-2 ${emailDisabled ? "bg-gray-100 cursor-not-allowed" : ""
-              }`}
+            className={`w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 ${
+              emailDisabled ? "bg-gray-100 dark:bg-gray-600 cursor-not-allowed" : ""
+            }`}
           />
 
           {emailDisabled && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-red-500 dark:text-red-400">
               Ingresa primero todos tus nombres y apellidos correctamente antes de poder ingresar tu correo institucional.
             </p>
           )}
@@ -236,31 +238,31 @@ export default function AuthForm() {
               placeholder="Contraseña"
               value={formData.password}
               onChange={handleChange}
-              className="w-full border rounded-xl p-2"
+              className="w-full border dark:border-gray-600 rounded-xl p-2 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2"
+              className="absolute right-3 top-2 text-gray-600 dark:text-gray-300"
             >
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
 
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          {error && <p className="text-sm text-red-500 dark:text-red-400 text-center">{error}</p>}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white py-2 rounded-xl font-medium transition-colors"
           >
             {isRegister ? "Registrarme" : "Entrar"}
           </button>
 
-          <p className="text-center text-sm">
+          <p className="text-center text-sm dark:text-gray-300">
             {isRegister ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
             <button
               type="button"
-              className="text-blue-600"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
               onClick={() => {
                 setIsRegister(!isRegister);
                 setFormData(initialFormData); 
@@ -273,21 +275,23 @@ export default function AuthForm() {
         </form>
 
         {/* Botones temporales para acceso sin registro */}
-        <div className="mt-6 border-t pt-4 text-center">
-          <p className="text-sm text-gray-500 mb-3">Modo demostración:</p>
+        <div className="mt-6 border-t dark:border-gray-600 pt-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Modo demostración:</p>
 
           <div className="flex flex-col gap-3">
             {/* Botón para login demo como PROFESOR */}
             <button
               type="button"
               onClick={() => handleDemoLogin("profesor")}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl font-medium transition-colors"
+              className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white py-2 rounded-xl font-medium transition-colors"
             >
               Entrar como Profesor (Demo)
             </button>
           </div>
         </div>
       </motion.div>
+      
+      <ModoOscuro />
     </div>
   );
 }
