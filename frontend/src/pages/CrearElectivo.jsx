@@ -103,8 +103,10 @@ export default function CrearElectivo() {
       return;
     }
 
-    //suma cupos distribuidos en cada carrera
-    const sumaCupos = carrerasSeleccionadas.reduce((acc, c) => acc + (c.cupos || 0), 0);
+    const sumaCupos = carrerasSeleccionadas.reduce(
+      (acc, c) => acc + (c.cantidad || 0),
+      0
+    );
 
     if (sumaCupos !== Number(formData.cuposTotales)) {
       setError(
@@ -124,9 +126,13 @@ export default function CrearElectivo() {
 
       setSuccess("Electivo registrado correctamente.");
 
-    //reiniciar formulario
-    setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
-    setCarreras(carrerasDisponibles.map(c => ({ ...c, seleccionada: false, cupos: "" })));
+      setFormData({ nombre: "", descripcion: "", creditos: "", cuposTotales: "" });
+
+      setCarreras(carreras.map(c => ({
+        ...c,
+        seleccionada: false,
+        cupos: ""
+      })));
 
     } catch (err) {
       const msg =
