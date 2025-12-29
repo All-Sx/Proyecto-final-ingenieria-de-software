@@ -1,4 +1,4 @@
-import { createSolicitudService, getSolicitudesPorAlumnoService, getCuposPorCarreraService, deleteSoliciturService } from "../services/inscripcion.service.js";
+import { createSolicitudService, getSolicitudesPorAlumnoService, getCuposPorCarreraService, deleteSolicitudService } from "../services/inscripcion.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/response.handlers.js";
 
 export const createSolicitud = async (req, res) => {
@@ -85,7 +85,7 @@ export const deleteSolicitud = async (req, res) => {
     const { id_usuario } = req.user;
     const { id_solicitud } = req.params;
 
-    const result = await deleteSoliciturService(id_solicitud, id_usuario);
+    const result = await deleteSolicitudService(id_solicitud, id_usuario);
 
     handleSuccess(res, 200, "Solicitud eliminado.", result);
 

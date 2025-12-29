@@ -13,6 +13,8 @@ import InscripcionesPage from "../pages/Inscripciones";
 import { updateClave, updateMyProfile } from "../services/perfil.service";
 import GestionElectivos from "./GestionElectivos";
 import GestionAlumnos from "./GestionAlumnos";
+import VistaMisInscripciones from "./MisIncripciones";
+
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -96,6 +98,7 @@ export default function Dashboard() {
         {vistaActual === "electivos" && <VistaElectivos user={user} darkMode={darkMode} />}
         {vistaActual === "registrarElectivo" && <VistaCrearElectivo darkMode={darkMode} />}
         {vistaActual === "inscripciones" && <InscripcionesPage user={user} darkMode={darkMode} />}
+        {vistaActual === "misInscripciones" && <VistaMisInscripciones user={user} darkMode={darkMode} />}
         {vistaActual === "gestionAlumnos" && <GestionAlumnos user={user} darkMode={darkMode} />}
         {vistaActual === "perfil" && <VistaPerfil user={user} darkMode={darkMode} />}
         {vistaActual === "gestionElectivos" && <GestionElectivos user={user} darkMode={darkMode} />}

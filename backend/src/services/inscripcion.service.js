@@ -205,6 +205,7 @@ export async function getSolicitudesPorAlumnoService(alumnoId) {
         fecha_solicitud: "DESC"
       }
     });
+    console.log(solicitudes);
 
     const solicitudesLimpias = solicitudes.map(solicitud => ({
       id: solicitud.id,
@@ -292,7 +293,7 @@ export async function getCuposPorCarreraService(electivoId) {
   }
 }
 
-export async function deleteSoliciturService(solicitudId, alumnoId) {
+export async function deleteSolicitudService(solicitudId, alumnoId) {
   try {
     const solicitudRepository = AppDataSource.getRepository(SolicitudInscripcion);
 
